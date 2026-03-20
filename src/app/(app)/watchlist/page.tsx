@@ -119,6 +119,42 @@ function loadAlerts(): Record<string, number> {
   }
 }
 
+function saveAlerts(alerts: Record<string, number>) {
+  try {
+    localStorage.setItem(ALERTS_KEY, JSON.stringify(alerts));
+  } catch {
+    // silently ignore
+  }
+}
+
+// ---- group storage ----
+
+interface WatchlistGroup {
+  id: string;
+  name: string;
+  mints: string[];
+}
+
+const GROUPS_KEY = "hatcher_watchlist_groups";
+
+function loadGroups(): WatchlistGroup[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(GROUPS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveGroups(groups: WatchlistGroup[]) {
+  try {
+    localStorage.setItem(GROUPS_KEY, JSON.stringify(groups));
+  } catch {
+    // silently ignore
+  }
+}
+
 // ---- sort logic ----
 
 function getSortValue(
@@ -194,15 +230,24 @@ export default function WatchlistPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [alerts, setAlerts] = useState<Record<string, number>>({});
   const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const [groups, setGroups] = useState<WatchlistGroup[]>([]);
+  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
+  const [showAddGroup, setShowAddGroup] = useState(false);
+  const [newGroupName, setNewGroupName] = useState("");
+  const [alertEditMint, setAlertEditMint] = useState<string | null>(null);
+  const [alertPriceInput, setAlertPriceInput] = useState("");
+  const [showGroupAssign, setShowGroupAssign] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const alertInputRef = useRef<HTMLInputElement>(null);
 
-  // Load alerts
+  // Load alerts & groups
   useEffect(() => {
     setAlerts(loadAlerts());
+    setGroups(loadGroups());
   }, []);
 
-  // Close dropdown on outside click
+  // Close dropdowns on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (
@@ -210,6 +255,15 @@ export default function WatchlistPage() {
         !dropdownRef.current.contains(e.target as Node)
       ) {
         setShowSortDropdown(false);
+      }
+      // Close group assign dropdown if clicking outside
+      const target = e.target as HTMLElement;
+      if (!target.closest("[data-group-assign]")) {
+        setShowGroupAssign(false);
+      }
+      // Close alert popover if clicking outside
+      if (!target.closest("[data-alert-popover]") && !target.closest("[data-alert-trigger]")) {
+        setAlertEditMint(null);
       }
     }
     document.addEventListener("mousedown", handleClick);
@@ -302,6 +356,77 @@ export default function WatchlistPage() {
     selected.forEach((mint) => removeFromWatchlist(mint));
     setSelected(new Set());
   };
+
+  // Group management
+  const addGroup = () => {
+    const name = newGroupName.trim();
+    if (!name) return;
+    const id = `grp_${Date.now()}`;
+    const next = [...groups, { id, name, mints: [] }];
+    setGroups(next);
+    saveGroups(next);
+    setNewGroupName("");
+    setShowAddGroup(false);
+  };
+
+  const deleteGroup = (groupId: string) => {
+    const next = groups.filter((g) => g.id !== groupId);
+    setGroups(next);
+    saveGroups(next);
+    if (activeGroupId === groupId) setActiveGroupId(null);
+  };
+
+  const addMintsToGroup = (groupId: string, mints: string[]) => {
+    const next = groups.map((g) => {
+      if (g.id !== groupId) return g;
+      const existing = new Set(g.mints);
+      mints.forEach((m) => existing.add(m));
+      return { ...g, mints: [...existing] };
+    });
+    setGroups(next);
+    saveGroups(next);
+  };
+
+  const removeMintFromGroup = (groupId: string, mint: string) => {
+    const next = groups.map((g) => {
+      if (g.id !== groupId) return g;
+      return { ...g, mints: g.mints.filter((m) => m !== mint) };
+    });
+    setGroups(next);
+    saveGroups(next);
+  };
+
+  const bulkAddToGroup = (groupId: string) => {
+    addMintsToGroup(groupId, [...selected]);
+    setSelected(new Set());
+    setShowGroupAssign(false);
+  };
+
+  // Price alert management
+  const setAlert = (mint: string, price: number) => {
+    const next = { ...alerts, [mint]: price };
+    setAlerts(next);
+    saveAlerts(next);
+    setAlertEditMint(null);
+    setAlertPriceInput("");
+  };
+
+  const removeAlert = (mint: string) => {
+    const next = { ...alerts };
+    delete next[mint];
+    setAlerts(next);
+    saveAlerts(next);
+    setAlertEditMint(null);
+  };
+
+  // Filtered watchlist based on active group
+  const filteredWatchlist = useMemo(() => {
+    if (!activeGroupId) return sortedWatchlist;
+    const group = groups.find((g) => g.id === activeGroupId);
+    if (!group) return sortedWatchlist;
+    const mintSet = new Set(group.mints);
+    return sortedWatchlist.filter((item) => mintSet.has(item.mintAddress));
+  }, [sortedWatchlist, activeGroupId, groups]);
 
   // Column sort handler
   const handleSort = (key: SortKey) => {
@@ -477,34 +602,6 @@ export default function WatchlistPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Batch remove */}
-          {selected.size > 0 && (
-            <button
-              onClick={removeSelected}
-              className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium rounded-md transition-all"
-              style={{
-                color: "#f23645",
-                backgroundColor: "#f2364518",
-                border: "1px solid #f2364530",
-              }}
-            >
-              <svg
-                viewBox="0 0 24 24"
-                width={12}
-                height={12}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <polyline points="3 6 5 6 21 6" />
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-              </svg>
-              Remove {selected.size}
-            </button>
-          )}
-
           {/* Sort dropdown (mobile) */}
           <div className="relative terminal:hidden" ref={dropdownRef}>
             <button
@@ -558,6 +655,194 @@ export default function WatchlistPage() {
         </div>
       </div>
 
+      {/* Group tabs */}
+      <div
+        className="flex items-center gap-1 mb-2 px-1 overflow-x-auto terminal-scrollbar-x"
+        style={{ scrollbarWidth: "none" }}
+      >
+        <button
+          onClick={() => setActiveGroupId(null)}
+          className="flex-shrink-0 px-2.5 py-1 text-[11px] font-medium rounded-md transition-all"
+          style={{
+            color: activeGroupId === null ? "#eef0f6" : "#5c6380",
+            backgroundColor: activeGroupId === null ? "#1f2435" : "transparent",
+            border: `1px solid ${activeGroupId === null ? "#1a1f2e" : "transparent"}`,
+          }}
+        >
+          All ({watchlist.length})
+        </button>
+        {groups.map((g) => {
+          const count = g.mints.filter((m) =>
+            watchlist.some((w) => w.mintAddress === m)
+          ).length;
+          return (
+            <div key={g.id} className="flex-shrink-0 flex items-center group/tab">
+              <button
+                onClick={() =>
+                  setActiveGroupId(activeGroupId === g.id ? null : g.id)
+                }
+                className="px-2.5 py-1 text-[11px] font-medium rounded-l-md transition-all"
+                style={{
+                  color: activeGroupId === g.id ? "#eef0f6" : "#5c6380",
+                  backgroundColor:
+                    activeGroupId === g.id ? "#1f2435" : "transparent",
+                  border: `1px solid ${activeGroupId === g.id ? "#1a1f2e" : "transparent"}`,
+                  borderRight: "none",
+                }}
+              >
+                {g.name} ({count})
+              </button>
+              <button
+                onClick={() => deleteGroup(g.id)}
+                className="px-1 py-1 text-[11px] rounded-r-md opacity-0 group-hover/tab:opacity-100 transition-all"
+                style={{
+                  color: "#5c6380",
+                  backgroundColor:
+                    activeGroupId === g.id ? "#1f2435" : "transparent",
+                  border: `1px solid ${activeGroupId === g.id ? "#1a1f2e" : "transparent"}`,
+                  borderLeft: "none",
+                }}
+                aria-label={`Delete group ${g.name}`}
+              >
+                <svg viewBox="0 0 24 24" width={10} height={10} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+          );
+        })}
+        {showAddGroup ? (
+          <form
+            onSubmit={(e) => { e.preventDefault(); addGroup(); }}
+            className="flex items-center gap-1 flex-shrink-0"
+          >
+            <input
+              autoFocus
+              value={newGroupName}
+              onChange={(e) => setNewGroupName(e.target.value)}
+              placeholder="Group name"
+              className="w-24 px-2 py-1 text-[11px] rounded-md outline-none"
+              style={{
+                backgroundColor: "#10131c",
+                color: "#eef0f6",
+                border: "1px solid #1a1f2e",
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") {
+                  setShowAddGroup(false);
+                  setNewGroupName("");
+                }
+              }}
+            />
+            <button
+              type="submit"
+              className="px-2 py-1 text-[11px] font-medium rounded-md"
+              style={{ color: "#00d672", backgroundColor: "#00d67218" }}
+            >
+              Add
+            </button>
+            <button
+              type="button"
+              onClick={() => { setShowAddGroup(false); setNewGroupName(""); }}
+              className="px-1.5 py-1 text-[11px] rounded-md"
+              style={{ color: "#5c6380" }}
+            >
+              Cancel
+            </button>
+          </form>
+        ) : (
+          <button
+            onClick={() => setShowAddGroup(true)}
+            className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-md transition-all"
+            style={{
+              color: "#5c6380",
+              border: "1px dashed #1a1f2e",
+            }}
+            aria-label="Add group"
+          >
+            <svg viewBox="0 0 24 24" width={12} height={12} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          </button>
+        )}
+      </div>
+
+      {/* Bulk actions bar */}
+      {selected.size > 0 && (
+        <div
+          className="flex items-center gap-2 mb-2 px-3 py-2 rounded-lg"
+          style={{
+            backgroundColor: "#8b5cf610",
+            border: "1px solid #8b5cf630",
+          }}
+        >
+          <span className="text-[11px] font-medium" style={{ color: "#9ca3b8" }}>
+            {selected.size} selected
+          </span>
+          <div className="flex-1" />
+          {/* Add to group */}
+          <div className="relative" data-group-assign>
+            <button
+              onClick={() => setShowGroupAssign((s) => !s)}
+              className="flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded-md transition-all"
+              style={{
+                color: "#8b5cf6",
+                backgroundColor: "#8b5cf618",
+                border: "1px solid #8b5cf630",
+              }}
+            >
+              <svg viewBox="0 0 24 24" width={11} height={11} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+              </svg>
+              Add to Group
+            </button>
+            {showGroupAssign && (
+              <div
+                className="absolute left-0 top-full mt-1 py-1 rounded-lg z-50 min-w-[160px]"
+                style={{
+                  backgroundColor: "#10131c",
+                  border: "1px solid #1a1f2e",
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+                }}
+              >
+                {groups.length === 0 ? (
+                  <div className="px-3 py-2 text-[11px]" style={{ color: "#5c6380" }}>
+                    No groups yet. Create one first.
+                  </div>
+                ) : (
+                  groups.map((g) => (
+                    <button
+                      key={g.id}
+                      onClick={() => bulkAddToGroup(g.id)}
+                      className="w-full text-left px-3 py-1.5 text-[11px] transition-colors hover:bg-[#181c28]"
+                      style={{ color: "#9ca3b8" }}
+                    >
+                      {g.name}
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+          {/* Bulk remove */}
+          <button
+            onClick={removeSelected}
+            className="flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded-md transition-all"
+            style={{
+              color: "#f23645",
+              backgroundColor: "#f2364518",
+              border: "1px solid #f2364530",
+            }}
+          >
+            <svg viewBox="0 0 24 24" width={11} height={11} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+            </svg>
+            Remove
+          </button>
+        </div>
+      )}
+
       {/* ===== Desktop Table ===== */}
       <div
         className="hidden terminal:block rounded-lg overflow-hidden"
@@ -593,11 +878,11 @@ export default function WatchlistPage() {
                 <Th columnKey="holders">Holders</Th>
                 <Th columnKey="bonding">Bonding</Th>
                 <Th columnKey="risk">Risk</Th>
-                <th className="w-12 px-2 py-2" />
+                <th className="w-20 px-2 py-2" />
               </tr>
             </thead>
             <tbody>
-              {sortedWatchlist.map((item, idx) => {
+              {filteredWatchlist.map((item, idx) => {
                 const live = livePrices[item.mintAddress];
                 const isSelected = selected.has(item.mintAddress);
                 const hasAlert = alerts[item.mintAddress] != null;
@@ -609,7 +894,7 @@ export default function WatchlistPage() {
                     style={{
                       backgroundColor: isSelected ? "#181c2840" : "transparent",
                       borderBottom:
-                        idx < sortedWatchlist.length - 1
+                        idx < filteredWatchlist.length - 1
                           ? "1px solid #1a1f2e20"
                           : undefined,
                     }}
@@ -789,38 +1074,113 @@ export default function WatchlistPage() {
                     </td>
 
                     {/* Actions */}
-                    <td className="w-12 px-2 py-2 text-center">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeFromWatchlist(item.mintAddress);
-                        }}
-                        className="w-6 h-6 flex items-center justify-center rounded-full transition-all opacity-0 group-hover:opacity-100"
-                        style={{ color: "#5c6380" }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.color = "#f23645";
-                          e.currentTarget.style.backgroundColor = "#f2364518";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.color = "#5c6380";
-                          e.currentTarget.style.backgroundColor = "transparent";
-                        }}
-                        aria-label={`Remove ${item.name} from watchlist`}
-                      >
-                        <svg
-                          viewBox="0 0 24 24"
-                          width={12}
-                          height={12}
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
+                    <td className="w-20 px-2 py-2">
+                      <div className="flex items-center justify-end gap-1 relative">
+                        {/* Alert button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (alertEditMint === item.mintAddress) {
+                              setAlertEditMint(null);
+                            } else {
+                              setAlertEditMint(item.mintAddress);
+                              setAlertPriceInput(
+                                alerts[item.mintAddress]?.toString() ?? ""
+                              );
+                            }
+                          }}
+                          className="w-6 h-6 flex items-center justify-center rounded-full transition-all opacity-0 group-hover:opacity-100"
+                          style={{
+                            color: hasAlert ? "#f0a000" : "#5c6380",
+                            backgroundColor: hasAlert ? "#f0a00018" : "transparent",
+                          }}
+                          aria-label={`Set price alert for ${item.name}`}
                         >
-                          <line x1="18" y1="6" x2="6" y2="18" />
-                          <line x1="6" y1="6" x2="18" y2="18" />
-                        </svg>
-                      </button>
+                          <svg viewBox="0 0 24 24" width={12} height={12} fill={hasAlert ? "#f0a000" : "none"} stroke={hasAlert ? "#f0a000" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                          </svg>
+                        </button>
+                        {/* Alert popover */}
+                        {alertEditMint === item.mintAddress && (
+                          <div
+                            className="absolute right-0 top-full mt-1 z-50 p-2 rounded-lg"
+                            style={{
+                              backgroundColor: "#10131c",
+                              border: "1px solid #1a1f2e",
+                              boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <form
+                              onSubmit={(e) => {
+                                e.preventDefault();
+                                const val = parseFloat(alertPriceInput);
+                                if (!isNaN(val) && val > 0) setAlert(item.mintAddress, val);
+                              }}
+                              className="flex items-center gap-1"
+                            >
+                              <span className="text-[10px]" style={{ color: "#5c6380" }}>$</span>
+                              <input
+                                ref={alertInputRef}
+                                autoFocus
+                                value={alertPriceInput}
+                                onChange={(e) => setAlertPriceInput(e.target.value)}
+                                placeholder="Price"
+                                className="w-20 px-1.5 py-1 text-[11px] font-mono rounded outline-none"
+                                style={{
+                                  backgroundColor: "#181c28",
+                                  color: "#eef0f6",
+                                  border: "1px solid #1a1f2e",
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Escape") setAlertEditMint(null);
+                                }}
+                              />
+                              <button
+                                type="submit"
+                                className="px-1.5 py-1 text-[10px] font-medium rounded"
+                                style={{ color: "#00d672", backgroundColor: "#00d67218" }}
+                              >
+                                Set
+                              </button>
+                              {hasAlert && (
+                                <button
+                                  type="button"
+                                  onClick={() => removeAlert(item.mintAddress)}
+                                  className="px-1.5 py-1 text-[10px] font-medium rounded"
+                                  style={{ color: "#f23645", backgroundColor: "#f2364518" }}
+                                >
+                                  Clear
+                                </button>
+                              )}
+                            </form>
+                          </div>
+                        )}
+                        {/* Remove button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeFromWatchlist(item.mintAddress);
+                          }}
+                          className="w-6 h-6 flex items-center justify-center rounded-full transition-all opacity-0 group-hover:opacity-100"
+                          style={{ color: "#5c6380" }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.color = "#f23645";
+                            e.currentTarget.style.backgroundColor = "#f2364518";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.color = "#5c6380";
+                            e.currentTarget.style.backgroundColor = "transparent";
+                          }}
+                          aria-label={`Remove ${item.name} from watchlist`}
+                        >
+                          <svg viewBox="0 0 24 24" width={12} height={12} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                          </svg>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -851,18 +1211,9 @@ export default function WatchlistPage() {
             />
             Select all
           </label>
-          {selected.size > 0 && (
-            <button
-              onClick={removeSelected}
-              className="text-[11px] font-medium"
-              style={{ color: "#f23645" }}
-            >
-              Remove {selected.size}
-            </button>
-          )}
         </div>
 
-        {sortedWatchlist.map((item) => {
+        {filteredWatchlist.map((item) => {
           const live = livePrices[item.mintAddress];
           const isSelected = selected.has(item.mintAddress);
           const hasAlert = alerts[item.mintAddress] != null;
@@ -1025,28 +1376,96 @@ export default function WatchlistPage() {
                   </div>
                 </Link>
 
-                {/* Remove button */}
-                <button
-                  onClick={() => removeFromWatchlist(item.mintAddress)}
-                  className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full mt-0.5 transition-colors"
-                  style={{ color: "#363d54" }}
-                  aria-label={`Remove ${item.name} from watchlist`}
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    width={12}
-                    height={12}
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                {/* Alert + Remove buttons */}
+                <div className="flex-shrink-0 flex flex-col items-center gap-1 mt-0.5">
+                  <button
+                    onClick={() => {
+                      if (alertEditMint === item.mintAddress) {
+                        setAlertEditMint(null);
+                      } else {
+                        setAlertEditMint(item.mintAddress);
+                        setAlertPriceInput(alerts[item.mintAddress]?.toString() ?? "");
+                      }
+                    }}
+                    className="w-6 h-6 flex items-center justify-center rounded-full transition-colors"
+                    style={{
+                      color: hasAlert ? "#f0a000" : "#363d54",
+                      backgroundColor: hasAlert ? "#f0a00018" : "transparent",
+                    }}
+                    aria-label={`Set price alert for ${item.name}`}
                   >
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
-                </button>
+                    <svg viewBox="0 0 24 24" width={12} height={12} fill={hasAlert ? "#f0a000" : "none"} stroke={hasAlert ? "#f0a000" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => removeFromWatchlist(item.mintAddress)}
+                    className="w-6 h-6 flex items-center justify-center rounded-full transition-colors"
+                    style={{ color: "#363d54" }}
+                    aria-label={`Remove ${item.name} from watchlist`}
+                  >
+                    <svg viewBox="0 0 24 24" width={12} height={12} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                </div>
               </div>
+              {/* Mobile alert popover */}
+              {alertEditMint === item.mintAddress && (
+                <div
+                  className="px-3 pb-2.5"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const val = parseFloat(alertPriceInput);
+                      if (!isNaN(val) && val > 0) setAlert(item.mintAddress, val);
+                    }}
+                    className="flex items-center gap-1.5 p-2 rounded-md"
+                    style={{
+                      backgroundColor: "#10131c",
+                      border: "1px solid #1a1f2e",
+                    }}
+                  >
+                    <span className="text-[10px]" style={{ color: "#5c6380" }}>Alert at $</span>
+                    <input
+                      autoFocus
+                      value={alertPriceInput}
+                      onChange={(e) => setAlertPriceInput(e.target.value)}
+                      placeholder="0.00"
+                      className="flex-1 min-w-0 px-1.5 py-1 text-[11px] font-mono rounded outline-none"
+                      style={{
+                        backgroundColor: "#181c28",
+                        color: "#eef0f6",
+                        border: "1px solid #1a1f2e",
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Escape") setAlertEditMint(null);
+                      }}
+                    />
+                    <button
+                      type="submit"
+                      className="px-2 py-1 text-[10px] font-medium rounded"
+                      style={{ color: "#00d672", backgroundColor: "#00d67218" }}
+                    >
+                      Set
+                    </button>
+                    {hasAlert && (
+                      <button
+                        type="button"
+                        onClick={() => removeAlert(item.mintAddress)}
+                        className="px-2 py-1 text-[10px] font-medium rounded"
+                        style={{ color: "#f23645", backgroundColor: "#f2364518" }}
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </form>
+                </div>
+              )}
             </div>
           );
         })}
