@@ -6,6 +6,7 @@ import bs58 from "bs58";
 
 const STORAGE_KEY = "hatcher_encrypted_wallet";
 const SESSION_PUB_KEY = "sol_pub";
+const SESSION_PRIV_KEY = "sol_priv";
 
 interface EncryptedWallet {
   ciphertext: string;
@@ -105,7 +106,7 @@ export function KeyProvider({ children }: { children: ReactNode }) {
   const [publicKey, setPublicKey] = useState<string | null>(null);
   const [hasEncryptedWallet, setHasEncryptedWallet] = useState(false);
 
-  // On mount, check for encrypted wallet in localStorage and restore publicKey from session
+  // On mount, check for encrypted wallet and restore keypair from session
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -114,9 +115,17 @@ export function KeyProvider({ children }: { children: ReactNode }) {
       // localStorage unavailable
     }
     try {
-      const storedPub = sessionStorage.getItem(SESSION_PUB_KEY);
-      if (storedPub) {
-        setPublicKey(storedPub);
+      const storedPriv = sessionStorage.getItem(SESSION_PRIV_KEY);
+      if (storedPriv) {
+        const decoded = bs58.decode(storedPriv);
+        const kp = Keypair.fromSecretKey(decoded);
+        setKeypair(kp);
+        setPublicKey(kp.publicKey.toBase58());
+      } else {
+        const storedPub = sessionStorage.getItem(SESSION_PUB_KEY);
+        if (storedPub) {
+          setPublicKey(storedPub);
+        }
       }
     } catch {
       // sessionStorage unavailable
@@ -135,6 +144,7 @@ export function KeyProvider({ children }: { children: ReactNode }) {
 
       try {
         sessionStorage.setItem(SESSION_PUB_KEY, pubKey);
+        sessionStorage.setItem(SESSION_PRIV_KEY, trimmed);
       } catch { /* ignore */ }
 
       return true;
@@ -153,6 +163,7 @@ export function KeyProvider({ children }: { children: ReactNode }) {
 
       try {
         sessionStorage.setItem(SESSION_PUB_KEY, pubKey);
+        sessionStorage.setItem(SESSION_PRIV_KEY, bs58.encode(secretKeyBytes));
       } catch { /* ignore */ }
 
       return true;
@@ -166,6 +177,7 @@ export function KeyProvider({ children }: { children: ReactNode }) {
     setPublicKey(null);
     try {
       sessionStorage.removeItem(SESSION_PUB_KEY);
+      sessionStorage.removeItem(SESSION_PRIV_KEY);
       localStorage.removeItem(STORAGE_KEY);
     } catch { /* ignore */ }
     setHasEncryptedWallet(false);
@@ -207,6 +219,7 @@ export function KeyProvider({ children }: { children: ReactNode }) {
 
     try {
       sessionStorage.setItem(SESSION_PUB_KEY, pubKey);
+      sessionStorage.setItem(SESSION_PRIV_KEY, privKey);
     } catch { /* ignore */ }
 
     return { publicKey: pubKey, privateKey: privKey };
@@ -238,6 +251,7 @@ export function KeyProvider({ children }: { children: ReactNode }) {
 
       try {
         sessionStorage.setItem(SESSION_PUB_KEY, pubKey);
+        sessionStorage.setItem(SESSION_PRIV_KEY, privateKeyBase58);
       } catch { /* ignore */ }
 
       return true;
