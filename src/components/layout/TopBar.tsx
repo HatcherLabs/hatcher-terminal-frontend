@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useSolPriceContext } from "@/components/providers/SolPriceProvider";
+import { ConnectionStatus } from "@/components/ui/ConnectionStatus";
 import { NotificationBell } from "@/components/ui/NotificationBell";
 import { TokenSearch } from "@/components/ui/TokenSearch";
 
@@ -50,6 +51,12 @@ export function TopBar() {
               })}`}
         </span>
       </div>
+
+      {/* Separator */}
+      <div className="w-px h-5 shrink-0" style={{ background: "#1a1f2e" }} />
+
+      {/* SSE Connection Status */}
+      <ConnectionStatus />
 
       {/* Separator */}
       <div className="w-px h-5 shrink-0" style={{ background: "#1a1f2e" }} />
