@@ -82,7 +82,7 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
 
       {/* Desktop terminal layout: shows at 1024px and above */}
       <div className="hidden terminal:flex flex-col h-screen w-screen overflow-hidden">
-        {/* Top Bar (includes desktop PriceTicker) */}
+        {/* Top Bar */}
         <TopBar />
 
         {/* Middle section: sidebar + main content */}
