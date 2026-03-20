@@ -336,6 +336,44 @@ export default function SettingsPage() {
   const { setAmount: setQuickBuyAmount } = useQuickBuy();
   const { enabled: mevEnabled, toggle: toggleMEV } = useMEVProtection();
 
+  /* ── local-only prefs (persisted to localStorage) ── */
+  const [notifPrefs, setNotifPrefs] = useState({
+    priceAlerts: true,
+    limitOrderFills: true,
+    autoTpSlTriggers: true,
+    whaleAlerts: false,
+    soundEffects: true,
+  });
+  const [displayPrefs, setDisplayPrefs] = useState<{
+    defaultViewMode: "table" | "card";
+    priceDisplay: "SOL" | "USD" | "both";
+  }>({
+    defaultViewMode: "table",
+    priceDisplay: "SOL",
+  });
+  const [clearWatchlistConfirm, setClearWatchlistConfirm] = useState(false);
+
+  /* hydrate local prefs from localStorage */
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("hatcher_notif_prefs");
+      if (stored) setNotifPrefs(JSON.parse(stored));
+    } catch { /* ignore */ }
+    try {
+      const stored = localStorage.getItem("hatcher_display_prefs");
+      if (stored) setDisplayPrefs(JSON.parse(stored));
+    } catch { /* ignore */ }
+  }, []);
+
+  /* persist local prefs whenever they change */
+  useEffect(() => {
+    try { localStorage.setItem("hatcher_notif_prefs", JSON.stringify(notifPrefs)); } catch { /* ignore */ }
+  }, [notifPrefs]);
+
+  useEffect(() => {
+    try { localStorage.setItem("hatcher_display_prefs", JSON.stringify(displayPrefs)); } catch { /* ignore */ }
+  }, [displayPrefs]);
+
   useEffect(() => {
     api.raw("/api/settings")
       .then((r) => r.json())
@@ -1129,7 +1167,427 @@ export default function SettingsPage() {
         </CollapsibleSection>
 
         {/* ════════════════════════════════════════════════════════
-            5. ACCOUNT
+            5. NOTIFICATION PREFERENCES
+        ════════════════════════════════════════════════════════ */}
+        <CollapsibleSection title="Notification Preferences" subtitle="Choose which alerts and sounds you receive" defaultOpen={false}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <SettingRow label="Price Alerts" description="Get notified when tokens hit your target price">
+              <Toggle
+                enabled={notifPrefs.priceAlerts}
+                onChange={(on) => setNotifPrefs((p) => ({ ...p, priceAlerts: on }))}
+                activeColor="green"
+                size="sm"
+                label="Toggle price alerts"
+              />
+            </SettingRow>
+            <SettingRow label="Limit Order Fills" description="Notification when a limit order executes">
+              <Toggle
+                enabled={notifPrefs.limitOrderFills}
+                onChange={(on) => setNotifPrefs((p) => ({ ...p, limitOrderFills: on }))}
+                activeColor="green"
+                size="sm"
+                label="Toggle limit order fill notifications"
+              />
+            </SettingRow>
+            <SettingRow label="Auto TP/SL Triggers" description="Alert when take-profit or stop-loss fires">
+              <Toggle
+                enabled={notifPrefs.autoTpSlTriggers}
+                onChange={(on) => setNotifPrefs((p) => ({ ...p, autoTpSlTriggers: on }))}
+                activeColor="green"
+                size="sm"
+                label="Toggle auto TP/SL notifications"
+              />
+            </SettingRow>
+            <SettingRow label="Whale Alerts" description="Large trades and wallet movements">
+              <Toggle
+                enabled={notifPrefs.whaleAlerts}
+                onChange={(on) => setNotifPrefs((p) => ({ ...p, whaleAlerts: on }))}
+                activeColor="green"
+                size="sm"
+                label="Toggle whale alerts"
+              />
+            </SettingRow>
+            <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 14 }}>
+              <SettingRow label="Sound Effects" description="Play sounds for notifications and trade confirmations">
+                <Toggle
+                  enabled={notifPrefs.soundEffects}
+                  onChange={(on) => setNotifPrefs((p) => ({ ...p, soundEffects: on }))}
+                  activeColor="accent"
+                  size="sm"
+                  label="Toggle sound effects"
+                />
+              </SettingRow>
+            </div>
+          </div>
+        </CollapsibleSection>
+
+        {/* ════════════════════════════════════════════════════════
+            6. DISPLAY PREFERENCES
+        ════════════════════════════════════════════════════════ */}
+        <CollapsibleSection title="Display Preferences" subtitle="Customize how data is shown" defaultOpen={false}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {/* Default View Mode */}
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: 9,
+                  fontWeight: 700,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase" as const,
+                  color: C.textMuted,
+                  marginBottom: 8,
+                  fontFamily: "var(--font-jetbrains-mono), monospace",
+                }}
+              >
+                Default Explore View
+              </label>
+              <div style={{ display: "flex", gap: 6 }}>
+                {(["table", "card"] as const).map((mode) => {
+                  const active = displayPrefs.defaultViewMode === mode;
+                  return (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => setDisplayPrefs((p) => ({ ...p, defaultViewMode: mode }))}
+                      style={{
+                        flex: 1,
+                        padding: "8px 4px",
+                        borderRadius: 8,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        fontFamily: "var(--font-jetbrains-mono), monospace",
+                        border: `1px solid ${active ? C.green + "66" : C.border}`,
+                        background: active ? C.green + "18" : C.bgPrimary,
+                        color: active ? C.green : C.textFaint,
+                        cursor: "pointer",
+                        transition: "all 150ms ease",
+                        textAlign: "center",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {mode === "table" ? (
+                        <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                            <line x1="3" y1="9" x2="21" y2="9" />
+                            <line x1="3" y1="15" x2="21" y2="15" />
+                            <line x1="9" y1="3" x2="9" y2="21" />
+                          </svg>
+                          Table
+                        </span>
+                      ) : (
+                        <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="3" y="3" width="7" height="7" rx="1" />
+                            <rect x="14" y="3" width="7" height="7" rx="1" />
+                            <rect x="3" y="14" width="7" height="7" rx="1" />
+                            <rect x="14" y="14" width="7" height="7" rx="1" />
+                          </svg>
+                          Card
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Price Display */}
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: 9,
+                  fontWeight: 700,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase" as const,
+                  color: C.textMuted,
+                  marginBottom: 8,
+                  fontFamily: "var(--font-jetbrains-mono), monospace",
+                }}
+              >
+                Price Display
+              </label>
+              <div style={{ display: "flex", gap: 6 }}>
+                {(["SOL", "USD", "both"] as const).map((mode) => {
+                  const active = displayPrefs.priceDisplay === mode;
+                  const label = mode === "both" ? "SOL + USD" : mode;
+                  return (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => setDisplayPrefs((p) => ({ ...p, priceDisplay: mode }))}
+                      style={{
+                        flex: 1,
+                        padding: "8px 4px",
+                        borderRadius: 8,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        fontFamily: "var(--font-jetbrains-mono), monospace",
+                        border: `1px solid ${active ? C.green + "66" : C.border}`,
+                        background: active ? C.green + "18" : C.bgPrimary,
+                        color: active ? C.green : C.textFaint,
+                        cursor: "pointer",
+                        transition: "all 150ms ease",
+                        textAlign: "center",
+                      }}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Theme */}
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: 9,
+                  fontWeight: 700,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase" as const,
+                  color: C.textMuted,
+                  marginBottom: 8,
+                  fontFamily: "var(--font-jetbrains-mono), monospace",
+                }}
+              >
+                Theme
+              </label>
+              <div style={{ display: "flex", gap: 6 }}>
+                <button
+                  type="button"
+                  style={{
+                    flex: 1,
+                    padding: "8px 4px",
+                    borderRadius: 8,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    fontFamily: "var(--font-jetbrains-mono), monospace",
+                    border: `1px solid ${C.green}66`,
+                    background: C.green + "18",
+                    color: C.green,
+                    cursor: "default",
+                    textAlign: "center",
+                  }}
+                >
+                  Dark
+                </button>
+                <button
+                  type="button"
+                  disabled
+                  style={{
+                    flex: 1,
+                    padding: "8px 4px",
+                    borderRadius: 8,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    fontFamily: "var(--font-jetbrains-mono), monospace",
+                    border: `1px solid ${C.border}`,
+                    background: C.bgPrimary,
+                    color: C.textFaint,
+                    cursor: "not-allowed",
+                    textAlign: "center",
+                    position: "relative",
+                    overflow: "hidden",
+                  }}
+                >
+                  Light
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: -1,
+                      right: -1,
+                      fontSize: 7,
+                      fontWeight: 700,
+                      padding: "2px 5px",
+                      borderRadius: "0 7px 0 6px",
+                      background: C.amber + "30",
+                      color: C.amber,
+                      letterSpacing: "0.04em",
+                    }}
+                  >
+                    SOON
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </CollapsibleSection>
+
+        {/* ════════════════════════════════════════════════════════
+            7. DATA & PRIVACY
+        ════════════════════════════════════════════════════════ */}
+        <CollapsibleSection title="Data & Privacy" subtitle="Manage your local data and exports" defaultOpen={false}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {/* Clear Search History */}
+            <button
+              type="button"
+              onClick={() => {
+                try {
+                  localStorage.removeItem("hatcher_search_history");
+                  toast.add("Search history cleared", "success");
+                } catch {
+                  toast.add("Failed to clear search history", "error");
+                }
+              }}
+              style={{
+                width: "100%",
+                padding: "10px 16px",
+                borderRadius: 8,
+                background: "transparent",
+                border: `1px solid ${C.border}`,
+                color: C.textSecondary,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "all 150ms ease",
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.borderColor = C.borderHover;
+                (e.currentTarget as HTMLButtonElement).style.background = C.bgHover;
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.borderColor = C.border;
+                (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              Clear Search History
+            </button>
+
+            {/* Clear Watchlist */}
+            <button
+              type="button"
+              onClick={() => {
+                if (clearWatchlistConfirm) {
+                  try {
+                    localStorage.removeItem("hatcher_watchlist");
+                    toast.add("Watchlist cleared", "success");
+                    setClearWatchlistConfirm(false);
+                  } catch {
+                    toast.add("Failed to clear watchlist", "error");
+                  }
+                } else {
+                  setClearWatchlistConfirm(true);
+                  setTimeout(() => setClearWatchlistConfirm(false), 4000);
+                }
+              }}
+              style={{
+                width: "100%",
+                padding: "10px 16px",
+                borderRadius: 8,
+                background: clearWatchlistConfirm ? C.red + "15" : "transparent",
+                border: `1px solid ${clearWatchlistConfirm ? C.red + "50" : C.border}`,
+                color: clearWatchlistConfirm ? C.red : C.textSecondary,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "all 150ms ease",
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+              }}
+              onMouseEnter={(e) => {
+                if (!clearWatchlistConfirm) {
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = C.borderHover;
+                  (e.currentTarget as HTMLButtonElement).style.background = C.bgHover;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!clearWatchlistConfirm) {
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = C.border;
+                  (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+                }
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={clearWatchlistConfirm ? C.red : C.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              </svg>
+              {clearWatchlistConfirm ? "Tap again to confirm" : "Clear Watchlist"}
+            </button>
+
+            {/* Export All Data */}
+            <button
+              type="button"
+              onClick={() => {
+                try {
+                  const data: Record<string, unknown> = {};
+                  for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && key.startsWith("hatcher_")) {
+                      try {
+                        data[key] = JSON.parse(localStorage.getItem(key) ?? "null");
+                      } catch {
+                        data[key] = localStorage.getItem(key);
+                      }
+                    }
+                  }
+                  data["settings"] = settings;
+                  data["exportedAt"] = new Date().toISOString();
+                  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `hatcher-export-${new Date().toISOString().slice(0, 10)}.json`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                  toast.add("Data exported", "success");
+                } catch {
+                  toast.add("Failed to export data", "error");
+                }
+              }}
+              style={{
+                width: "100%",
+                padding: "10px 16px",
+                borderRadius: 8,
+                background: "transparent",
+                border: `1px solid ${C.border}`,
+                color: C.textSecondary,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "all 150ms ease",
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.borderColor = C.borderHover;
+                (e.currentTarget as HTMLButtonElement).style.background = C.bgHover;
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.borderColor = C.border;
+                (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Export All Data as JSON
+            </button>
+
+            <p style={{ fontSize: 10, color: C.textFaint, marginTop: 4, lineHeight: 1.5 }}>
+              Export includes your settings, watchlist, search history, and all locally stored preferences.
+            </p>
+          </div>
+        </CollapsibleSection>
+
+        {/* ════════════════════════════════════════════════════════
+            8. ACCOUNT
         ════════════════════════════════════════════════════════ */}
         <CollapsibleSection title="Account" subtitle="Session and danger zone" defaultOpen={false}>
           <div>
