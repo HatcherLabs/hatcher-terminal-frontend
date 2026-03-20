@@ -194,9 +194,10 @@ export function PositionCard({ position, onClose, takeProfitPct, stopLossPct }: 
         {position.status === "open" &&
           (takeProfitPct || stopLossPct) && (
             <PositionTriggers
-              pnlPercent={pnl}
-              takeProfitPct={takeProfitPct ?? null}
-              stopLossPct={stopLossPct ?? null}
+              entryPrice={position.entryPricePerToken}
+              currentPrice={position.currentPriceSol ?? position.entryPricePerToken}
+              takeProfitPct={takeProfitPct ?? undefined}
+              stopLossPct={stopLossPct ?? undefined}
             />
           )}
 

@@ -1,99 +1,211 @@
 "use client";
 
 interface PositionTriggersProps {
-  pnlPercent: number;
-  takeProfitPct: number | null;
-  stopLossPct: number | null;
+  entryPrice: number;
+  currentPrice: number;
+  takeProfitPct?: number;
+  stopLossPct?: number;
 }
 
 export function PositionTriggers({
-  pnlPercent,
+  entryPrice,
+  currentPrice,
   takeProfitPct,
   stopLossPct,
 }: PositionTriggersProps) {
-  const hasTP = takeProfitPct !== null && takeProfitPct > 0;
-  const hasSL = stopLossPct !== null && stopLossPct > 0;
+  const hasTP = takeProfitPct !== undefined && takeProfitPct > 0;
+  const hasSL = stopLossPct !== undefined && stopLossPct > 0;
 
   if (!hasTP && !hasSL) return null;
 
-  // Progress bar: map pnlPercent between -stopLossPct and +takeProfitPct
-  const slVal = hasSL ? stopLossPct : 100;
-  const tpVal = hasTP ? takeProfitPct : 100;
-  const totalRange = slVal + tpVal;
-  // Normalize current P&L: 0% means at -SL, 100% means at +TP
-  const normalizedPnl = ((pnlPercent + slVal) / totalRange) * 100;
-  const clampedPnl = Math.max(0, Math.min(100, normalizedPnl));
+  const tpPrice = hasTP ? entryPrice * (1 + takeProfitPct / 100) : null;
+  const slPrice = hasSL ? entryPrice * (1 - stopLossPct / 100) : null;
 
-  // Check if close to triggering (within 10% of trigger value)
-  const closeToTP = hasTP && pnlPercent >= takeProfitPct * 0.9;
-  const closeToSL = hasSL && pnlPercent <= -(stopLossPct * 0.9);
+  const pnlPct = ((currentPrice - entryPrice) / entryPrice) * 100;
+
+  // Build the price range for the bar.
+  // We want SL on the left, entry in the middle, TP on the right.
+  // Use symmetric fallback when only one side is set.
+  const slRange = hasSL ? stopLossPct : hasTP ? takeProfitPct : 10;
+  const tpRange = hasTP ? takeProfitPct : hasSL ? stopLossPct : 10;
+
+  // Add 20% padding beyond TP/SL so the markers don't sit at the very edge.
+  const lowerBound = -(slRange * 1.2);
+  const upperBound = tpRange * 1.2;
+  const totalSpan = upperBound - lowerBound;
+
+  // Convert a % value (relative to entry) to an x position in [0, 1].
+  const pctToX = (pct: number) =>
+    Math.max(0, Math.min(1, (pct - lowerBound) / totalSpan));
+
+  const entryX = pctToX(0);
+  const currentX = pctToX(pnlPct);
+  const tpX = hasTP ? pctToX(takeProfitPct) : null;
+  const slX = hasSL ? pctToX(-stopLossPct) : null;
+
+  const W = 200;
+  const H = 50;
+  const barY = 24;
+  const barH = 4;
+  const pad = 6; // horizontal padding so markers don't clip
+
+  const toSvgX = (ratio: number) => pad + ratio * (W - pad * 2);
+
+  const entrySvgX = toSvgX(entryX);
+  const currentSvgX = toSvgX(currentX);
+  const tpSvgX = tpX !== null ? toSvgX(tpX) : null;
+  const slSvgX = slX !== null ? toSvgX(slX) : null;
+
+  const formatPrice = (p: number) =>
+    p >= 1 ? p.toFixed(2) : p.toPrecision(4);
 
   return (
-    <div className="space-y-1.5">
-      {/* Trigger badges */}
-      <div className="flex items-center gap-2">
-        {hasSL && (
-          <span
-            className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold border ${
-              closeToSL
-                ? "bg-red/20 border-red/50 text-red animate-pulse"
-                : "bg-red/10 border-red/20 text-red/80"
-            }`}
-          >
-            SL: -{stopLossPct}%
-          </span>
-        )}
-        {hasTP && (
-          <span
-            className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold border ${
-              closeToTP
-                ? "bg-green/20 border-green/50 text-green animate-pulse"
-                : "bg-green/10 border-green/20 text-green/80"
-            }`}
-          >
-            TP: +{takeProfitPct}%
-          </span>
-        )}
-      </div>
+    <svg
+      width={W}
+      height={H}
+      viewBox={`0 0 ${W} ${H}`}
+      style={{ display: "block" }}
+    >
+      {/* Bar background */}
+      <rect
+        x={pad}
+        y={barY}
+        width={W - pad * 2}
+        height={barH}
+        rx={2}
+        fill="#1e2030"
+      />
 
-      {/* Progress bar showing P&L relative to SL and TP */}
-      <div className="relative w-full h-1.5 bg-bg-elevated rounded-full overflow-hidden">
-        {/* SL zone (left red) */}
-        {hasSL && (
-          <div
-            className="absolute left-0 top-0 h-full bg-red/20 rounded-l-full"
-            style={{ width: `${(slVal / totalRange) * 100 * 0.15}%` }}
+      {/* Colored fill from entry to current price */}
+      {(() => {
+        const x1 = Math.min(entrySvgX, currentSvgX);
+        const x2 = Math.max(entrySvgX, currentSvgX);
+        const fillColor = pnlPct >= 0 ? "#00d672" : "#f23645";
+        return (
+          <rect
+            x={x1}
+            y={barY}
+            width={Math.max(0, x2 - x1)}
+            height={barH}
+            rx={2}
+            fill={fillColor}
+            opacity={0.35}
           />
-        )}
-        {/* TP zone (right green) */}
-        {hasTP && (
-          <div
-            className="absolute right-0 top-0 h-full bg-green/20 rounded-r-full"
-            style={{ width: `${(tpVal / totalRange) * 100 * 0.15}%` }}
-          />
-        )}
-        {/* Current position indicator */}
-        <div
-          className={`absolute top-0 h-full w-1 rounded-full transition-all duration-500 ${
-            pnlPercent >= 0 ? "bg-green" : "bg-red"
-          }`}
-          style={{ left: `${clampedPnl}%` }}
-        />
-        {/* Center line (entry point) */}
-        <div
-          className="absolute top-0 h-full w-px bg-text-muted/30"
-          style={{ left: `${(slVal / totalRange) * 100}%` }}
-        />
-      </div>
+        );
+      })()}
 
-      {/* Labels */}
-      <div className="flex items-center justify-between text-[9px] font-mono text-text-muted">
-        {hasSL && <span className="text-red/60">-{stopLossPct}%</span>}
-        {!hasSL && <span />}
-        <span className="text-text-muted/50">Entry</span>
-        {hasTP && <span className="text-green/60">+{takeProfitPct}%</span>}
-        {!hasTP && <span />}
-      </div>
-    </div>
+      {/* Stop loss dashed line */}
+      {slSvgX !== null && (
+        <>
+          <line
+            x1={slSvgX}
+            y1={barY - 6}
+            x2={slSvgX}
+            y2={barY + barH + 2}
+            stroke="#f23645"
+            strokeWidth={1.5}
+            strokeDasharray="2 2"
+          />
+          <text
+            x={slSvgX}
+            y={barY - 9}
+            textAnchor="middle"
+            fill="#f23645"
+            fontSize={9}
+            fontFamily="monospace"
+          >
+            {slPrice !== null ? formatPrice(slPrice) : ""}
+          </text>
+          <text
+            x={slSvgX}
+            y={barY + barH + 12}
+            textAnchor="middle"
+            fill="#f23645"
+            fontSize={8}
+            fontFamily="monospace"
+            opacity={0.7}
+          >
+            -{stopLossPct}%
+          </text>
+        </>
+      )}
+
+      {/* Take profit dashed line */}
+      {tpSvgX !== null && (
+        <>
+          <line
+            x1={tpSvgX}
+            y1={barY - 6}
+            x2={tpSvgX}
+            y2={barY + barH + 2}
+            stroke="#00d672"
+            strokeWidth={1.5}
+            strokeDasharray="2 2"
+          />
+          <text
+            x={tpSvgX}
+            y={barY - 9}
+            textAnchor="middle"
+            fill="#00d672"
+            fontSize={9}
+            fontFamily="monospace"
+          >
+            {tpPrice !== null ? formatPrice(tpPrice) : ""}
+          </text>
+          <text
+            x={tpSvgX}
+            y={barY + barH + 12}
+            textAnchor="middle"
+            fill="#00d672"
+            fontSize={8}
+            fontFamily="monospace"
+            opacity={0.7}
+          >
+            +{takeProfitPct}%
+          </text>
+        </>
+      )}
+
+      {/* Entry price line */}
+      <line
+        x1={entrySvgX}
+        y1={barY - 4}
+        x2={entrySvgX}
+        y2={barY + barH + 2}
+        stroke="#5c6380"
+        strokeWidth={1}
+      />
+      <text
+        x={entrySvgX}
+        y={barY + barH + 12}
+        textAnchor="middle"
+        fill="#5c6380"
+        fontSize={8}
+        fontFamily="monospace"
+      >
+        Entry
+      </text>
+
+      {/* Current price dot */}
+      <circle
+        cx={currentSvgX}
+        cy={barY + barH / 2}
+        r={3.5}
+        fill={pnlPct >= 0 ? "#00d672" : "#f23645"}
+        stroke="#eef0f6"
+        strokeWidth={1}
+      />
+      <text
+        x={currentSvgX}
+        y={barY - 9}
+        textAnchor="middle"
+        fill="#eef0f6"
+        fontSize={9}
+        fontFamily="monospace"
+        fontWeight="bold"
+      >
+        {formatPrice(currentPrice)}
+      </text>
+    </svg>
   );
 }
