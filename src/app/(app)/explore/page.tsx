@@ -10,6 +10,8 @@ import { SecurityDots } from "@/components/ui/SecurityDots";
 import { useToast } from "@/components/ui/Toast";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { VirtualizedTable } from "@/components/ui/VirtualizedTable";
+import { MarketOverview } from "@/components/explore/MarketOverview";
+import { TokenScanner } from "@/components/explore/TokenScanner";
 import { api } from "@/lib/api";
 
 type ExploreCategory = "new" | "graduating" | "migrated";
@@ -638,7 +640,10 @@ export default function TrenchesPage() {
 
   return (
     <ErrorBoundary fallbackTitle="Explore error">
-    <div className="flex flex-col pt-2" style={{ height: "100%", minHeight: 0 }}>
+    {/* Desktop Market Overview bar */}
+    <MarketOverview tokens={tokens as unknown as import("@/types/token").TokenData[]} />
+    <div className="terminal:flex terminal:gap-0" style={{ height: "100%", minHeight: 0 }}>
+    <div className="flex flex-col pt-2 flex-1" style={{ minHeight: 0, minWidth: 0 }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
@@ -1001,6 +1006,15 @@ export default function TrenchesPage() {
           )}
         </>
       )}
+    </div>
+
+    {/* Desktop Token Scanner sidebar */}
+    <div
+      className="hidden terminal:block shrink-0"
+      style={{ width: 320, minHeight: 0, overflowY: "auto" }}
+    >
+      <TokenScanner tokens={tokens as unknown as import("@/types/token").TokenData[]} />
+    </div>
     </div>
     </ErrorBoundary>
   );
