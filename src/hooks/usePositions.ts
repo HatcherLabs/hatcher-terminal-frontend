@@ -9,6 +9,7 @@ interface Position {
   entrySol: number;
   entryTokenAmount: number;
   entryPricePerToken: number;
+  entryTimestamp: string | null;
   currentPriceSol: number | null;
   pnlPercent: number | null;
   pnlSol: number | null;
