@@ -170,98 +170,100 @@ function PortfolioSummaryHeader({
   positions,
   analytics,
   analyticsLoading,
+  closedPositions,
 }: {
   positions: Position[];
   analytics: WalletAnalytics | null;
   analyticsLoading: boolean;
+  closedPositions: ClosedPosition[];
 }) {
-  const totalInvested = positions.reduce((s, p) => s + p.entrySol, 0);
   const totalUnrealized = positions.reduce((s, p) => s + computePnl(p).pnlSol, 0);
-  const totalValue = totalInvested + totalUnrealized;
-  const unrealizedPositive = totalUnrealized >= 0;
-
   const realizedPnl = analytics?.totalPnlSol ?? 0;
-  const realizedPositive = realizedPnl >= 0;
-
-  const winRate = analytics?.winRate ?? 0;
-  const totalTrades = analytics?.totalTrades ?? 0;
-  const avgHold = analytics?.avgHoldTimeMs ?? 0;
+  const totalPnl = realizedPnl + totalUnrealized;
 
   // Approximate USD (placeholder rate)
   const solUsdRate = 150;
-  const totalValueUsd = totalValue * solUsdRate;
+  const totalPnlUsd = totalPnl * solUsdRate;
+
+  // Today's PnL: sum of closed positions exited today + current unrealized
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayClosedPnl = closedPositions
+    .filter((p) => p.exitTimestamp && new Date(p.exitTimestamp).getTime() >= todayStart.getTime())
+    .reduce((s, p) => s + (p.pnlSol ?? 0), 0);
+  const todayPnl = todayClosedPnl + totalUnrealized;
+  const todayPnlUsd = todayPnl * solUsdRate;
+
+  const winRate = analytics?.winRate ?? 0;
+
+  // Best / worst trades
+  const bestTrade = analytics?.bestTradeSol ?? 0;
+  const losses = closedPositions.filter((p) => (p.pnlSol ?? 0) < 0);
+  const worstTrade = analytics?.worstTradeSol ?? (losses.length > 0 ? Math.min(...losses.map((p) => p.pnlSol ?? 0)) : 0);
+
+  const stats = [
+    {
+      label: "Total PnL",
+      primary: `${pnlSign(totalPnl)}${totalPnl.toFixed(4)} SOL`,
+      secondary: `~$${Math.abs(totalPnlUsd).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      color: pnlColor(totalPnl),
+    },
+    {
+      label: "Today",
+      primary: `${pnlSign(todayPnl)}${todayPnl.toFixed(4)} SOL`,
+      secondary: `~$${Math.abs(todayPnlUsd).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      color: pnlColor(todayPnl),
+    },
+    {
+      label: "Win Rate",
+      primary: analyticsLoading ? null : `${winRate.toFixed(1)}%`,
+      secondary: analyticsLoading ? null : `${analytics?.totalTrades ?? 0} trades`,
+      color: winRate >= 50 ? "#00d672" : "#f23645",
+    },
+    {
+      label: "Best Trade",
+      primary: analyticsLoading ? null : `${pnlSign(bestTrade)}${bestTrade.toFixed(4)}`,
+      secondary: "SOL",
+      color: "#00d672",
+    },
+    {
+      label: "Worst Trade",
+      primary: analyticsLoading ? null : `${worstTrade.toFixed(4)}`,
+      secondary: "SOL",
+      color: "#f23645",
+    },
+  ];
 
   return (
-    <div style={{ background: "#0a0d14", border: "1px solid #1a1f2e", borderRadius: 8 }} className="p-4">
-      {/* Top row: Total value */}
-      <div className="flex items-start justify-between mb-3">
-        <div>
-          <p style={{ color: "#5c6380" }} className="text-[10px] uppercase tracking-wider font-medium mb-1">
-            Portfolio Value
+    <div
+      style={{ background: "#0a0d14", border: "1px solid #1a1f2e", borderRadius: 8 }}
+      className="px-2 py-2.5 flex items-stretch gap-0 overflow-x-auto"
+    >
+      {stats.map((stat, i) => (
+        <div
+          key={stat.label}
+          className="flex-1 min-w-0 px-3 flex flex-col justify-center"
+          style={i < stats.length - 1 ? { borderRight: "1px solid #1a1f2e" } : undefined}
+        >
+          <p style={{ color: "#5c6380" }} className="text-[9px] uppercase tracking-wider font-medium mb-0.5 whitespace-nowrap">
+            {stat.label}
           </p>
-          <p className="font-mono text-2xl font-bold" style={{ color: "#eef0f6" }}>
-            {totalValue.toFixed(4)} <span className="text-sm" style={{ color: "#5c6380" }}>SOL</span>
-          </p>
-          <p className="font-mono text-xs" style={{ color: "#5c6380" }}>
-            ~${totalValueUsd.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </p>
-        </div>
-        <div className="text-right">
-          <p style={{ color: "#5c6380" }} className="text-[10px] uppercase tracking-wider font-medium mb-1">
-            Daily Change
-          </p>
-          <p className="font-mono text-sm font-bold" style={{ color: pnlColor(totalUnrealized) }}>
-            {pnlSign(totalUnrealized)}{totalUnrealized.toFixed(4)} SOL
-          </p>
-        </div>
-      </div>
-
-      {/* P&L row */}
-      <div className="grid grid-cols-2 gap-3 mb-3">
-        <div style={{ background: "#10131c", borderRadius: 6 }} className="p-2.5">
-          <p style={{ color: "#5c6380" }} className="text-[10px] uppercase tracking-wider mb-0.5">
-            Unrealized P&amp;L
-          </p>
-          <p className="font-mono text-sm font-bold" style={{ color: pnlColor(totalUnrealized) }}>
-            {pnlSign(totalUnrealized)}{totalUnrealized.toFixed(4)} SOL
-          </p>
-        </div>
-        <div style={{ background: "#10131c", borderRadius: 6 }} className="p-2.5">
-          <p style={{ color: "#5c6380" }} className="text-[10px] uppercase tracking-wider mb-0.5">
-            Realized P&amp;L
-          </p>
-          {analyticsLoading ? (
-            <Skeleton className="h-5 w-24 rounded" />
+          {stat.primary === null ? (
+            <Skeleton className="h-4 w-16 rounded" />
           ) : (
-            <p className="font-mono text-sm font-bold" style={{ color: pnlColor(realizedPnl) }}>
-              {pnlSign(realizedPnl)}{realizedPnl.toFixed(4)} SOL
+            <p className="font-mono text-xs font-bold whitespace-nowrap" style={{ color: stat.color }}>
+              {stat.primary}
+            </p>
+          )}
+          {stat.secondary === null ? (
+            <Skeleton className="h-3 w-10 rounded mt-0.5" />
+          ) : (
+            <p className="font-mono text-[10px] whitespace-nowrap" style={{ color: "#5c6380" }}>
+              {stat.secondary}
             </p>
           )}
         </div>
-      </div>
-
-      {/* Stats row */}
-      <div className="grid grid-cols-4 gap-2">
-        {[
-          { label: "Win Rate", value: analyticsLoading ? null : `${winRate.toFixed(1)}%`, color: winRate >= 50 ? "#00d672" : "#f23645" },
-          { label: "Trades", value: analyticsLoading ? null : String(totalTrades), color: "#eef0f6" },
-          { label: "Avg Hold", value: analyticsLoading ? null : formatDuration(avgHold), color: "#eef0f6" },
-          { label: "Open", value: String(positions.length), color: "#eef0f6" },
-        ].map((stat) => (
-          <div key={stat.label} style={{ background: "#10131c", borderRadius: 6 }} className="p-2 text-center">
-            <p style={{ color: "#5c6380" }} className="text-[9px] uppercase tracking-wider mb-0.5">
-              {stat.label}
-            </p>
-            {stat.value === null ? (
-              <Skeleton className="h-4 w-10 mx-auto rounded" />
-            ) : (
-              <p className="font-mono text-xs font-bold" style={{ color: stat.color }}>
-                {stat.value}
-              </p>
-            )}
-          </div>
-        ))}
-      </div>
+      ))}
     </div>
   );
 }
@@ -350,8 +352,8 @@ function PositionsTable({
         <span style={{ color: "#5c6380" }} className="text-[10px] uppercase tracking-wider font-medium text-right">Entry</span>
         <span style={{ color: "#5c6380" }} className="text-[10px] uppercase tracking-wider font-medium text-right">Current</span>
         <div className="text-right"><SortHeader label="P&L %" k="pnl" /></div>
-        <div className="text-right"><SortHeader label="P&L SOL" k="size" /></div>
-        <div className="text-right"><SortHeader label="Duration" k="duration" /></div>
+        <div className="text-right"><SortHeader label="Unreal. PnL" k="size" /></div>
+        <div className="text-right"><SortHeader label="Age" k="duration" /></div>
         <span style={{ color: "#5c6380" }} className="text-[10px] uppercase tracking-wider font-medium text-right">Actions</span>
       </div>
 
@@ -433,7 +435,7 @@ function PositionsTable({
                     border: `1px solid ${pct === 100 ? "rgba(242, 54, 69, 0.3)" : "#1a1f2e"}`,
                   }}
                 >
-                  {isSelling && sellingState.pct === pct ? <SellSpinner /> : pct === 100 ? "Close" : `${pct}%`}
+                  {isSelling && sellingState.pct === pct ? <SellSpinner /> : pct === 100 ? "Close All" : `Close ${pct}%`}
                 </button>
               ))}
             </div>
@@ -502,7 +504,7 @@ function MobilePositionCard({
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-2 text-[10px] font-mono mb-2">
+      <div className="grid grid-cols-5 gap-2 text-[10px] font-mono mb-2">
         <div>
           <p style={{ color: "#5c6380" }}>Entry</p>
           <p style={{ color: "#9ca3b8" }}>
@@ -524,7 +526,11 @@ function MobilePositionCard({
           <p style={{ color: "#9ca3b8" }}>{position.entrySol.toFixed(3)}</p>
         </div>
         <div>
-          <p style={{ color: "#5c6380" }}>Duration</p>
+          <p style={{ color: "#5c6380" }}>Unreal. PnL</p>
+          <p style={{ color: pnlColor(pnlSol) }}>{pnlSign(pnlSol)}{pnlSol.toFixed(4)}</p>
+        </div>
+        <div>
+          <p style={{ color: "#5c6380" }}>Age</p>
           <p style={{ color: "#9ca3b8" }}>{formatDurationFromEntry(position.entryTimestamp)}</p>
         </div>
       </div>
@@ -1080,6 +1086,7 @@ export default function MatchesPage() {
             positions={positions}
             analytics={analytics}
             analyticsLoading={analyticsLoading}
+            closedPositions={closedPositions}
           />
         )}
 
