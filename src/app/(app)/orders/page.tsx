@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { api } from "@/lib/api";
-import { useToast } from "@/components/ui/Toast";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { useToast } from "@/components/ui/Toast";
 
 interface LimitOrder {
   id: string;
@@ -84,14 +84,20 @@ export default function OrdersPage() {
 
   const fetchOrders = useCallback(async () => {
     try {
-      const data = await api.get<LimitOrder[]>("/api/orders");
-      setOrders(data);
+      const res = await api.raw("/api/orders");
+      if (res.ok) {
+        const data = await res.json();
+        setOrders(Array.isArray(data) ? data : data.data ?? []);
+      } else {
+        setOrders([]);
+      }
     } catch {
-      toast.add("Failed to load orders", "error");
+      // Backend may not have this endpoint yet — show empty state
+      setOrders([]);
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, []);
 
   useEffect(() => {
     fetchOrders();

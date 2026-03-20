@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useQuickBuy } from "@/hooks/useQuickBuy";
+import { useAuth } from "@/components/providers/AuthProvider";
 import { api } from "@/lib/api";
 import { useMEVProtection } from "@/components/trade/MEVProtection";
 
@@ -25,6 +26,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const toast = useToast();
+  const { logout } = useAuth();
   const { setAmount: setQuickBuyAmount } = useQuickBuy();
   const { enabled: mevEnabled, toggle: toggleMEV } = useMEVProtection();
 
@@ -500,6 +502,14 @@ export default function SettingsPage() {
           className="w-full py-3 rounded-lg bg-green text-bg-primary font-semibold text-sm hover:brightness-110 transition-all disabled:opacity-50"
         >
           {saving ? "Saving..." : "Save Settings"}
+        </button>
+
+        {/* Logout */}
+        <button
+          onClick={logout}
+          className="w-full py-3 rounded-lg border border-red/30 text-red text-sm font-medium hover:bg-red/10 transition-colors"
+        >
+          Log Out
         </button>
       </div>
     </div>

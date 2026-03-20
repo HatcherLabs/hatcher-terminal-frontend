@@ -70,8 +70,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    await api.raw("/api/auth/logout", { method: "POST" });
+    try {
+      await api.raw("/api/auth/logout", { method: "POST" });
+    } catch {
+      // Ignore network errors on logout
+    }
     setUser(null);
+    // Clear local wallet data
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("hatcher_encrypted_wallet");
+      localStorage.removeItem("hatcher_welcomed");
+    }
+    // Redirect to login
+    window.location.href = "/login";
   };
 
   return (
