@@ -5,7 +5,6 @@ import { TopBar } from "./TopBar";
 import { Sidebar } from "./Sidebar";
 import { PositionsBar } from "./PositionsBar";
 import { PriceTicker } from "@/components/ui/PriceTicker";
-import { TrendingTicker } from "@/components/ui/TrendingTicker";
 import { NotificationBell } from "@/components/ui/NotificationBell";
 import { ShortcutsModal } from "@/components/ui/ShortcutsModal";
 import { CommandPalette } from "@/components/ui/CommandPalette";
@@ -93,9 +92,6 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
       <div className="hidden terminal:flex flex-col h-screen w-screen overflow-hidden">
         {/* Top Bar */}
         <TopBar />
-
-        {/* Trending Token Ticker */}
-        <TrendingTicker />
 
         {/* Middle section: sidebar + main content */}
         <div className="flex flex-1 min-h-0">

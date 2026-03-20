@@ -298,12 +298,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
         "funds",
         "sol",
       ]),
-      nav("nav-graveyard", "Go to Graveyard", "/graveyard", [
-        "graveyard",
-        "passed",
-        "rejected",
-      ]),
-      nav("nav-compare", "Go to Compare", "/compare", [
+nav("nav-compare", "Go to Compare", "/compare", [
         "compare",
         "side by side",
         "versus",

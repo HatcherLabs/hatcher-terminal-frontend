@@ -12,7 +12,6 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { VirtualizedTable } from "@/components/ui/VirtualizedTable";
 import { MarketOverview } from "@/components/explore/MarketOverview";
 import { TokenScanner } from "@/components/explore/TokenScanner";
-import { TrendingBar } from "@/components/explore/TrendingBar";
 import { BubbleMap } from "@/components/explore/BubbleMap";
 import { NewTokenBanner } from "@/components/explore/NewTokenBanner";
 import { LiveAge } from "@/components/ui/LiveAge";
@@ -829,9 +828,6 @@ export default function TrenchesPage() {
           </button>
         )}
       </div>
-
-      {/* Trending bar */}
-      <TrendingBar />
 
       {/* New token alerts via WebSocket */}
       {newTokens.length > 0 && (

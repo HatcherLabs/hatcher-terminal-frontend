@@ -26,10 +26,9 @@ const shortcutGroups: ShortcutGroup[] = [
       { keys: ["3"], description: "Go to Watchlist" },
       { keys: ["4"], description: "Go to Portfolio" },
       { keys: ["5"], description: "Go to Orders" },
-      { keys: ["6"], description: "Go to Graveyard" },
-      { keys: ["7"], description: "Go to Alerts" },
-      { keys: ["8"], description: "Go to Smart Money" },
-      { keys: ["9"], description: "Go to Copy Trade" },
+      { keys: ["6"], description: "Go to Alerts" },
+      { keys: ["7"], description: "Go to Smart Money" },
+      { keys: ["8"], description: "Go to Copy Trade" },
     ],
   },
   {

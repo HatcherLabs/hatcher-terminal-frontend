@@ -107,22 +107,6 @@ export function TopBar() {
         )}
       </Link>
 
-      {/* $HATCH Tier Badge */}
-      <Link
-        href="/settings"
-        className="px-1.5 py-0.5 rounded-[3px] text-[9px] font-bold font-mono shrink-0 no-underline hover:opacity-80 transition-opacity"
-        style={{
-          background: "#8b5cf618",
-          color: "#8b5cf6",
-          border: "1px solid #8b5cf625",
-        }}
-      >
-        Egg
-      </Link>
-
-      {/* Separator */}
-      <div className="w-px h-5 shrink-0" style={{ background: "#1a1f2e" }} />
-
       {/* User */}
       <Link href="/settings" className="flex items-center gap-1.5 shrink-0 no-underline hover:opacity-80 transition-opacity">
         <div

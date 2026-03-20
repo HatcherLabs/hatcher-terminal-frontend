@@ -21,10 +21,9 @@ const NAV_ROUTES = [
   "/watchlist",   // 3 - Watchlist
   "/matches",     // 4 - Portfolio
   "/orders",      // 5 - Orders
-  "/graveyard",   // 6 - Graveyard
-  "/alerts",      // 7 - Alerts
-  "/smart-money", // 8 - Smart Money
-  "/copy-trade",  // 9 - Copy Trade
+  "/alerts",      // 6 - Alerts
+  "/smart-money", // 7 - Smart Money
+  "/copy-trade",  // 8 - Copy Trade
 ];
 
 /**
