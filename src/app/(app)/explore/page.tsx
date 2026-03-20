@@ -12,6 +12,7 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { VirtualizedTable } from "@/components/ui/VirtualizedTable";
 import { MarketOverview } from "@/components/explore/MarketOverview";
 import { TokenScanner } from "@/components/explore/TokenScanner";
+import { TrendingBar } from "@/components/explore/TrendingBar";
 import { api } from "@/lib/api";
 
 type ExploreCategory = "new" | "graduating" | "migrated";
@@ -746,6 +747,9 @@ export default function TrenchesPage() {
           </button>
         )}
       </div>
+
+      {/* Trending bar */}
+      <TrendingBar tokens={tokens} />
 
       {/* Tab bar */}
       <nav
