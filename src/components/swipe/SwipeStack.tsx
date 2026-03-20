@@ -573,7 +573,6 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
         isOpen={detailToken !== null}
         onClose={() => setDetailToken(null)}
         onBuy={(token) => handleSwipe("right", token)}
-        onPass={(token) => handleSwipe("left", token)}
       />
     </>
   );

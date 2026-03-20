@@ -67,12 +67,18 @@ interface ExploreTokenDetailProps {
   token: ExploreTokenData | null;
   isOpen: boolean;
   onClose: () => void;
+  onViewDetail?: (token: TokenData) => void;
+  onBuy?: (token: TokenData) => void;
+  anchorRect?: { top: number; left: number; width: number; height: number } | null;
 }
 
 export function ExploreTokenDetail({
   token,
   isOpen,
   onClose,
+  onViewDetail,
+  onBuy,
+  anchorRect,
 }: ExploreTokenDetailProps) {
   const [fullToken, setFullToken] = useState<TokenData | null>(null);
 
@@ -105,6 +111,13 @@ export function ExploreTokenDetail({
   }, [token, isOpen]);
 
   return (
-    <TokenDetailModal token={fullToken} isOpen={isOpen} onClose={onClose} />
+    <TokenDetailModal
+      token={fullToken}
+      isOpen={isOpen}
+      onClose={onClose}
+      onViewDetail={onViewDetail}
+      onBuy={onBuy}
+      anchorRect={anchorRect}
+    />
   );
 }

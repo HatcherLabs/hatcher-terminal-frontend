@@ -1,82 +1,127 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TokenAvatar } from "@/components/ui/TokenAvatar";
 import { RiskBadge } from "@/components/ui/RiskBadge";
-import { TokenLinks } from "./TokenLinks";
-import { TokenChart } from "./TokenChart";
+import { MiniChart } from "./MiniChart";
 import type { TokenData } from "@/types/token";
 import { useSolPriceContext } from "@/components/providers/SolPriceProvider";
+
+/* ── Types ───────────────────────────────────────────── */
+
+interface AnchorRect {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+}
 
 interface TokenDetailModalProps {
   token: TokenData | null;
   isOpen: boolean;
   onClose: () => void;
+  onViewDetail?: (token: TokenData) => void;
   onBuy?: (token: TokenData) => void;
-  onPass?: (token: TokenData) => void;
+  /** Optional rect of the element that triggered the modal */
+  anchorRect?: AnchorRect | null;
 }
 
-function formatNumber(n: number | null | undefined): string {
-  if (n === null || n === undefined) return "";
+/* ── Helpers ─────────────────────────────────────────── */
+
+const MODAL_W = 320;
+const MODAL_GAP = 8;
+
+function fmt(n: number | null | undefined): string {
+  if (n == null) return "--";
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-  return n.toFixed(n < 10 ? 1 : 0);
+  return n.toFixed(n < 1 ? 4 : n < 10 ? 2 : 0);
 }
 
-function tokenAge(dateStr: string): string {
-  const seconds = Math.floor(
-    (Date.now() - new Date(dateStr).getTime()) / 1000
-  );
-  if (seconds < 60) return `${seconds}s`;
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`;
-  return `${Math.floor(seconds / 86400)}d`;
+function pctStr(n: number | null | undefined): string {
+  if (n == null) return "--";
+  const sign = n >= 0 ? "+" : "";
+  return `${sign}${n.toFixed(1)}%`;
 }
 
-function StatValue({
-  value,
-  color,
-}: {
-  value: string;
-  color?: string;
-}) {
-  if (!value) {
-    return (
-      <span className="text-xs font-mono text-text-faint italic">
-        Pending...
-      </span>
-    );
+function pctColor(n: number | null | undefined): string {
+  if (n == null) return "#6b7280";
+  return n >= 0 ? "#00d672" : "#f23645";
+}
+
+function computePosition(
+  anchor: AnchorRect | null | undefined,
+  modalRef: React.RefObject<HTMLDivElement | null>,
+): React.CSSProperties {
+  if (!anchor) {
+    // Center screen fallback
+    return {
+      position: "fixed",
+      top: "50%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+    };
   }
-  return (
-    <span className={`text-sm font-mono font-semibold ${color ?? "text-text-primary"}`}>
-      {value}
-    </span>
-  );
+
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  // Try to place to the right of the anchor
+  let left = anchor.left + anchor.width + MODAL_GAP;
+  if (left + MODAL_W > vw - MODAL_GAP) {
+    // Flip to left side
+    left = anchor.left - MODAL_W - MODAL_GAP;
+  }
+  // Still off-screen? Center horizontally
+  if (left < MODAL_GAP) {
+    left = Math.max(MODAL_GAP, (vw - MODAL_W) / 2);
+  }
+
+  // Vertically align with anchor, but stay on-screen
+  let top = anchor.top;
+  const el = modalRef.current;
+  const modalH = el ? el.offsetHeight : 480;
+  if (top + modalH > vh - MODAL_GAP) {
+    top = vh - modalH - MODAL_GAP;
+  }
+  if (top < MODAL_GAP) {
+    top = MODAL_GAP;
+  }
+
+  return {
+    position: "fixed",
+    top,
+    left,
+  };
 }
+
+/* ── Component ───────────────────────────────────────── */
 
 export function TokenDetailModal({
   token,
   isOpen,
   onClose,
+  onViewDetail,
   onBuy,
-  onPass,
+  anchorRect,
 }: TokenDetailModalProps) {
   const { solPrice: SOL_PRICE_USD } = useSolPriceContext();
   const [copied, setCopied] = useState(false);
-  const [descExpanded, setDescExpanded] = useState(false);
+  const modalRef = useRef<HTMLDivElement | null>(null);
+  const [posStyle, setPosStyle] = useState<React.CSSProperties>({});
 
+  // Recompute position when open/anchor changes
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
+    if (!isOpen) return;
+    // Small delay to let ref mount
+    const raf = requestAnimationFrame(() => {
+      setPosStyle(computePosition(anchorRect, modalRef));
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [isOpen, anchorRect]);
 
+  // Escape to close
   useEffect(() => {
     if (!isOpen) return;
     const handler = (e: KeyboardEvent) => {
@@ -99,265 +144,539 @@ export function TokenDetailModal({
   const mcapUsd =
     token.marketCapSol != null ? token.marketCapSol * SOL_PRICE_USD : null;
   const bondingPct = token.bondingProgress ?? 0;
-  const bondingSol =
-    token.bondingProgress != null
-      ? ((token.bondingProgress / 100) * 85).toFixed(1)
-      : null;
+  const lpBurned = token.riskFactors
+    ? (token.riskFactors as Record<string, unknown>).lpBurned === true
+    : false;
+  const mintRevoked = token.riskFactors
+    ? (token.riskFactors as Record<string, unknown>).mintRevoked === true
+    : false;
 
-  const totalTrades = (token.buyCount ?? 0) + (token.sellCount ?? 0);
-  const buyPressure =
-    totalTrades > 0 ? ((token.buyCount ?? 0) / totalTrades) * 100 : 50;
-
-  const descTruncLen = 120;
-  const descNeedsTruncate =
-    token.description != null && token.description.length > descTruncLen;
-  const displayDesc =
-    descNeedsTruncate && !descExpanded
-      ? token.description!.slice(0, descTruncLen) + "..."
-      : token.description;
+  const hasSocials = token.twitter || token.telegram || token.website;
 
   return (
     <AnimatePresence>
       {isOpen && (
         <>
+          {/* Backdrop */}
           <motion.div
-            key="backdrop"
-            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm"
+            key="modal-backdrop"
+            className="fixed inset-0 z-[60]"
+            style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.15 }}
             onClick={onClose}
             aria-hidden="true"
           />
 
+          {/* Modal */}
           <motion.div
-            key="sheet"
-            className="fixed inset-x-0 bottom-0 z-50 flex justify-center"
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", damping: 30, stiffness: 350 }}
+            key="modal-card"
+            ref={modalRef}
+            className="z-[61]"
+            style={{
+              ...posStyle,
+              width: MODAL_W,
+              maxWidth: "calc(100vw - 16px)",
+            }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${token.name} preview`}
+            onClick={(e) => e.stopPropagation()}
           >
             <div
-              className="w-full max-w-app bg-bg-card rounded-t-[20px] border border-b-0 border-border flex flex-col card-depth"
-              style={{ maxHeight: "85vh" }}
-              role="dialog"
-              aria-modal="true"
-              aria-label={`${token.name} details`}
-              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: "#0a0d14",
+                border: "1px solid #1a1f2e",
+                borderRadius: 12,
+                overflow: "hidden",
+              }}
             >
-              <div className="flex justify-center pt-3 pb-2 shrink-0">
-                <div className="w-10 h-1 rounded-full bg-text-faint" />
-              </div>
-
+              {/* ── Header: Avatar + Name + Ticker + Risk ─── */}
               <div
-                className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 pb-4 space-y-4"
-                style={{ WebkitOverflowScrolling: "touch" }}
+                style={{
+                  padding: "12px 14px 10px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                }}
               >
-                <div className="flex items-center gap-3">
-                  <TokenAvatar
-                    mintAddress={token.mintAddress}
-                    imageUri={token.imageUri}
-                    size={44}
-                    ticker={token.ticker}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-lg font-bold text-text-primary truncate">
-                        {token.name}
-                      </h2>
-                      <span className="text-sm font-mono text-text-muted shrink-0">
-                        ${token.ticker}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <button
-                        onClick={handleCopy}
-                        className="flex items-center gap-1 text-[11px] font-mono text-text-muted hover:text-text-secondary transition-colors"
-                        title="Copy contract address"
-                      >
-                        <span>
-                          {token.mintAddress.slice(0, 6)}...
-                          {token.mintAddress.slice(-4)}
-                        </span>
-                        <span className="text-[10px]">
-                          {copied ? "\u2713" : "\u2398"}
-                        </span>
-                      </button>
-                      <RiskBadge level={token.riskLevel} />
-                    </div>
+                <TokenAvatar
+                  mintAddress={token.mintAddress}
+                  imageUri={token.imageUri}
+                  size={36}
+                  ticker={token.ticker}
+                />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <span
+                      style={{
+                        color: "#e5e7eb",
+                        fontWeight: 700,
+                        fontSize: 14,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {token.name}
+                    </span>
+                    <span
+                      style={{
+                        color: "#6b7280",
+                        fontFamily: "monospace",
+                        fontSize: 12,
+                        flexShrink: 0,
+                      }}
+                    >
+                      ${token.ticker}
+                    </span>
                   </div>
                   <button
-                    onClick={onClose}
-                    className="shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-bg-elevated text-text-muted hover:text-text-primary transition-colors"
-                    aria-label="Close"
+                    onClick={handleCopy}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      padding: 0,
+                      color: "#4b5563",
+                      fontFamily: "monospace",
+                      fontSize: 10,
+                      cursor: "pointer",
+                      marginTop: 1,
+                    }}
+                    title="Copy contract address"
                   >
-                    &#10005;
+                    {token.mintAddress.slice(0, 6)}...
+                    {token.mintAddress.slice(-4)}{" "}
+                    {copied ? "\u2713" : "\u2398"}
                   </button>
                 </div>
-
-                <div className="flex items-baseline gap-2">
-                  <span className="text-[10px] text-text-muted uppercase tracking-wider">
-                    MCap
-                  </span>
-                  {mcapUsd != null ? (
-                    <>
-                      <span className="text-2xl font-bold font-mono text-text-primary">
-                        ${formatNumber(mcapUsd)}
-                      </span>
-                      {token.marketCapSol != null && (
-                        <span className="text-xs font-mono text-text-muted">
-                          ({formatNumber(token.marketCapSol)} SOL)
-                        </span>
-                      )}
-                    </>
-                  ) : token.marketCapSol != null ? (
-                    <span className="text-2xl font-bold font-mono text-text-primary">
-                      {formatNumber(token.marketCapSol)} SOL
-                    </span>
-                  ) : (
-                    <span className="text-sm font-mono text-text-faint italic">
-                      Pending...
-                    </span>
-                  )}
-                </div>
-
-                <div>
-                  <TokenChart mintAddress={token.mintAddress} />
-                </div>
-
-                <div className="grid grid-cols-3 gap-[1px] bg-border rounded-xl overflow-hidden">
-                  <div className="bg-bg-elevated px-3 py-2.5 text-center">
-                    <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">MCap SOL</p>
-                    <StatValue value={formatNumber(token.marketCapSol)} />
-                  </div>
-                  <div className="bg-bg-elevated px-3 py-2.5 text-center">
-                    <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Vol 1h</p>
-                    <StatValue value={token.volume1h != null ? `$${formatNumber(token.volume1h)}` : ""} />
-                  </div>
-                  <div className="bg-bg-elevated px-3 py-2.5 text-center">
-                    <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Holders</p>
-                    <StatValue value={formatNumber(token.holders)} />
-                  </div>
-                  <div className="bg-bg-elevated px-3 py-2.5 text-center">
-                    <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Age</p>
-                    <StatValue value={tokenAge(token.createdAt)} />
-                  </div>
-                  <div className="bg-bg-elevated px-3 py-2.5 text-center">
-                    <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Buys / Sells</p>
-                    {token.buyCount != null || token.sellCount != null ? (
-                      <span className="text-sm font-mono font-semibold">
-                        <span className="text-green">{formatNumber(token.buyCount) || "0"}</span>
-                        <span className="text-text-muted mx-0.5">/</span>
-                        <span className="text-red">{formatNumber(token.sellCount) || "0"}</span>
-                      </span>
-                    ) : (
-                      <span className="text-xs font-mono text-text-faint italic">Pending...</span>
-                    )}
-                  </div>
-                  <div className="bg-bg-elevated px-3 py-2.5 text-center">
-                    <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Dev Hold</p>
-                    <StatValue
-                      value={token.devHoldPct !== null ? `${token.devHoldPct.toFixed(1)}%` : ""}
-                      color={token.devHoldPct !== null && token.devHoldPct > 15 ? "text-red" : undefined}
-                    />
-                  </div>
-                </div>
-
-                <div className="bg-bg-elevated rounded-xl p-3.5 border border-border">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-text-secondary font-medium">Bonding Curve</span>
-                    <span className="text-xs font-mono text-text-primary font-semibold">
-                      {token.bondingProgress != null ? `${token.bondingProgress.toFixed(1)}%` : "0%"}
-                    </span>
-                  </div>
-                  <div className="w-full h-2 bg-bg-primary rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-700 ease-out"
-                      style={{
-                        width: `${Math.min(bondingPct, 100)}%`,
-                        background: bondingPct >= 90 ? "#00d672" : bondingPct >= 50 ? "#f0a000" : "#3b82f6",
-                      }}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between mt-1.5">
-                    <span className="text-[10px] text-text-muted font-mono">{bondingSol ?? "0"} SOL</span>
-                    <span className="text-[10px] text-text-muted font-mono">85 SOL</span>
-                  </div>
-                  {token.isGraduated && (
-                    <div className="mt-2 text-center">
-                      <span className="text-[10px] text-green font-bold uppercase tracking-wider bg-green-dim px-2 py-0.5 rounded-full">
-                        Graduated to Raydium
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {totalTrades > 0 && (
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[10px] text-text-muted uppercase tracking-wider">Buy/Sell Pressure</span>
-                    </div>
-                    <div className="flex h-2 rounded-full overflow-hidden">
-                      <div className="bg-green transition-all duration-500" style={{ width: `${buyPressure}%` }} />
-                      <div className="bg-red transition-all duration-500" style={{ width: `${100 - buyPressure}%` }} />
-                    </div>
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="text-[10px] font-mono text-green">{buyPressure.toFixed(0)}% buys</span>
-                      <span className="text-[10px] font-mono text-red">{(100 - buyPressure).toFixed(0)}% sells</span>
-                    </div>
-                  </div>
-                )}
-
-                {token.description && (
-                  <div>
-                    <p className="text-xs text-text-secondary leading-relaxed">{displayDesc}</p>
-                    {descNeedsTruncate && (
-                      <button
-                        onClick={() => setDescExpanded(!descExpanded)}
-                        className="text-[11px] text-text-muted hover:text-text-secondary mt-1 transition-colors"
-                      >
-                        {descExpanded ? "Show less" : "Show more"}
-                      </button>
-                    )}
-                  </div>
-                )}
-
-                <div>
-                  <TokenLinks
-                    mintAddress={token.mintAddress}
-                    twitter={token.twitter}
-                    telegram={token.telegram}
-                    website={token.website}
-                  />
+                <div style={{ flexShrink: 0 }}>
+                  <RiskBadge level={token.riskLevel} />
                 </div>
               </div>
 
-              <div className="shrink-0 px-4 pb-4 pt-2 border-t border-border bg-bg-card">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => { onPass?.(token); onClose(); }}
-                    className="flex-1 h-12 rounded-xl bg-red/10 border border-red/30 text-red font-bold text-sm flex items-center justify-center gap-2 hover:bg-red/20 transition-colors active:scale-[0.97]"
-                    aria-label="Pass on token"
+              {/* ── Price + Change ─────────────────────────── */}
+              <div
+                style={{
+                  padding: "0 14px 8px",
+                  display: "flex",
+                  alignItems: "baseline",
+                  gap: 8,
+                }}
+              >
+                <span
+                  style={{
+                    color: "#e5e7eb",
+                    fontFamily: "monospace",
+                    fontWeight: 700,
+                    fontSize: 20,
+                  }}
+                >
+                  {mcapUsd != null ? `$${fmt(mcapUsd)}` : token.marketCapSol != null ? `${fmt(token.marketCapSol)} SOL` : "--"}
+                </span>
+                <span
+                  style={{
+                    fontFamily: "monospace",
+                    fontSize: 11,
+                    color: pctColor(token.priceChange5m),
+                  }}
+                >
+                  5m {pctStr(token.priceChange5m)}
+                </span>
+                <span
+                  style={{
+                    fontFamily: "monospace",
+                    fontSize: 11,
+                    color: pctColor(token.priceChange1h),
+                  }}
+                >
+                  1h {pctStr(token.priceChange1h)}
+                </span>
+              </div>
+
+              {/* ── 4-Cell Metrics Grid ───────────────────── */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: 1,
+                  background: "#1a1f2e",
+                  margin: "0 14px",
+                  borderRadius: 8,
+                  overflow: "hidden",
+                }}
+              >
+                {[
+                  { label: "MCap", value: mcapUsd != null ? `$${fmt(mcapUsd)}` : fmt(token.marketCapSol) },
+                  { label: "Holders", value: fmt(token.holders) },
+                  { label: "Vol 1h", value: token.volume1h != null ? `$${fmt(token.volume1h)}` : "--" },
+                  { label: "Bonding", value: token.bondingProgress != null ? `${token.bondingProgress.toFixed(1)}%` : "--" },
+                ].map((cell) => (
+                  <div
+                    key={cell.label}
+                    style={{
+                      background: "#0f1219",
+                      padding: "8px 10px",
+                      textAlign: "center",
+                    }}
                   >
-                    <span>&#10005;</span>
-                    Pass
-                  </button>
-                  <button
-                    onClick={() => { onBuy?.(token); onClose(); }}
-                    className="flex-1 h-12 rounded-xl bg-green/10 border border-green/30 text-green font-bold text-sm flex items-center justify-center gap-2 hover:bg-green/20 transition-colors active:scale-[0.97]"
-                    aria-label="Buy token"
+                    <div
+                      style={{
+                        color: "#4b5563",
+                        fontSize: 9,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.05em",
+                        marginBottom: 2,
+                      }}
+                    >
+                      {cell.label}
+                    </div>
+                    <div
+                      style={{
+                        color: "#d1d5db",
+                        fontFamily: "monospace",
+                        fontSize: 13,
+                        fontWeight: 600,
+                      }}
+                    >
+                      {cell.value}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* ── Mini Sparkline ─────────────────────────── */}
+              <div
+                style={{
+                  padding: "10px 14px 6px",
+                  display: "flex",
+                  justifyContent: "center",
+                }}
+              >
+                <MiniChart
+                  mintAddress={token.mintAddress}
+                  width={280}
+                  height={48}
+                />
+              </div>
+
+              {/* ── Bonding Progress Bar ──────────────────── */}
+              <div style={{ padding: "4px 14px 8px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 3,
+                  }}
+                >
+                  <span style={{ color: "#6b7280", fontSize: 10 }}>
+                    Bonding Curve
+                  </span>
+                  <span
+                    style={{
+                      color: "#d1d5db",
+                      fontFamily: "monospace",
+                      fontSize: 10,
+                      fontWeight: 600,
+                    }}
                   >
-                    <span className="text-base">&#9829;</span>
-                    Buy
-                  </button>
+                    {token.bondingProgress != null
+                      ? `${token.bondingProgress.toFixed(1)}%`
+                      : "0%"}
+                  </span>
                 </div>
+                <div
+                  style={{
+                    width: "100%",
+                    height: 4,
+                    background: "#1a1f2e",
+                    borderRadius: 2,
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      height: "100%",
+                      width: `${Math.min(bondingPct, 100)}%`,
+                      borderRadius: 2,
+                      background:
+                        bondingPct >= 90
+                          ? "#00d672"
+                          : bondingPct >= 50
+                            ? "#f0a000"
+                            : "#3b82f6",
+                      transition: "width 0.5s ease-out",
+                    }}
+                  />
+                </div>
+                {token.isGraduated && (
+                  <div style={{ textAlign: "center", marginTop: 4 }}>
+                    <span
+                      style={{
+                        fontSize: 9,
+                        fontWeight: 700,
+                        color: "#00d672",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.05em",
+                        background: "rgba(0,214,114,0.1)",
+                        padding: "2px 8px",
+                        borderRadius: 9999,
+                      }}
+                    >
+                      Graduated to Raydium
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* ── Security Indicators ───────────────────── */}
+              <div
+                style={{
+                  padding: "4px 14px 8px",
+                  display: "flex",
+                  gap: 8,
+                  flexWrap: "wrap",
+                }}
+              >
+                <SecurityPill
+                  label="LP Burned"
+                  active={lpBurned}
+                />
+                <SecurityPill
+                  label="Mint Revoked"
+                  active={mintRevoked}
+                />
+                {token.devHoldPct != null && (
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 4,
+                      fontSize: 10,
+                      fontFamily: "monospace",
+                      padding: "3px 8px",
+                      borderRadius: 6,
+                      background:
+                        token.devHoldPct > 15
+                          ? "rgba(242,54,69,0.1)"
+                          : "rgba(0,214,114,0.1)",
+                      color:
+                        token.devHoldPct > 15 ? "#f23645" : "#00d672",
+                      border: `1px solid ${token.devHoldPct > 15 ? "rgba(242,54,69,0.2)" : "rgba(0,214,114,0.2)"}`,
+                    }}
+                  >
+                    Dev {token.devHoldPct.toFixed(1)}%
+                  </span>
+                )}
+              </div>
+
+              {/* ── Social Links ──────────────────────────── */}
+              {hasSocials && (
+                <div
+                  style={{
+                    padding: "2px 14px 8px",
+                    display: "flex",
+                    gap: 6,
+                    justifyContent: "center",
+                  }}
+                >
+                  {token.twitter && (
+                    <SocialLink
+                      href={token.twitter}
+                      label="X"
+                      hoverColor="#1DA1F2"
+                    />
+                  )}
+                  {token.telegram && (
+                    <SocialLink
+                      href={
+                        token.telegram.startsWith("http")
+                          ? token.telegram
+                          : `https://t.me/${token.telegram}`
+                      }
+                      label="TG"
+                      hoverColor="#229ED9"
+                    />
+                  )}
+                  {token.website && (
+                    <SocialLink
+                      href={
+                        token.website.startsWith("http")
+                          ? token.website
+                          : `https://${token.website}`
+                      }
+                      label="Web"
+                      hoverColor="#00d672"
+                    />
+                  )}
+                  <SocialLink
+                    href={`https://pump.fun/coin/${token.mintAddress}`}
+                    label="PF"
+                    hoverColor="#00d672"
+                  />
+                  <SocialLink
+                    href={`https://dexscreener.com/solana/${token.mintAddress}`}
+                    label="DS"
+                    hoverColor="#00d672"
+                  />
+                </div>
+              )}
+
+              {/* ── Action Buttons ────────────────────────── */}
+              <div
+                style={{
+                  padding: "6px 14px 12px",
+                  display: "flex",
+                  gap: 8,
+                }}
+              >
+                <button
+                  onClick={() => {
+                    onViewDetail?.(token);
+                    onClose();
+                  }}
+                  style={{
+                    flex: 1,
+                    height: 36,
+                    borderRadius: 8,
+                    border: "1px solid #1a1f2e",
+                    background: "#0f1219",
+                    color: "#d1d5db",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    transition: "background 0.15s, border-color 0.15s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "#161b26";
+                    e.currentTarget.style.borderColor = "#2a3040";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "#0f1219";
+                    e.currentTarget.style.borderColor = "#1a1f2e";
+                  }}
+                >
+                  View Detail
+                </button>
+                <button
+                  onClick={() => {
+                    onBuy?.(token);
+                    onClose();
+                  }}
+                  style={{
+                    flex: 1,
+                    height: 36,
+                    borderRadius: 8,
+                    border: "1px solid rgba(0,214,114,0.3)",
+                    background: "rgba(0,214,114,0.1)",
+                    color: "#00d672",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    transition: "background 0.15s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(0,214,114,0.2)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "rgba(0,214,114,0.1)";
+                  }}
+                >
+                  Quick Buy
+                </button>
               </div>
             </div>
           </motion.div>
         </>
       )}
     </AnimatePresence>
+  );
+}
+
+/* ── Sub-components ──────────────────────────────────── */
+
+function SecurityPill({
+  label,
+  active,
+}: {
+  label: string;
+  active: boolean;
+}) {
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 4,
+        fontSize: 10,
+        fontFamily: "monospace",
+        padding: "3px 8px",
+        borderRadius: 6,
+        background: active
+          ? "rgba(0,214,114,0.1)"
+          : "rgba(107,114,128,0.1)",
+        color: active ? "#00d672" : "#4b5563",
+        border: `1px solid ${active ? "rgba(0,214,114,0.2)" : "rgba(107,114,128,0.15)"}`,
+      }}
+    >
+      <span style={{ fontSize: 9 }}>{active ? "\u2713" : "\u2717"}</span>
+      {label}
+    </span>
+  );
+}
+
+function SocialLink({
+  href,
+  label,
+  hoverColor,
+}: {
+  href: string;
+  label: string;
+  hoverColor: string;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: 32,
+        height: 28,
+        borderRadius: 6,
+        background: "#0f1219",
+        border: "1px solid #1a1f2e",
+        color: "#6b7280",
+        fontSize: 10,
+        fontWeight: 700,
+        textDecoration: "none",
+        transition: "color 0.15s, border-color 0.15s",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.color = hoverColor;
+        e.currentTarget.style.borderColor = `${hoverColor}44`;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.color = "#6b7280";
+        e.currentTarget.style.borderColor = "#1a1f2e";
+      }}
+    >
+      {label}
+    </a>
   );
 }
