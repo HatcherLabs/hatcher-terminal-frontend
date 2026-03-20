@@ -1258,6 +1258,305 @@ export default function TokenTerminalPage() {
             </div>
           )}
 
+          {/* ====== TRADE TAB ====== */}
+          {activeLeftTab === "trade" && (
+            <div className="space-y-3">
+              {/* Comprehensive trading interface */}
+              <div
+                className="rounded overflow-hidden"
+                style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
+              >
+                {/* BUY / SELL toggle */}
+                <div className="flex" style={{ borderBottom: "1px solid #1a1f2e" }}>
+                  <button
+                    onClick={() => setActiveTradeTab("buy")}
+                    className="flex-1 py-3 text-sm font-bold transition-all duration-200"
+                    style={{
+                      color: activeTradeTab === "buy" ? "#00d672" : "#5c6380",
+                      background: activeTradeTab === "buy" ? "rgba(0,214,114,0.06)" : "transparent",
+                      borderBottom: activeTradeTab === "buy" ? "2px solid #00d672" : "2px solid transparent",
+                    }}
+                  >
+                    BUY
+                  </button>
+                  <button
+                    onClick={() => setActiveTradeTab("sell")}
+                    className="flex-1 py-3 text-sm font-bold transition-all duration-200"
+                    style={{
+                      color: activeTradeTab === "sell" ? "#f23645" : "#5c6380",
+                      background: activeTradeTab === "sell" ? "rgba(242,54,69,0.06)" : "transparent",
+                      borderBottom: activeTradeTab === "sell" ? "2px solid #f23645" : "2px solid transparent",
+                    }}
+                  >
+                    SELL
+                  </button>
+                </div>
+
+                <div className="p-4 space-y-4">
+                  {/* No wallet key warning */}
+                  {!hasKey && (
+                    <div
+                      className="rounded px-3 py-2 text-[11px]"
+                      style={{
+                        background: "rgba(240,160,0,0.08)",
+                        border: "1px solid rgba(240,160,0,0.2)",
+                        color: "#f0a000",
+                      }}
+                    >
+                      Import a wallet key in Settings to enable trading.
+                    </div>
+                  )}
+
+                  {/* Current price display */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase tracking-wider" style={{ color: "#5c6380" }}>Current Price</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold font-mono" style={{ color: "#eef0f6" }}>
+                        {priceSol != null ? `${formatPriceSol(priceSol)} SOL` : "\u2014"}
+                      </span>
+                      {priceChange5m !== null && (
+                        <span
+                          className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded"
+                          style={{
+                            color: priceChange5m > 0 ? "#00d672" : priceChange5m < 0 ? "#f23645" : "#5c6380",
+                            background: priceChange5m > 0 ? "rgba(0,214,114,0.1)" : priceChange5m < 0 ? "rgba(242,54,69,0.1)" : "rgba(92,99,128,0.1)",
+                          }}
+                        >
+                          {priceChange5m > 0 ? "+" : ""}{priceChange5m.toFixed(1)}%
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {activeTradeTab === "buy" ? (
+                    <>
+                      {/* Amount selection */}
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color: "#5c6380" }}>
+                          Amount (SOL)
+                        </p>
+                        <div className="grid grid-cols-5 gap-1.5">
+                          {[0.1, 0.25, 0.5, 1.0, 2.0].map((amt) => (
+                            <button
+                              key={amt}
+                              onClick={() => handleQuickAmount(amt)}
+                              className="py-2 rounded text-xs font-mono font-medium transition-colors"
+                              style={{
+                                background: tradeAmount === amt ? "rgba(0,214,114,0.1)" : "#10131c",
+                                border: tradeAmount === amt ? "1px solid rgba(0,214,114,0.3)" : "1px solid #1a1f2e",
+                                color: tradeAmount === amt ? "#00d672" : "#9ca3b8",
+                              }}
+                            >
+                              {amt}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Custom amount input */}
+                      <div>
+                        <label className="text-[10px] uppercase tracking-wider mb-1.5 block" style={{ color: "#5c6380" }}>
+                          Custom Amount
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            value={customAmount}
+                            onChange={(e) => setCustomAmount(e.target.value)}
+                            placeholder={String(quickBuyAmount)}
+                            className="w-full rounded px-3 py-2.5 text-sm font-mono focus:outline-none transition-all"
+                            style={{ background: "#10131c", border: "1px solid #1a1f2e", color: "#eef0f6" }}
+                            onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(0,214,114,0.4)"; }}
+                            onBlur={(e) => { e.currentTarget.style.borderColor = "#1a1f2e"; }}
+                            step="0.01"
+                            min="0"
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-mono" style={{ color: "#5c6380" }}>
+                            SOL
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Quote estimate */}
+                      {(quoteEstimate || quoteFetching) && (
+                        <div className="flex items-center justify-between text-[11px] px-1">
+                          <span style={{ color: "#5c6380" }}>Est. output</span>
+                          <span className="font-mono" style={{ color: "#9ca3b8" }}>
+                            {quoteFetching ? (
+                              <span
+                                className="inline-block w-3 h-3 rounded-full animate-spin"
+                                style={{ border: "1px solid rgba(156,163,184,0.3)", borderTopColor: "#9ca3b8" }}
+                              />
+                            ) : quoteEstimate}
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {/* Sell percentage */}
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color: "#5c6380" }}>
+                          Sell Percentage
+                        </p>
+                        <div className="grid grid-cols-4 gap-1.5">
+                          {[25, 50, 75, 100].map((pct) => (
+                            <button
+                              key={pct}
+                              onClick={() => setSellPercent(pct)}
+                              className="py-2 rounded text-xs font-mono font-medium transition-colors"
+                              style={{
+                                background: sellPercent === pct ? "rgba(242,54,69,0.1)" : "#10131c",
+                                border: sellPercent === pct ? "1px solid rgba(242,54,69,0.3)" : "1px solid #1a1f2e",
+                                color: sellPercent === pct ? "#f23645" : "#9ca3b8",
+                              }}
+                            >
+                              {pct}%
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Open position info */}
+                      {openPosition ? (
+                        <div className="rounded p-3 space-y-2" style={{ background: "#10131c", border: "1px solid #1a1f2e" }}>
+                          <div className="flex items-center justify-between text-[11px]">
+                            <span style={{ color: "#5c6380" }}>Position</span>
+                            <span className="font-mono" style={{ color: "#eef0f6" }}>{openPosition.entrySol.toFixed(4)} SOL</span>
+                          </div>
+                          <div className="flex items-center justify-between text-[11px]">
+                            <span style={{ color: "#5c6380" }}>Tokens</span>
+                            <span className="font-mono" style={{ color: "#eef0f6" }}>{formatNumber(openPosition.entryTokenAmount)}</span>
+                          </div>
+                          {openPosition.pnlPercent != null && (
+                            <div className="flex items-center justify-between text-[11px]">
+                              <span style={{ color: "#5c6380" }}>P&L</span>
+                              <span className="font-mono font-semibold" style={{ color: openPosition.pnlPercent >= 0 ? "#00d672" : "#f23645" }}>
+                                {openPosition.pnlPercent >= 0 ? "+" : ""}{openPosition.pnlPercent.toFixed(1)}%
+                                {openPosition.pnlSol != null && ` (${openPosition.pnlSol >= 0 ? "+" : ""}${openPosition.pnlSol.toFixed(4)} SOL)`}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="rounded p-3 text-center" style={{ background: "#10131c", border: "1px solid #1a1f2e" }}>
+                          <p className="text-[11px]" style={{ color: "#5c6380" }}>No open position for this token.</p>
+                        </div>
+                      )}
+
+                      {/* Sell quote estimate */}
+                      {(quoteEstimate || quoteFetching) && (
+                        <div className="flex items-center justify-between text-[11px] px-1">
+                          <span style={{ color: "#5c6380" }}>Est. output</span>
+                          <span className="font-mono" style={{ color: "#9ca3b8" }}>
+                            {quoteFetching ? (
+                              <span
+                                className="inline-block w-3 h-3 rounded-full animate-spin"
+                                style={{ border: "1px solid rgba(156,163,184,0.3)", borderTopColor: "#9ca3b8" }}
+                              />
+                            ) : quoteEstimate}
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* Trade summary */}
+                  <div className="rounded p-3 space-y-1.5" style={{ background: "#10131c", border: "1px solid #1a1f2e" }}>
+                    {activeTradeTab === "buy" ? (
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span style={{ color: "#5c6380" }}>You pay</span>
+                        <span className="font-mono" style={{ color: "#eef0f6" }}>{isNaN(tradeAmount) ? "0" : tradeAmount} SOL</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span style={{ color: "#5c6380" }}>Selling</span>
+                        <span className="font-mono" style={{ color: "#eef0f6" }}>{sellPercent}% of position</span>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span style={{ color: "#5c6380" }}>Slippage</span>
+                      <span className="font-mono" style={{ color: "#9ca3b8" }}>Auto</span>
+                    </div>
+                    {liveData?.priceSol != null && (
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span style={{ color: "#5c6380" }}>Price</span>
+                        <span className="font-mono" style={{ color: "#9ca3b8" }}>{formatPriceSol(liveData.priceSol)} SOL</span>
+                      </div>
+                    )}
+                    {marketCapUsd != null && (
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span style={{ color: "#5c6380" }}>MCap</span>
+                        <span className="font-mono" style={{ color: "#9ca3b8" }}>{formatUsd(marketCapUsd)}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Price impact warning */}
+                  {activeTradeTab === "buy" &&
+                    !isNaN(tradeAmount) &&
+                    tradeAmount > 0 &&
+                    marketCapSol != null &&
+                    marketCapSol > 0 &&
+                    (tradeAmount / marketCapSol) * 100 > 5 && (
+                      <div
+                        className="flex items-center gap-1.5 rounded px-2.5 py-1.5 text-[11px]"
+                        style={{ background: "rgba(242,54,69,0.08)", border: "1px solid rgba(242,54,69,0.2)", color: "#f23645" }}
+                      >
+                        <span>&#9888;</span>
+                        <span>High price impact (~{((tradeAmount / marketCapSol) * 100).toFixed(1)}% of market cap)</span>
+                      </div>
+                    )}
+
+                  {/* Execute Trade button */}
+                  <button
+                    onClick={handleTrade}
+                    disabled={
+                      tradeLoading ||
+                      !hasKey ||
+                      (activeTradeTab === "buy"
+                        ? isNaN(tradeAmount) || tradeAmount <= 0
+                        : !openPosition)
+                    }
+                    className="w-full py-3.5 rounded font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
+                    style={{
+                      background: activeTradeTab === "buy"
+                        ? "linear-gradient(135deg, #00d672 0%, #00b060 100%)"
+                        : "linear-gradient(135deg, #f23645 0%, #cc2e49 100%)",
+                      color: activeTradeTab === "buy" ? "#04060b" : "#ffffff",
+                      boxShadow: activeTradeTab === "buy"
+                        ? "0 0 16px rgba(0,214,114,0.2), 0 2px 8px rgba(0,0,0,0.3)"
+                        : "0 0 16px rgba(242,54,69,0.2), 0 2px 8px rgba(0,0,0,0.3)",
+                    }}
+                  >
+                    {tradeLoading ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <span
+                          className="w-3.5 h-3.5 rounded-full animate-spin"
+                          style={{ border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "currentColor" }}
+                        />
+                        Processing...
+                      </span>
+                    ) : !hasKey ? (
+                      "Import Key to Trade"
+                    ) : activeTradeTab === "buy" ? (
+                      `Buy ${isNaN(tradeAmount) ? "" : tradeAmount + " SOL"}`
+                    ) : !openPosition ? (
+                      "No Position to Sell"
+                    ) : (
+                      `Sell ${sellPercent}%`
+                    )}
+                  </button>
+
+                  {/* Keyboard shortcut hints */}
+                  <p className="text-center text-[9px] font-mono" style={{ color: "#363d54" }}>
+                    Press <span style={{ color: "#5c6380", background: "#10131c", padding: "1px 4px", borderRadius: 3, border: "1px solid #1a1f2e" }}>B</span> to buy, <span style={{ color: "#5c6380", background: "#10131c", padding: "1px 4px", borderRadius: 3, border: "1px solid #1a1f2e" }}>S</span> to sell
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* ====== TRADES TAB ====== */}
           {activeLeftTab === "trades" && (
             <div
@@ -2239,6 +2538,11 @@ export default function TokenTerminalPage() {
                   `Execute Sell ${sellPercent}%`
                 )}
               </button>
+
+              {/* Keyboard shortcut hints */}
+              <p className="text-center text-[9px] font-mono mt-1" style={{ color: "#363d54" }}>
+                <span style={{ color: "#5c6380", background: "#10131c", padding: "1px 4px", borderRadius: 3, border: "1px solid #1a1f2e" }}>B</span> buy &middot; <span style={{ color: "#5c6380", background: "#10131c", padding: "1px 4px", borderRadius: 3, border: "1px solid #1a1f2e" }}>S</span> sell
+              </p>
             </div>
           </div>
         </div>
