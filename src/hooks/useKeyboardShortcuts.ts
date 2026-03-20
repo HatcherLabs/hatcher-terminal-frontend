@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useQuickTrade } from "@/components/providers/QuickTradeProvider";
+import { useWatchlist } from "@/components/providers/WatchlistProvider";
 
 interface KeyboardShortcutsOptions {
   onOpenShortcutsModal: () => void;
@@ -13,9 +14,9 @@ interface KeyboardShortcutsOptions {
   isShortcutsModalOpen: boolean;
 }
 
-/** Navigation routes indexed 1-7 (matches sidebar order) */
+/** Navigation routes indexed 1-5 (matches sidebar order) */
 const NAV_ROUTES = [
-  "/swipe",      // 1 - Discover
+  "/swipe",      // 1 - Swipe / Discover
   "/explore",    // 2 - Explore
   "/matches",    // 3 - Portfolio
   "/graveyard",  // 4 - Passed
@@ -25,8 +26,34 @@ const NAV_ROUTES = [
 ];
 
 /**
+ * Returns true when the keyboard event target is an editable element
+ * (input, textarea, select, contenteditable) and non-global shortcuts
+ * should be suppressed.
+ */
+function isEditableTarget(e: KeyboardEvent): boolean {
+  const target = e.target as HTMLElement;
+  const tagName = target.tagName;
+  return (
+    tagName === "INPUT" ||
+    tagName === "TEXTAREA" ||
+    tagName === "SELECT" ||
+    target.isContentEditable
+  );
+}
+
+/**
  * Central keyboard shortcut handler for the Hatcher Terminal.
  * Attaches a single global keydown listener and dispatches actions.
+ *
+ * Shortcuts:
+ *   Escape         Close any open modal / panel (always fires)
+ *   Ctrl+K / Cmd+K Toggle command palette (fires even in inputs)
+ *   /              Open command palette
+ *   ?              Open shortcuts help modal
+ *   1-7            Navigate to pages (Swipe, Explore, Portfolio, Passed, Compare, Wallet, Settings)
+ *   b / B          Quick buy (when a token is selected)
+ *   s / S          Quick sell (when a token is selected)
+ *   w / W          Toggle watchlist for current token
  */
 export function useKeyboardShortcuts({
   onOpenShortcutsModal,
@@ -38,14 +65,17 @@ export function useKeyboardShortcuts({
 }: KeyboardShortcutsOptions): void {
   const router = useRouter();
   const pathname = usePathname();
-  const { isOpen: isQuickTradeOpen, closePanel: closeQuickTrade, openPanel: openQuickTrade, selectedToken } = useQuickTrade();
+  const {
+    isOpen: isQuickTradeOpen,
+    closePanel: closeQuickTrade,
+    openPanel: openQuickTrade,
+    selectedToken,
+  } = useQuickTrade();
+  const { isWatchlisted, addToWatchlist, removeFromWatchlist } = useWatchlist();
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      const target = e.target as HTMLElement;
-      const tagName = target.tagName;
-
-      // Always handle Escape regardless of focus
+      // ── Escape: always handle regardless of focus ──
       if (e.key === "Escape") {
         if (isCommandPaletteOpen) {
           onCloseCommandPalette();
@@ -65,7 +95,7 @@ export function useKeyboardShortcuts({
         return;
       }
 
-      // Ctrl+K / Cmd+K: command palette (works even in inputs)
+      // ── Ctrl+K / Cmd+K: command palette (works even in inputs) ──
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         if (isCommandPaletteOpen) {
@@ -76,21 +106,14 @@ export function useKeyboardShortcuts({
         return;
       }
 
-      // Ignore all other shortcuts when focus is in input/textarea/select
-      if (
-        tagName === "INPUT" ||
-        tagName === "TEXTAREA" ||
-        tagName === "SELECT" ||
-        target.isContentEditable
-      ) {
-        return;
-      }
+      // ── All remaining shortcuts are suppressed when typing in inputs ──
+      if (isEditableTarget(e)) return;
 
-      // Don't handle shortcuts when modifiers are held (except the ones above)
+      // Don't handle shortcuts when other modifiers are held
       if (e.metaKey || e.ctrlKey || e.altKey) return;
 
       switch (e.key) {
-        // "/" - Focus search / open command palette
+        // "/" - Open command palette
         case "/": {
           e.preventDefault();
           onOpenCommandPalette();
@@ -100,12 +123,15 @@ export function useKeyboardShortcuts({
         // "?" - Open shortcuts help modal
         case "?": {
           e.preventDefault();
-          onOpenShortcutsModal();
+          if (isShortcutsModalOpen) {
+            onCloseShortcutsModal();
+          } else {
+            onOpenShortcutsModal();
+          }
           break;
         }
 
-        // Arrow keys - Swipe (handled by SwipeStack itself, we don't duplicate)
-        // "B" - Open quick trade buy tab
+        // "B" - Open quick trade (buy)
         case "b":
         case "B": {
           if (selectedToken) {
@@ -114,11 +140,29 @@ export function useKeyboardShortcuts({
           break;
         }
 
-        // "S" - Open quick trade sell tab
+        // "S" - Open quick trade (sell)
         case "s":
         case "S": {
           if (selectedToken) {
             openQuickTrade();
+          }
+          break;
+        }
+
+        // "W" - Toggle watchlist for current token
+        case "w":
+        case "W": {
+          if (selectedToken) {
+            if (isWatchlisted(selectedToken.mintAddress)) {
+              removeFromWatchlist(selectedToken.mintAddress);
+            } else {
+              addToWatchlist({
+                mintAddress: selectedToken.mintAddress,
+                name: selectedToken.name,
+                ticker: selectedToken.ticker,
+                imageUri: selectedToken.imageUri,
+              });
+            }
           }
           break;
         }
@@ -155,6 +199,9 @@ export function useKeyboardShortcuts({
     closeQuickTrade,
     openQuickTrade,
     selectedToken,
+    isWatchlisted,
+    addToWatchlist,
+    removeFromWatchlist,
     onOpenShortcutsModal,
     onOpenCommandPalette,
     onCloseCommandPalette,
