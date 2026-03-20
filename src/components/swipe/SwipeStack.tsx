@@ -484,11 +484,11 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
-            <span className="text-red/50">&larr; PASS</span>
+            <span className="text-red/50">&larr; NOPE</span>
             <span className="mx-4 text-text-faint">|</span>
             <span className="text-amber/50">&uarr; WATCH</span>
             <span className="mx-4 text-text-faint">|</span>
-            <span className="text-green/50">BUY &rarr;</span>
+            <span className="text-green/50">APE IN &rarr;</span>
           </motion.p>
         )}
 

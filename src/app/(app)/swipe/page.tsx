@@ -86,8 +86,8 @@ export default function SwipePage() {
     <ErrorBoundary fallbackTitle="Swipe feed error">
       <SwipeTutorialOverlay />
       <div className="flex flex-col items-center pt-2">
-        <h1 className="text-lg font-bold text-text-primary tracking-tight mb-3">
-          SOL <span className="text-gradient-green">TRENCHES</span>
+        <h1 className="text-lg font-bold tracking-tight mb-3" style={{ color: "#ffffff" }}>
+          DISCOVER <span style={{ color: "#00ff88" }}>TOKENS</span>
         </h1>
 
         {/* Tab bar */}

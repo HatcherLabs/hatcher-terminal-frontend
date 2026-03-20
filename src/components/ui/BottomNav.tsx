@@ -17,11 +17,11 @@ const navItems = [
   },
   {
     href: "/explore",
-    label: "Explore",
+    label: "Trenches",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <circle cx="12" cy="12" r="10" />
-        <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+        <path d="M3 3v18h18" />
+        <path d="M7 17l4-8 4 4 6-10" />
       </svg>
     ),
   },

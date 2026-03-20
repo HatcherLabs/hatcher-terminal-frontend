@@ -14,7 +14,7 @@ export function SwipeOverlay({ direction, opacity }: SwipeOverlayProps) {
 
   const config = {
     left: {
-      text: "PASS",
+      text: "NOPE",
       color: "#ff3b5c",
       colorDim: "rgba(255, 59, 92, 0.08)",
       icon: (
@@ -26,7 +26,7 @@ export function SwipeOverlay({ direction, opacity }: SwipeOverlayProps) {
       rotation: -20,
     },
     right: {
-      text: "BUY",
+      text: "APE IN",
       color: "#00ff88",
       colorDim: "rgba(0, 255, 136, 0.08)",
       icon: (

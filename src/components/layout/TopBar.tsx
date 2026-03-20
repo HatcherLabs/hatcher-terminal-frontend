@@ -13,11 +13,17 @@ export function TopBar() {
       <header className="h-12 bg-bg-card border-b border-border flex items-center px-4 gap-4">
         {/* Logo */}
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-accent font-bold text-lg tracking-widest font-mono">
-            HATCHER
-          </span>
-          <span className="text-text-faint text-[10px] font-mono uppercase tracking-wider hidden xl:inline">
-            Terminal
+          <div
+            className="w-6 h-6 rounded flex items-center justify-center"
+            style={{
+              background: "linear-gradient(135deg, rgba(124,77,255,0.2) 0%, rgba(0,255,136,0.1) 100%)",
+              border: "1px solid rgba(124,77,255,0.25)",
+            }}
+          >
+            <span className="text-[10px] font-black" style={{ color: "#7c4dff" }}>H</span>
+          </div>
+          <span className="text-sm font-bold tracking-tight" style={{ color: "#e0e0e8" }}>
+            hatcher<span style={{ color: "#7c4dff" }}>.trade</span>
           </span>
         </div>
 

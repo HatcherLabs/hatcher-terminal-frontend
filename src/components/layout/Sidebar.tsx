@@ -9,21 +9,23 @@ import { useNotifications } from "@/components/providers/NotificationProvider";
 const navItems = [
   {
     href: "/swipe",
-    label: "Discover",
+    label: "Swipe",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-[18px] h-[18px]">
-        <rect x="2" y="3" width="20" height="18" rx="3" />
-        <path d="M8 21V7a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v14" />
+        <rect x="4" y="2" width="16" height="18" rx="2" />
+        <path d="M8 22h8" />
+        <path d="M12 18v4" />
+        <path d="M9 10l3-3 3 3" />
       </svg>
     ),
   },
   {
     href: "/explore",
-    label: "Explore",
+    label: "Trenches",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-[18px] h-[18px]">
-        <circle cx="12" cy="12" r="10" />
-        <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+        <path d="M3 3v18h18" />
+        <path d="M7 17l4-8 4 4 6-10" />
       </svg>
     ),
   },

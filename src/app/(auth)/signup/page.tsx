@@ -111,8 +111,17 @@ export default function SignupPage() {
       <div className="max-w-sm w-full space-y-8 relative z-10">
         <div className="text-center space-y-2">
           <Link href="/" className="inline-block text-xs font-mono text-text-muted hover:text-green transition-colors mb-4">
-            &larr; Back to Hatcher
+            &larr; Back to hatcher.trade
           </Link>
+          <div
+            className="w-10 h-10 rounded-xl mx-auto mb-3 flex items-center justify-center"
+            style={{
+              background: "linear-gradient(135deg, rgba(124,77,255,0.15) 0%, rgba(0,255,136,0.1) 100%)",
+              border: "1px solid rgba(124,77,255,0.2)",
+            }}
+          >
+            <span className="text-base font-black" style={{ color: "#7c4dff" }}>H</span>
+          </div>
           <h1 className="text-2xl font-bold text-text-primary tracking-tight">Join the Trenches</h1>
           <p className="text-sm text-text-secondary font-light">Create your account to start trading</p>
         </div>

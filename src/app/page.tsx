@@ -120,11 +120,16 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div
-              className="w-2 h-2 rounded-full animate-pulse"
-              style={{ backgroundColor: "#00ff88" }}
-            />
+              className="w-7 h-7 rounded-lg flex items-center justify-center"
+              style={{
+                background: "linear-gradient(135deg, rgba(124,77,255,0.15) 0%, rgba(0,255,136,0.1) 100%)",
+                border: "1px solid rgba(124,77,255,0.2)",
+              }}
+            >
+              <span className="text-xs font-black" style={{ color: "#7c4dff" }}>H</span>
+            </div>
             <span className="text-sm font-bold tracking-tight" style={{ color: "#e8e8f0" }}>
-              HATCHER
+              Hatcher<span style={{ color: "#7c4dff" }}>Labs</span>
             </span>
           </div>
           <div className="flex items-center gap-3">
@@ -178,7 +183,7 @@ export default function LandingPage() {
             className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-[1.1] mb-6"
             style={{ color: "#e8e8f0" }}
           >
-            The Trading Terminal{" "}
+            Swipe. Trade.{" "}
             <span
               style={{
                 background: "linear-gradient(135deg, #00ff88 0%, #00cc6a 40%, #7c4dff 100%)",
@@ -187,13 +192,13 @@ export default function LandingPage() {
                 backgroundClip: "text",
               }}
             >
-              Built for Degens
+              Hatch.
             </span>
           </h1>
 
           <p className="text-base sm:text-lg font-light leading-relaxed mb-10 max-w-lg mx-auto" style={{ color: "#8888a0" }}>
-            Discover, analyze, and trade Pump.fun tokens the moment they launch.
-            Swipe right to buy. Left to dodge the rug.
+            The Solana memecoin trading terminal with a swipe-to-trade UX.
+            Discover Pump.fun tokens the moment they launch. Swipe right to ape in.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -377,9 +382,13 @@ export default function LandingPage() {
       >
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#00ff88" }} />
+            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#7c4dff" }} />
             <span className="text-xs font-bold tracking-tight" style={{ color: "#666680" }}>
-              HATCHER TERMINAL
+              Hatcher<span style={{ color: "#7c4dff" }}>Labs</span>
+            </span>
+            <span className="text-[10px]" style={{ color: "#44445a" }}>|</span>
+            <span className="text-[10px] font-mono" style={{ color: "#44445a" }}>
+              hatcher.trade
             </span>
           </div>
           <p className="text-[10px] text-center sm:text-right leading-relaxed" style={{ color: "#44445a" }}>
