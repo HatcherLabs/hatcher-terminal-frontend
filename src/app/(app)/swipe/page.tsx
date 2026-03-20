@@ -3,12 +3,22 @@
 import { useState, useMemo, useCallback } from "react";
 import { SwipeStack, type SwipeSessionData } from "@/components/swipe/SwipeStack";
 import { SwipeFilters, useSwipeFilters, type SwipeFilterValues } from "@/components/swipe/SwipeFilters";
-import { SwipeSessionStats } from "@/components/swipe/SwipeSessionStats";
 import { SwipeTutorialOverlay } from "@/components/onboarding/SwipeTutorialOverlay";
+/* SwipeSessionStats replaced by inline floating badge */
 import { LiveFeed } from "@/components/swipe/LiveFeed";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { useFeed, type FeedCategory } from "@/components/providers/FeedProvider";
 import type { TokenData } from "@/types/token";
+
+type QuickFilter = "all" | "lowRisk" | "highMcap" | "new" | "graduating";
+
+const QUICK_FILTERS: { key: QuickFilter; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "lowRisk", label: "Low Risk" },
+  { key: "highMcap", label: "High MCap" },
+  { key: "new", label: "New (<5m)" },
+  { key: "graduating", label: "Graduating" },
+];
 
 const TABS: { key: FeedCategory; label: string }[] = [
   { key: "new", label: "New" },
@@ -38,8 +48,29 @@ function applySwipeFilters(tokens: TokenData[], filters: SwipeFilterValues): Tok
   });
 }
 
+function applyQuickFilter(tokens: TokenData[], qf: QuickFilter): TokenData[] {
+  switch (qf) {
+    case "lowRisk":
+      return tokens.filter((t) => t.riskLevel === "LOW");
+    case "highMcap":
+      return tokens.filter((t) => t.marketCapSol !== null && t.marketCapSol >= 10);
+    case "new":
+      return tokens.filter((t) => {
+        if (!t.createdAt) return false;
+        const age = Date.now() - new Date(t.createdAt).getTime();
+        return age < 5 * 60 * 1000; // less than 5 minutes
+      });
+    case "graduating":
+      return tokens.filter((t) => t.bondingProgress !== null && t.bondingProgress !== undefined && t.bondingProgress >= 80);
+    case "all":
+    default:
+      return tokens;
+  }
+}
+
 export default function SwipePage() {
   const [activeTab, setActiveTab] = useState<FeedCategory>("new");
+  const [quickFilter, setQuickFilter] = useState<QuickFilter>("all");
   const { getFilteredTokens } = useFeed();
   const { filters, updateFilters } = useSwipeFilters();
   const [session, setSession] = useState<SwipeSessionData>({
@@ -70,8 +101,8 @@ export default function SwipePage() {
         base = migratedTokens;
         break;
     }
-    return applySwipeFilters(base, filters);
-  }, [activeTab, newTokens, closeToBondTokens, migratedTokens, filters]);
+    return applyQuickFilter(applySwipeFilters(base, filters), quickFilter);
+  }, [activeTab, newTokens, closeToBondTokens, migratedTokens, filters, quickFilter]);
 
   // Count after applying swipe filters
   const counts: Record<FeedCategory, number> = useMemo(
@@ -145,18 +176,54 @@ export default function SwipePage() {
             })}
           </nav>
 
+          {/* Quick filter pills */}
+          <div className="flex items-center gap-1.5 flex-wrap justify-center mb-2 px-4">
+            {QUICK_FILTERS.map((qf) => {
+              const isActive = quickFilter === qf.key;
+              return (
+                <button
+                  key={qf.key}
+                  onClick={() => setQuickFilter(qf.key)}
+                  className="px-3 py-1 rounded-full text-[11px] font-semibold transition-all duration-200 whitespace-nowrap"
+                  style={{
+                    background: isActive ? "#8b5cf6" : "rgba(31,36,53,0.6)",
+                    color: isActive ? "#eef0f6" : "#5c6380",
+                    border: `1px solid ${isActive ? "#8b5cf6" : "#1a1f2e"}`,
+                    boxShadow: isActive ? "0 0 12px rgba(139,92,246,0.3)" : "none",
+                  }}
+                >
+                  {qf.label}
+                </button>
+              );
+            })}
+          </div>
+
           {/* Filter panel */}
           <SwipeFilters filters={filters} onChange={updateFilters} />
 
-          {/* Session stats */}
-          <div className="mt-2 w-full max-w-[480px] px-4 terminal:px-0">
-            <SwipeSessionStats
-              seen={session.seen}
-              bought={session.bought}
-              passed={session.passed}
-              totalMarketCapSol={session.totalMarketCapSol}
-            />
-          </div>
+          {/* Floating session stats badge */}
+          {session.seen > 0 && (
+            <div
+              className="fixed bottom-20 left-4 z-40 flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-md text-[10px] font-mono"
+              style={{
+                background: "rgba(10,13,20,0.85)",
+                border: "1px solid #1a1f2e",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
+              }}
+            >
+              <span style={{ color: "#9ca3b8" }}>
+                {session.seen} <span style={{ color: "#5c6380" }}>seen</span>
+              </span>
+              <span style={{ color: "#1a1f2e" }}>|</span>
+              <span style={{ color: "#00d672" }}>
+                {session.bought} <span style={{ color: "#5c6380" }}>liked</span>
+              </span>
+              <span style={{ color: "#1a1f2e" }}>|</span>
+              <span style={{ color: "#9ca3b8" }}>
+                {session.seen > 0 ? Math.round((session.passed / session.seen) * 100) : 0}% <span style={{ color: "#5c6380" }}>pass</span>
+              </span>
+            </div>
+          )}
 
           {/* Swipe stack for the active tab */}
           <div

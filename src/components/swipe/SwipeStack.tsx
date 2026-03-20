@@ -493,73 +493,85 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
         )}
 
         {/* Action buttons with undo */}
-        <div className="flex items-center gap-2 sm:gap-4 mt-4">
+        <div className="flex items-center gap-3 sm:gap-5 mt-5">
+          {/* Pass button */}
           <button
             onClick={() => currentToken && handleSwipe("left", currentToken)}
             disabled={swiping}
-            className="w-12 h-12 sm:w-14 sm:h-14 rounded-full text-xl sm:text-2xl flex items-center justify-center transition-all duration-200 disabled:opacity-30 hover:scale-105 active:scale-95"
+            className="w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-full text-2xl sm:text-3xl flex items-center justify-center transition-all duration-200 disabled:opacity-30 hover:scale-110 active:scale-90"
             style={{
-              background: "rgba(242,54,69,0.08)",
-              border: "2px solid #f23645",
+              background: "rgba(242,54,69,0.12)",
+              border: "2.5px solid #f23645",
               color: "#f23645",
-              boxShadow: "0 0 16px rgba(242,54,69,0.15)",
+              boxShadow: "0 0 24px rgba(242,54,69,0.25), 0 0 48px rgba(242,54,69,0.1), inset 0 0 12px rgba(242,54,69,0.06)",
             }}
             aria-label="Pass on token"
           >
             &#10005;
           </button>
 
-          {/* Undo button */}
-          <button
-            onClick={handleUndo}
-            disabled={undoHistory.length === 0 || swiping}
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-bg-elevated border border-border text-text-muted flex items-center justify-center hover:text-text-secondary hover:border-border-hover transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
-            aria-label="Undo last pass"
-            title="Undo last pass (Ctrl+Z)"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="1 4 1 10 7 10" />
-              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
-            </svg>
-          </button>
+          {/* Middle cluster: undo, watchlist, SOL amount */}
+          <div className="flex flex-col items-center gap-1.5">
+            {/* Watchlist button */}
+            <button
+              onClick={() => {
+                if (!currentToken || swiping) return;
+                setExitDirection("up");
+                setSwiping(true);
+                handleWatchlistSwipe(currentToken);
+                setTimeout(() => {
+                  setSwiping(false);
+                  setExitDirection(null);
+                }, 350);
+              }}
+              disabled={swiping}
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-full text-lg flex items-center justify-center transition-all duration-200 disabled:opacity-30 hover:scale-110 active:scale-90"
+              style={{
+                background: "rgba(240,160,0,0.08)",
+                border: "2px solid #f0a000",
+                color: "#f0a000",
+                boxShadow: "0 0 16px rgba(240,160,0,0.15), 0 0 32px rgba(240,160,0,0.06)",
+              }}
+              aria-label="Add to watchlist"
+              title="Add to watchlist (swipe up)"
+            >
+              &#9733;
+            </button>
 
-          {/* Watchlist button */}
-          <button
-            onClick={() => {
-              if (!currentToken || swiping) return;
-              setExitDirection("up");
-              setSwiping(true);
-              handleWatchlistSwipe(currentToken);
-              setTimeout(() => {
-                setSwiping(false);
-                setExitDirection(null);
-              }, 350);
-            }}
-            disabled={swiping}
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full text-lg flex items-center justify-center transition-all duration-200 disabled:opacity-30 hover:scale-105 active:scale-95"
-            style={{
-              background: "rgba(240,160,0,0.06)",
-              border: "2px solid #f0a000",
-              color: "#f0a000",
-              boxShadow: "0 0 12px rgba(240,160,0,0.1)",
-            }}
-            aria-label="Add to watchlist"
-            title="Add to watchlist (swipe up)"
-          >
-            &#9733;
-          </button>
+            <div className="flex items-center gap-2">
+              {/* Undo button */}
+              <button
+                onClick={handleUndo}
+                disabled={undoHistory.length === 0 || swiping}
+                className="w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 disabled:opacity-15 disabled:cursor-not-allowed hover:scale-110"
+                style={{
+                  background: undoHistory.length > 0 ? "rgba(139,92,246,0.1)" : "rgba(31,36,53,0.5)",
+                  border: `1.5px solid ${undoHistory.length > 0 ? "#8b5cf6" : "#1a1f2e"}`,
+                  color: undoHistory.length > 0 ? "#8b5cf6" : "#363d54",
+                  boxShadow: undoHistory.length > 0 ? "0 0 10px rgba(139,92,246,0.15)" : "none",
+                }}
+                aria-label="Undo last pass"
+                title="Undo last pass (Ctrl+Z)"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="1 4 1 10 7 10" />
+                  <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+                </svg>
+              </button>
+              <span className="text-[10px] font-mono" style={{ color: "#5c6380" }}>{quickBuyAmount} SOL</span>
+            </div>
+          </div>
 
-          <span className="text-xs font-mono text-text-muted">{quickBuyAmount} SOL</span>
-
+          {/* Buy / Like button */}
           <button
             onClick={() => currentToken && handleSwipe("right", currentToken)}
             disabled={swiping}
-            className="w-12 h-12 sm:w-14 sm:h-14 rounded-full text-xl sm:text-2xl flex items-center justify-center transition-all duration-200 disabled:opacity-30 hover:scale-105 active:scale-95"
+            className="w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-full text-2xl sm:text-3xl flex items-center justify-center transition-all duration-200 disabled:opacity-30 hover:scale-110 active:scale-90"
             style={{
-              background: "rgba(0,214,114,0.08)",
-              border: "2px solid #00d672",
+              background: "rgba(0,214,114,0.12)",
+              border: "2.5px solid #00d672",
               color: "#00d672",
-              boxShadow: "0 0 16px rgba(0,214,114,0.15)",
+              boxShadow: "0 0 24px rgba(0,214,114,0.25), 0 0 48px rgba(0,214,114,0.1), inset 0 0 12px rgba(0,214,114,0.06)",
             }}
             aria-label="Buy token"
           >
