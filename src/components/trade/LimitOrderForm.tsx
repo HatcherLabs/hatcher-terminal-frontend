@@ -1,133 +1,287 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { api } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
 
 interface LimitOrderFormProps {
-  tokenMint: string;
-  tokenSymbol?: string;
-  onClose?: () => void;
+  mintAddress: string;
+  tokenTicker: string;
+  currentPrice?: number;
 }
 
+type Side = "BUY" | "SELL";
+
+const AMOUNT_PRESETS = [0.1, 0.25, 0.5, 1.0] as const;
+
 const EXPIRY_OPTIONS = [
-  { label: "1h", value: 3600 },
-  { label: "6h", value: 21600 },
-  { label: "24h", value: 86400 },
-  { label: "7d", value: 604800 },
-  { label: "Never", value: 0 },
+  { label: "1h", seconds: 3600 },
+  { label: "4h", seconds: 14400 },
+  { label: "12h", seconds: 43200 },
+  { label: "24h", seconds: 86400 },
+  { label: "7d", seconds: 604800 },
+  { label: "Never", seconds: 0 },
 ] as const;
 
-export function LimitOrderForm({ tokenMint, tokenSymbol, onClose }: LimitOrderFormProps) {
-  const [orderType, setOrderType] = useState<"BUY" | "SELL">("BUY");
+function formatPrice(price: number): string {
+  if (price < 0.0001) return price.toExponential(4);
+  if (price < 1) return price.toFixed(8);
+  return price.toFixed(4);
+}
+
+function computeExpiresAt(seconds: number): string | null {
+  if (seconds === 0) return null;
+  return new Date(Date.now() + seconds * 1000).toISOString();
+}
+
+export function LimitOrderForm({
+  mintAddress,
+  tokenTicker,
+  currentPrice,
+}: LimitOrderFormProps) {
+  const [side, setSide] = useState<Side>("BUY");
   const [triggerPrice, setTriggerPrice] = useState("");
-  const [amount, setAmount] = useState("");
+  const [amountSol, setAmountSol] = useState("");
   const [expirySeconds, setExpirySeconds] = useState<number>(86400);
+  const [slippageBps, setSlippageBps] = useState(100);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const toast = useToast();
 
-  const isBuy = orderType === "BUY";
+  const isBuy = side === "BUY";
+
+  const parsedPrice = parseFloat(triggerPrice);
+  const parsedAmount = parseFloat(amountSol);
+  const priceValid = !isNaN(parsedPrice) && parsedPrice > 0;
+  const amountValid = !isNaN(parsedAmount) && parsedAmount > 0;
+  const canSubmit = priceValid && amountValid && !submitting;
+
+  const expiryLabel = useMemo(() => {
+    const match = EXPIRY_OPTIONS.find((o) => o.seconds === expirySeconds);
+    return match?.label ?? "24h";
+  }, [expirySeconds]);
+
+  const adjustPrice = useCallback(
+    (pct: number) => {
+      const base = priceValid ? parsedPrice : (currentPrice ?? 0);
+      if (base <= 0) return;
+      const adjusted = base * (1 + pct / 100);
+      setTriggerPrice(formatPrice(adjusted));
+    },
+    [priceValid, parsedPrice, currentPrice],
+  );
+
+  const setCurrentAsPrice = useCallback(() => {
+    if (currentPrice && currentPrice > 0) {
+      setTriggerPrice(formatPrice(currentPrice));
+    }
+  }, [currentPrice]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
 
-    const price = parseFloat(triggerPrice);
-    const amt = parseFloat(amount);
-
-    if (isNaN(price) || price <= 0) {
-      toast.add("Enter a valid trigger price", "error");
+    if (!priceValid) {
+      setError("Enter a valid trigger price");
       return;
     }
-    if (isNaN(amt) || amt <= 0) {
-      toast.add("Enter a valid amount", "error");
+    if (!amountValid) {
+      setError("Enter a valid SOL amount");
       return;
     }
 
     setSubmitting(true);
     try {
-      await api.post("/api/orders/limit", {
-        tokenMint,
-        orderType,
-        triggerPrice: price,
-        amount: amt,
-        expirySeconds: expirySeconds || null,
+      await api.post("/api/orders", {
+        mintAddress,
+        tokenTicker,
+        side,
+        triggerPrice: parsedPrice,
+        amountSol: parsedAmount,
+        slippageBps,
+        expiresAt: computeExpiresAt(expirySeconds),
       });
       toast.add(
-        `${orderType} limit order created for ${tokenSymbol || "token"}`,
-        "success"
+        `${side} limit order placed for ${tokenTicker} at ${formatPrice(parsedPrice)} SOL`,
+        "success",
       );
       setTriggerPrice("");
-      setAmount("");
+      setAmountSol("");
+      setError(null);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to create order";
+      const message =
+        err instanceof Error ? err.message : "Failed to create order";
+      setError(message);
       toast.add(message, "error");
     } finally {
       setSubmitting(false);
     }
   }
 
+  // Colors
+  const green = "#22c55e";
+  const greenDim = "rgba(34,197,94,0.12)";
+  const greenBorder = "rgba(34,197,94,0.35)";
+  const red = "#ef4444";
+  const redDim = "rgba(239,68,68,0.12)";
+  const redBorder = "rgba(239,68,68,0.35)";
+  const bg = "#0a0d14";
+  const border = "#1a1f2e";
+  const bgElevated = "#111520";
+  const textPrimary = "#e2e8f0";
+  const textMuted = "#64748b";
+  const textFaint = "#475569";
+  const accentColor = isBuy ? green : red;
+  const accentDim = isBuy ? greenDim : redDim;
+  const accentBorder = isBuy ? greenBorder : redBorder;
+
   return (
-    <form onSubmit={handleSubmit} className="bg-bg-card border border-border rounded-xl p-4 space-y-4">
+    <form
+      onSubmit={handleSubmit}
+      style={{
+        background: bg,
+        border: `1px solid ${border}`,
+        borderRadius: 12,
+        padding: 16,
+        display: "flex",
+        flexDirection: "column",
+        gap: 16,
+      }}
+    >
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-text-primary">Limit Order</h3>
-        <div className="flex items-center gap-2">
-          {tokenSymbol && (
-            <span className="text-xs text-text-muted font-mono truncate max-w-[140px]">
-              {tokenSymbol}
-            </span>
-          )}
-          {onClose && (
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-6 h-6 flex items-center justify-center rounded-full bg-bg-elevated text-text-muted hover:text-text-primary transition-colors"
-              aria-label="Close"
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
-          )}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <span
+          style={{
+            fontSize: 14,
+            fontWeight: 600,
+            color: textPrimary,
+          }}
+        >
+          Limit Order
+        </span>
+        <span
+          style={{
+            fontSize: 12,
+            fontFamily: "monospace",
+            color: textMuted,
+            maxWidth: 140,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {tokenTicker}
+        </span>
+      </div>
+
+      {/* Current price reference */}
+      {currentPrice != null && currentPrice > 0 && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            background: bgElevated,
+            border: `1px solid ${border}`,
+            borderRadius: 8,
+            padding: "8px 12px",
+          }}
+        >
+          <span style={{ fontSize: 11, color: textMuted }}>Current Price</span>
+          <span
+            style={{
+              fontSize: 13,
+              fontFamily: "monospace",
+              fontWeight: 600,
+              color: textPrimary,
+            }}
+          >
+            {formatPrice(currentPrice)} SOL
+          </span>
         </div>
-      </div>
+      )}
 
-      {/* Token mint display */}
-      <div className="text-[11px] text-text-faint font-mono truncate">
-        {tokenMint}
-      </div>
-
-      {/* BUY / SELL Toggle */}
-      <div className="flex rounded-lg overflow-hidden border border-border">
-        <button
-          type="button"
-          onClick={() => setOrderType("BUY")}
-          className={`flex-1 py-2 text-sm font-semibold transition-colors ${
-            isBuy
-              ? "bg-green/15 text-green border-r border-green/30"
-              : "bg-transparent text-text-muted hover:text-text-secondary border-r border-border"
-          }`}
-        >
-          BUY
-        </button>
-        <button
-          type="button"
-          onClick={() => setOrderType("SELL")}
-          className={`flex-1 py-2 text-sm font-semibold transition-colors ${
-            !isBuy
-              ? "bg-red/15 text-red"
-              : "bg-transparent text-text-muted hover:text-text-secondary"
-          }`}
-        >
-          SELL
-        </button>
+      {/* Side toggle: BUY / SELL */}
+      <div
+        style={{
+          display: "flex",
+          borderRadius: 8,
+          overflow: "hidden",
+          border: `1px solid ${border}`,
+        }}
+      >
+        {(["BUY", "SELL"] as Side[]).map((s) => {
+          const active = side === s;
+          const isGreen = s === "BUY";
+          return (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setSide(s)}
+              style={{
+                flex: 1,
+                padding: "10px 0",
+                fontSize: 13,
+                fontWeight: 700,
+                letterSpacing: "0.03em",
+                border: "none",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+                background: active
+                  ? isGreen
+                    ? greenDim
+                    : redDim
+                  : "transparent",
+                color: active
+                  ? isGreen
+                    ? green
+                    : red
+                  : textMuted,
+                borderRight: s === "BUY" ? `1px solid ${border}` : "none",
+              }}
+            >
+              {s}
+            </button>
+          );
+        })}
       </div>
 
       {/* Trigger Price */}
-      <div className="space-y-1.5">
-        <label className="text-xs text-text-muted">Trigger Price</label>
-        <div className="relative">
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <label style={{ fontSize: 12, color: textMuted }}>
+            Trigger Price
+          </label>
+          {currentPrice != null && currentPrice > 0 && (
+            <button
+              type="button"
+              onClick={setCurrentAsPrice}
+              style={{
+                fontSize: 10,
+                color: accentColor,
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                padding: 0,
+              }}
+            >
+              Use current
+            </button>
+          )}
+        </div>
+        <div style={{ position: "relative" }}>
           <input
             type="number"
             step="any"
@@ -135,49 +289,201 @@ export function LimitOrderForm({ tokenMint, tokenSymbol, onClose }: LimitOrderFo
             placeholder="0.00"
             value={triggerPrice}
             onChange={(e) => setTriggerPrice(e.target.value)}
-            className="w-full bg-bg-primary border border-border rounded-lg px-3 py-2.5 text-sm font-mono text-text-primary placeholder:text-text-faint focus:outline-none focus:border-green/50 transition-colors"
+            style={{
+              width: "100%",
+              background: bgElevated,
+              border: `1px solid ${border}`,
+              borderRadius: 8,
+              padding: "10px 50px 10px 12px",
+              fontSize: 14,
+              fontFamily: "monospace",
+              color: textPrimary,
+              outline: "none",
+              boxSizing: "border-box",
+            }}
           />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-text-faint font-mono">
+          <span
+            style={{
+              position: "absolute",
+              right: 12,
+              top: "50%",
+              transform: "translateY(-50%)",
+              fontSize: 11,
+              fontFamily: "monospace",
+              color: textFaint,
+            }}
+          >
             SOL
           </span>
         </div>
+        {/* +/- 1% quick buttons */}
+        <div style={{ display: "flex", gap: 6 }}>
+          <button
+            type="button"
+            onClick={() => adjustPrice(-1)}
+            style={{
+              flex: 1,
+              padding: "5px 0",
+              fontSize: 11,
+              fontWeight: 600,
+              fontFamily: "monospace",
+              background: redDim,
+              color: red,
+              border: `1px solid ${redBorder}`,
+              borderRadius: 6,
+              cursor: "pointer",
+            }}
+          >
+            -1%
+          </button>
+          <button
+            type="button"
+            onClick={() => adjustPrice(1)}
+            style={{
+              flex: 1,
+              padding: "5px 0",
+              fontSize: 11,
+              fontWeight: 600,
+              fontFamily: "monospace",
+              background: greenDim,
+              color: green,
+              border: `1px solid ${greenBorder}`,
+              borderRadius: 6,
+              cursor: "pointer",
+            }}
+          >
+            +1%
+          </button>
+        </div>
       </div>
 
-      {/* Amount */}
-      <div className="space-y-1.5">
-        <label className="text-xs text-text-muted">
-          Amount {isBuy ? "(SOL)" : "(Tokens)"}
-        </label>
-        <div className="relative">
+      {/* Amount (SOL) */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <label style={{ fontSize: 12, color: textMuted }}>Amount (SOL)</label>
+        <div style={{ position: "relative" }}>
           <input
             type="number"
             step="any"
             min="0"
             placeholder="0.00"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            className="w-full bg-bg-primary border border-border rounded-lg px-3 py-2.5 text-sm font-mono text-text-primary placeholder:text-text-faint focus:outline-none focus:border-green/50 transition-colors"
+            value={amountSol}
+            onChange={(e) => setAmountSol(e.target.value)}
+            style={{
+              width: "100%",
+              background: bgElevated,
+              border: `1px solid ${border}`,
+              borderRadius: 8,
+              padding: "10px 50px 10px 12px",
+              fontSize: 14,
+              fontFamily: "monospace",
+              color: textPrimary,
+              outline: "none",
+              boxSizing: "border-box",
+            }}
           />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-text-faint font-mono">
-            {isBuy ? "SOL" : "Tokens"}
+          <span
+            style={{
+              position: "absolute",
+              right: 12,
+              top: "50%",
+              transform: "translateY(-50%)",
+              fontSize: 11,
+              fontFamily: "monospace",
+              color: textFaint,
+            }}
+          >
+            SOL
           </span>
+        </div>
+        {/* Amount preset pills */}
+        <div style={{ display: "flex", gap: 6 }}>
+          {AMOUNT_PRESETS.map((preset) => (
+            <button
+              key={preset}
+              type="button"
+              onClick={() => setAmountSol(String(preset))}
+              style={{
+                flex: 1,
+                padding: "5px 0",
+                fontSize: 11,
+                fontWeight: 600,
+                fontFamily: "monospace",
+                background:
+                  amountSol === String(preset) ? accentDim : "transparent",
+                color:
+                  amountSol === String(preset) ? accentColor : textMuted,
+                border: `1px solid ${
+                  amountSol === String(preset) ? accentBorder : border
+                }`,
+                borderRadius: 6,
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+              }}
+            >
+              {preset}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Slippage */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <label style={{ fontSize: 12, color: textMuted }}>
+          Slippage ({(slippageBps / 100).toFixed(1)}%)
+        </label>
+        <div style={{ display: "flex", gap: 6 }}>
+          {[50, 100, 200, 500].map((bps) => (
+            <button
+              key={bps}
+              type="button"
+              onClick={() => setSlippageBps(bps)}
+              style={{
+                flex: 1,
+                padding: "5px 0",
+                fontSize: 11,
+                fontWeight: 600,
+                fontFamily: "monospace",
+                background: slippageBps === bps ? accentDim : "transparent",
+                color: slippageBps === bps ? accentColor : textMuted,
+                border: `1px solid ${
+                  slippageBps === bps ? accentBorder : border
+                }`,
+                borderRadius: 6,
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+              }}
+            >
+              {(bps / 100).toFixed(1)}%
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Expiry Selector */}
-      <div className="space-y-1.5">
-        <label className="text-xs text-text-muted">Expires In</label>
-        <div className="flex gap-1.5">
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <label style={{ fontSize: 12, color: textMuted }}>Expires In</label>
+        <div style={{ display: "flex", gap: 6 }}>
           {EXPIRY_OPTIONS.map((opt) => (
             <button
               key={opt.label}
               type="button"
-              onClick={() => setExpirySeconds(opt.value)}
-              className={`flex-1 py-1.5 text-xs font-medium rounded-md border transition-colors ${
-                expirySeconds === opt.value
-                  ? "border-green/50 bg-green/10 text-green"
-                  : "border-border bg-transparent text-text-muted hover:text-text-secondary hover:border-border/80"
-              }`}
+              onClick={() => setExpirySeconds(opt.seconds)}
+              style={{
+                flex: 1,
+                padding: "5px 0",
+                fontSize: 11,
+                fontWeight: 600,
+                background:
+                  expirySeconds === opt.seconds ? accentDim : "transparent",
+                color:
+                  expirySeconds === opt.seconds ? accentColor : textMuted,
+                border: `1px solid ${
+                  expirySeconds === opt.seconds ? accentBorder : border
+                }`,
+                borderRadius: 6,
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+              }}
             >
               {opt.label}
             </button>
@@ -185,17 +491,175 @@ export function LimitOrderForm({ tokenMint, tokenSymbol, onClose }: LimitOrderFo
         </div>
       </div>
 
-      {/* Submit Button */}
+      {/* Order Summary */}
+      {priceValid && amountValid && (
+        <div
+          style={{
+            background: bgElevated,
+            border: `1px solid ${border}`,
+            borderRadius: 8,
+            padding: 12,
+            display: "flex",
+            flexDirection: "column",
+            gap: 6,
+          }}
+        >
+          <span
+            style={{ fontSize: 11, fontWeight: 600, color: textMuted }}
+          >
+            Order Summary
+          </span>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              fontSize: 12,
+            }}
+          >
+            <span style={{ color: textMuted }}>Side</span>
+            <span
+              style={{
+                fontWeight: 700,
+                color: accentColor,
+              }}
+            >
+              {side}
+            </span>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              fontSize: 12,
+            }}
+          >
+            <span style={{ color: textMuted }}>Trigger Price</span>
+            <span
+              style={{
+                fontFamily: "monospace",
+                color: textPrimary,
+              }}
+            >
+              {formatPrice(parsedPrice)} SOL
+            </span>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              fontSize: 12,
+            }}
+          >
+            <span style={{ color: textMuted }}>Amount</span>
+            <span
+              style={{
+                fontFamily: "monospace",
+                color: textPrimary,
+              }}
+            >
+              {parsedAmount} SOL
+            </span>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              fontSize: 12,
+            }}
+          >
+            <span style={{ color: textMuted }}>Slippage</span>
+            <span
+              style={{
+                fontFamily: "monospace",
+                color: textPrimary,
+              }}
+            >
+              {(slippageBps / 100).toFixed(1)}%
+            </span>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              fontSize: 12,
+            }}
+          >
+            <span style={{ color: textMuted }}>Expires</span>
+            <span style={{ color: textPrimary }}>{expiryLabel}</span>
+          </div>
+          {currentPrice != null && currentPrice > 0 && (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: 12,
+                borderTop: `1px solid ${border}`,
+                paddingTop: 6,
+                marginTop: 2,
+              }}
+            >
+              <span style={{ color: textMuted }}>
+                {isBuy ? "Below" : "Above"} current
+              </span>
+              <span
+                style={{
+                  fontFamily: "monospace",
+                  color:
+                    (isBuy && parsedPrice < currentPrice) ||
+                    (!isBuy && parsedPrice > currentPrice)
+                      ? green
+                      : red,
+                }}
+              >
+                {(
+                  Math.abs(
+                    ((parsedPrice - currentPrice) / currentPrice) * 100,
+                  )
+                ).toFixed(2)}
+                %
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Error message */}
+      {error && (
+        <div
+          style={{
+            fontSize: 12,
+            color: red,
+            background: redDim,
+            border: `1px solid ${redBorder}`,
+            borderRadius: 8,
+            padding: "8px 12px",
+          }}
+        >
+          {error}
+        </div>
+      )}
+
+      {/* Place Order button */}
       <button
         type="submit"
-        disabled={submitting || !triggerPrice || !amount}
-        className={`w-full py-3 rounded-lg text-sm font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
-          isBuy
-            ? "bg-green text-bg-primary hover:bg-green/90"
-            : "bg-red text-white hover:bg-red/90"
-        }`}
+        disabled={!canSubmit}
+        style={{
+          width: "100%",
+          padding: "12px 0",
+          borderRadius: 8,
+          fontSize: 14,
+          fontWeight: 700,
+          border: "none",
+          cursor: canSubmit ? "pointer" : "not-allowed",
+          opacity: canSubmit ? 1 : 0.4,
+          transition: "all 0.15s ease",
+          background: accentColor,
+          color: isBuy ? "#0a0d14" : "#ffffff",
+        }}
       >
-        {submitting ? "Creating..." : `Create ${orderType} Order`}
+        {submitting
+          ? "Placing Order..."
+          : `Place ${side} Order`}
       </button>
     </form>
   );
