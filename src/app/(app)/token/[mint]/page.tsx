@@ -707,7 +707,15 @@ export default function TokenTerminalPage() {
         </div>
 
         {/* -- BONDING CURVE -- */}
-        <div className="bg-bg-card rounded-xl p-4 border border-border card-depth">
+        <div
+          className="rounded-xl p-4"
+          style={{
+            background: "rgba(13,13,26,0.7)",
+            border: "1px solid rgba(26,26,46,0.8)",
+            backdropFilter: "blur(8px)",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.2)",
+          }}
+        >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-text-secondary font-medium">
               Bonding Curve
@@ -780,7 +788,15 @@ export default function TokenTerminalPage() {
 
         {/* -- SECURITY SIGNALS -- */}
         {signals.length > 0 && (
-          <div className="bg-bg-card rounded-xl p-4 border border-border card-depth">
+          <div
+            className="rounded-xl p-4"
+            style={{
+              background: "rgba(13,13,26,0.7)",
+              border: "1px solid rgba(26,26,46,0.8)",
+              backdropFilter: "blur(8px)",
+              boxShadow: "0 2px 12px rgba(0,0,0,0.2)",
+            }}
+          >
             <p className="text-xs text-text-secondary font-medium mb-3">
               Security Signals
             </p>
@@ -810,7 +826,15 @@ export default function TokenTerminalPage() {
         )}
 
         {/* -- TOKEN INFO -- */}
-        <div className="bg-bg-card rounded-xl p-4 border border-border card-depth space-y-3">
+        <div
+          className="rounded-xl p-4 space-y-3"
+          style={{
+            background: "rgba(13,13,26,0.7)",
+            border: "1px solid rgba(26,26,46,0.8)",
+            backdropFilter: "blur(8px)",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.2)",
+          }}
+        >
           <p className="text-xs text-text-secondary font-medium">
             Token Info
           </p>
@@ -1170,14 +1194,24 @@ export default function TokenTerminalPage() {
             <button
               onClick={handleSell}
               disabled={tradeLoading || !hasKey || !openPosition}
-              className="px-4 py-2.5 rounded-lg bg-red/10 border border-red/30 text-red font-bold text-xs transition-colors hover:bg-red/20 disabled:opacity-40"
+              className="px-4 py-2.5 rounded-lg font-bold text-xs transition-all disabled:opacity-40 active:scale-95"
+              style={{
+                background: "linear-gradient(135deg, rgba(255,59,92,0.15) 0%, rgba(255,59,92,0.08) 100%)",
+                border: "1px solid rgba(255,59,92,0.3)",
+                color: "#ff3b5c",
+              }}
             >
               Sell
             </button>
             <button
               onClick={handleBuy}
               disabled={tradeLoading || !hasKey || isNaN(tradeAmount) || tradeAmount <= 0}
-              className="px-4 py-2.5 rounded-lg bg-green/10 border border-green/30 text-green font-bold text-xs transition-colors hover:bg-green/20 disabled:opacity-40"
+              className="px-4 py-2.5 rounded-lg font-bold text-xs transition-all disabled:opacity-40 active:scale-95"
+              style={{
+                background: "linear-gradient(135deg, rgba(0,255,136,0.15) 0%, rgba(0,255,136,0.08) 100%)",
+                border: "1px solid rgba(0,255,136,0.3)",
+                color: "#00ff88",
+              }}
             >
               Buy
             </button>

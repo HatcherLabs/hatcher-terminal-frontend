@@ -112,9 +112,14 @@ export function Sidebar({ onOpenShortcuts }: SidebarProps) {
 
   return (
     <aside
-      className={`h-full bg-bg-card border-r border-border flex flex-col transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shrink-0 ${
+      className={`h-full flex flex-col transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shrink-0 ${
         expanded ? "w-40" : "w-12"
       }`}
+      style={{
+        background: "rgba(13,13,26,0.95)",
+        borderRight: "1px solid rgba(26,26,46,0.8)",
+        backdropFilter: "blur(12px)",
+      }}
       onMouseEnter={() => setExpanded(true)}
       onMouseLeave={() => setExpanded(false)}
     >
@@ -129,17 +134,32 @@ export function Sidebar({ onOpenShortcuts }: SidebarProps) {
             <Link
               key={item.href}
               href={item.href}
-              className={`sidebar-nav-item relative flex items-center gap-2.5 h-9 rounded transition-all duration-150 group ${
+              className={`sidebar-nav-item relative flex items-center gap-2.5 h-9 rounded transition-all duration-200 group ${
                 expanded ? "px-2.5" : "px-0 justify-center"
               } ${
                 active
-                  ? "text-accent bg-accent/8"
-                  : "text-text-muted hover:text-text-secondary hover:bg-bg-hover"
+                  ? ""
+                  : "text-text-muted hover:text-text-secondary"
               }`}
+              style={
+                active
+                  ? {
+                      color: "#00ff88",
+                      background: "rgba(0,255,136,0.06)",
+                      boxShadow: "inset 0 0 12px rgba(0,255,136,0.03)",
+                    }
+                  : undefined
+              }
             >
               {/* Active indicator - 4px green left border accent bar */}
               {active && (
-                <div className="absolute left-0 top-1 bottom-1 w-[4px] rounded-r bg-green" />
+                <div
+                  className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r"
+                  style={{
+                    background: "linear-gradient(180deg, #00ff88 0%, #00cc6a 100%)",
+                    boxShadow: "0 0 6px rgba(0,255,136,0.4)",
+                  }}
+                />
               )}
 
               <span className="shrink-0 relative">
