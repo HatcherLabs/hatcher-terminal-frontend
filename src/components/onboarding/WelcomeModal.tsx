@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 
-const STORAGE_KEY = "hatcher_onboarded";
+const STORAGE_KEY = "hatcher_welcomed";
 
 function DotIndicators({ current, total }: { current: number; total: number }) {
   return (
@@ -21,128 +21,194 @@ function DotIndicators({ current, total }: { current: number; total: number }) {
   );
 }
 
-function StepWelcome() {
+/* ── Step Icons ────────────────────────────────────────────────── */
+
+function DiscoverIcon() {
   return (
-    <div className="flex flex-col items-center text-center">
-      {/* Logo */}
-      <div className="w-16 h-16 rounded-2xl bg-accent-purple/10 flex items-center justify-center mb-5">
-        <svg
-          viewBox="0 0 24 24"
-          width={32}
-          height={32}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="text-accent-purple"
-        >
-          <path d="M12 2L2 7l10 5 10-5-10-5z" />
-          <path d="M2 17l10 5 10-5" />
-          <path d="M2 12l10 5 10-5" />
-        </svg>
+    <svg
+      viewBox="0 0 48 48"
+      width={48}
+      height={48}
+      fill="none"
+      className="text-accent-purple"
+    >
+      {/* Card stack with swipe arrows */}
+      <rect
+        x="10"
+        y="8"
+        width="22"
+        height="30"
+        rx="4"
+        stroke="currentColor"
+        strokeWidth="2"
+        opacity="0.3"
+      />
+      <rect
+        x="14"
+        y="6"
+        width="22"
+        height="30"
+        rx="4"
+        stroke="currentColor"
+        strokeWidth="2"
+        fill="currentColor"
+        fillOpacity="0.08"
+      />
+      {/* Right arrow (buy) */}
+      <path
+        d="M40 22l4 4-4 4"
+        stroke="#22c55e"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Left arrow (pass) */}
+      <path
+        d="M8 22l-4 4 4 4"
+        stroke="#ef4444"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Heart on card */}
+      <path
+        d="M25 17c1.5-2 4.5-2 5.5 0s-.5 4.5-5.5 8c-5-3.5-6.5-6-5.5-8s4-2 5.5 0z"
+        fill="currentColor"
+        fillOpacity="0.25"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+    </svg>
+  );
+}
+
+function TradeIcon() {
+  return (
+    <svg
+      viewBox="0 0 48 48"
+      width={48}
+      height={48}
+      fill="none"
+      className="text-accent-purple"
+    >
+      {/* Sliders / settings */}
+      <rect
+        x="8"
+        y="12"
+        width="32"
+        height="24"
+        rx="4"
+        stroke="currentColor"
+        strokeWidth="2"
+        fill="currentColor"
+        fillOpacity="0.08"
+      />
+      {/* Slider tracks */}
+      <line x1="14" y1="20" x2="34" y2="20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
+      <line x1="14" y1="26" x2="34" y2="26" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
+      <line x1="14" y1="32" x2="34" y2="32" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
+      {/* Slider knobs */}
+      <circle cx="22" cy="20" r="2.5" fill="currentColor" />
+      <circle cx="28" cy="26" r="2.5" fill="currentColor" />
+      <circle cx="18" cy="32" r="2.5" fill="currentColor" />
+      {/* SOL symbol */}
+      <circle cx="38" cy="10" r="6" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.5" />
+      <text x="38" y="13" textAnchor="middle" fontSize="8" fontWeight="bold" fill="currentColor">S</text>
+    </svg>
+  );
+}
+
+function TrackIcon() {
+  return (
+    <svg
+      viewBox="0 0 48 48"
+      width={48}
+      height={48}
+      fill="none"
+      className="text-accent-purple"
+    >
+      {/* Chart area */}
+      <rect
+        x="6"
+        y="8"
+        width="36"
+        height="32"
+        rx="4"
+        stroke="currentColor"
+        strokeWidth="2"
+        fill="currentColor"
+        fillOpacity="0.08"
+      />
+      {/* Upward trend line */}
+      <polyline
+        points="12,32 18,26 24,28 30,18 36,14"
+        stroke="#22c55e"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+      {/* Area fill under line */}
+      <polygon
+        points="12,32 18,26 24,28 30,18 36,14 36,32"
+        fill="#22c55e"
+        fillOpacity="0.1"
+      />
+      {/* Data dots */}
+      <circle cx="18" cy="26" r="2" fill="#22c55e" />
+      <circle cx="24" cy="28" r="2" fill="#22c55e" />
+      <circle cx="30" cy="18" r="2" fill="#22c55e" />
+      <circle cx="36" cy="14" r="2" fill="#22c55e" />
+    </svg>
+  );
+}
+
+/* ── Step Content ──────────────────────────────────────────────── */
+
+interface StepData {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+}
+
+const STEPS: StepData[] = [
+  {
+    title: "Discover",
+    description:
+      "Swipe through Pump.fun tokens like Tinder. Right to buy, left to pass.",
+    icon: <DiscoverIcon />,
+  },
+  {
+    title: "Trade",
+    description:
+      "Set your buy amount, slippage, and auto-sell targets in Settings.",
+    icon: <TradeIcon />,
+  },
+  {
+    title: "Track",
+    description:
+      "Monitor your positions, P&L, and portfolio in Matches.",
+    icon: <TrackIcon />,
+  },
+];
+
+function StepSlide({ step }: { step: StepData }) {
+  return (
+    <div className="flex flex-col items-center text-center px-2">
+      <div className="w-20 h-20 rounded-2xl bg-accent-purple/10 flex items-center justify-center mb-6">
+        {step.icon}
       </div>
       <h2 className="text-xl font-bold text-text-primary mb-2">
-        Welcome to Hatcher
+        {step.title}
       </h2>
-      <p className="text-sm text-text-secondary/70 leading-relaxed">
-        Discover &amp; trade Solana tokens
+      <p className="text-sm text-text-secondary/70 leading-relaxed max-w-[260px]">
+        {step.description}
       </p>
     </div>
   );
 }
 
-function StepHowItWorks() {
-  const items = [
-    {
-      direction: "Swipe Right",
-      label: "Buy tokens you believe in",
-      icon: (
-        <svg viewBox="0 0 24 24" width={24} height={24} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green">
-          <line x1="5" y1="12" x2="19" y2="12" />
-          <polyline points="12 5 19 12 12 19" />
-        </svg>
-      ),
-      color: "bg-green/10",
-    },
-    {
-      direction: "Swipe Left",
-      label: "Pass on tokens you don't",
-      icon: (
-        <svg viewBox="0 0 24 24" width={24} height={24} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red">
-          <line x1="19" y1="12" x2="5" y2="12" />
-          <polyline points="12 19 5 12 12 5" />
-        </svg>
-      ),
-      color: "bg-red/10",
-    },
-    {
-      direction: "Swipe Up",
-      label: "Save to watchlist for later",
-      icon: (
-        <svg viewBox="0 0 24 24" width={24} height={24} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber">
-          <line x1="12" y1="19" x2="12" y2="5" />
-          <polyline points="5 12 12 5 19 12" />
-        </svg>
-      ),
-      color: "bg-amber/10",
-    },
-  ];
-
-  return (
-    <div className="flex flex-col items-center text-center">
-      <h2 className="text-lg font-bold text-text-primary mb-5">
-        How it works
-      </h2>
-      <div className="w-full space-y-3">
-        {items.map((item) => (
-          <div
-            key={item.direction}
-            className="flex items-center gap-3 bg-bg-elevated rounded-xl px-4 py-3"
-          >
-            <div
-              className={`w-10 h-10 rounded-lg ${item.color} flex items-center justify-center flex-shrink-0`}
-            >
-              {item.icon}
-            </div>
-            <div className="text-left">
-              <p className="text-xs font-bold text-text-primary">
-                {item.direction}
-              </p>
-              <p className="text-xs text-text-secondary/70">{item.label}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function StepGetStarted({ onClose }: { onClose: () => void }) {
-  return (
-    <div className="flex flex-col items-center text-center">
-      <div className="w-16 h-16 rounded-full bg-green/10 flex items-center justify-center mb-5">
-        <svg viewBox="0 0 24 24" width={32} height={32} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-green">
-          <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
-          <polyline points="22 4 12 14.01 9 11.01" />
-        </svg>
-      </div>
-      <h2 className="text-lg font-bold text-text-primary mb-2">
-        Get started
-      </h2>
-      <p className="text-sm text-text-secondary/70 leading-relaxed mb-6">
-        Fund your wallet to start trading, or jump straight in and explore
-        what&apos;s trending.
-      </p>
-      <button
-        onClick={onClose}
-        className="w-full bg-accent-purple text-white rounded-lg px-4 py-3 text-sm font-semibold hover:brightness-110 transition-all"
-      >
-        Start exploring
-      </button>
-    </div>
-  );
-}
+/* ── Modal ─────────────────────────────────────────────────────── */
 
 export function WelcomeModal() {
   const [isOpen, setIsOpen] = useState(false);
@@ -150,8 +216,8 @@ export function WelcomeModal() {
 
   useEffect(() => {
     try {
-      const onboarded = localStorage.getItem(STORAGE_KEY);
-      if (!onboarded) {
+      const welcomed = localStorage.getItem(STORAGE_KEY);
+      if (!welcomed) {
         setIsOpen(true);
       }
     } catch {
@@ -169,7 +235,10 @@ export function WelcomeModal() {
   }, []);
 
   const next = useCallback(() => {
-    setStep((prev) => Math.min(prev + 1, 2));
+    setStep((prev) => {
+      if (prev >= STEPS.length - 1) return prev;
+      return prev + 1;
+    });
   }, []);
 
   const prev = useCallback(() => {
@@ -178,20 +247,17 @@ export function WelcomeModal() {
 
   if (!isOpen) return null;
 
-  const TOTAL_STEPS = 3;
+  const isLastStep = step === STEPS.length - 1;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={close}
-      />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
       {/* Modal */}
       <div className="relative bg-bg-card border border-border rounded-2xl max-w-sm w-full p-8 shadow-2xl">
         {/* Skip button */}
-        {step < 2 && (
+        {!isLastStep && (
           <button
             onClick={close}
             className="absolute top-4 right-4 text-xs text-text-muted hover:text-text-secondary transition-colors"
@@ -200,46 +266,40 @@ export function WelcomeModal() {
           </button>
         )}
 
-        {/* Step content with slide transition */}
+        {/* Slide carousel */}
         <div className="overflow-hidden">
           <div
             className="flex transition-transform duration-300 ease-in-out"
             style={{ transform: `translateX(-${step * 100}%)` }}
           >
-            <div className="w-full flex-shrink-0 min-w-full">
-              <StepWelcome />
-            </div>
-            <div className="w-full flex-shrink-0 min-w-full">
-              <StepHowItWorks />
-            </div>
-            <div className="w-full flex-shrink-0 min-w-full">
-              <StepGetStarted onClose={close} />
-            </div>
+            {STEPS.map((s) => (
+              <div key={s.title} className="w-full flex-shrink-0 min-w-full">
+                <StepSlide step={s} />
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Bottom: dots + navigation */}
-        <div className="mt-6 space-y-4">
-          <DotIndicators current={step} total={TOTAL_STEPS} />
+        {/* Dots + navigation */}
+        <div className="mt-8 space-y-4">
+          <DotIndicators current={step} total={STEPS.length} />
 
-          {step < 2 && (
-            <div className="flex items-center gap-3">
-              {step > 0 && (
-                <button
-                  onClick={prev}
-                  className="flex-1 py-2 rounded-lg text-sm font-medium border border-border text-text-secondary hover:bg-bg-hover transition-colors"
-                >
-                  Back
-                </button>
-              )}
+          <div className="flex items-center gap-3">
+            {step > 0 && (
               <button
-                onClick={next}
-                className="flex-1 py-2 rounded-lg text-sm font-semibold bg-accent-purple text-white hover:brightness-110 transition-all"
+                onClick={prev}
+                className="flex-1 py-2.5 rounded-lg text-sm font-medium border border-border text-text-secondary hover:bg-bg-hover transition-colors"
               >
-                Next
+                Back
               </button>
-            </div>
-          )}
+            )}
+            <button
+              onClick={isLastStep ? close : next}
+              className="flex-1 py-2.5 rounded-lg text-sm font-semibold bg-accent-purple text-white hover:brightness-110 transition-all"
+            >
+              {isLastStep ? "Get Started" : "Next"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

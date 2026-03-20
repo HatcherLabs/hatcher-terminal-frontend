@@ -88,7 +88,7 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
         {/* Middle section: sidebar + main content */}
         <div className="flex flex-1 min-h-0">
           {/* Sidebar */}
-          <Sidebar />
+          <Sidebar onOpenShortcuts={openShortcutsModal} />
 
           {/* Main Content Area */}
           <main className="flex-1 min-w-0 overflow-y-auto terminal-scrollbar">

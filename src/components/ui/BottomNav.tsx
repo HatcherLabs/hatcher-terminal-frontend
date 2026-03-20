@@ -98,7 +98,11 @@ export function BottomNav() {
                   : "text-text-muted hover:text-text-secondary"
               }`}
             >
-              <span className="relative">
+              {/* Active top border accent */}
+              {active && (
+                <span className="absolute -top-[1px] left-1.5 right-1.5 h-[2px] rounded-b bg-green" />
+              )}
+              <span className={`relative ${active ? "[&>svg]:fill-green/20 [&>svg]:stroke-green" : ""}`}>
                 {item.icon}
                 {showBadge && (
                   <span className="absolute -top-1 -right-1.5 min-w-[14px] h-[14px] flex items-center justify-center rounded-full bg-green text-bg-primary text-[8px] font-bold px-0.5 leading-none">
