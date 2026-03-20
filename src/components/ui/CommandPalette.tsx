@@ -308,6 +308,24 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
         "side by side",
         "versus",
       ]),
+      nav("nav-alerts", "Go to Alerts", "/alerts", [
+        "alerts",
+        "price alerts",
+        "notifications",
+        "triggers",
+      ]),
+      nav("nav-smart-money", "Go to Smart Money", "/smart-money", [
+        "smart money",
+        "wallets",
+        "whales",
+        "tracking",
+      ]),
+      nav("nav-copy-trade", "Go to Copy Trade", "/copy-trade", [
+        "copy",
+        "trade",
+        "follow",
+        "mirror",
+      ]),
       // Actions
       act(
         "action-toggle-sidebar",

@@ -14,16 +14,17 @@ interface KeyboardShortcutsOptions {
   isShortcutsModalOpen: boolean;
 }
 
-/** Navigation routes indexed 1-8 (matches sidebar order) */
+/** Navigation routes indexed 1-9 (matches sidebar order) */
 const NAV_ROUTES = [
-  "/swipe",      // 1 - Swipe / Discover
-  "/explore",    // 2 - Explore
-  "/matches",    // 3 - Portfolio
-  "/graveyard",  // 4 - Passed
-  "/compare",    // 5 - Compare
-  "/wallet",     // 6 - Wallet
-  "/settings",   // 7 - Settings
-  "/copy-trade", // 8 - Copy Trade
+  "/swipe",       // 1 - Swipe / Discover
+  "/explore",     // 2 - Explore
+  "/watchlist",   // 3 - Watchlist
+  "/matches",     // 4 - Portfolio
+  "/orders",      // 5 - Orders
+  "/graveyard",   // 6 - Graveyard
+  "/alerts",      // 7 - Alerts
+  "/smart-money", // 8 - Smart Money
+  "/copy-trade",  // 9 - Copy Trade
 ];
 
 /**
@@ -51,7 +52,7 @@ function isEditableTarget(e: KeyboardEvent): boolean {
  *   Ctrl+K / Cmd+K Toggle command palette (fires even in inputs)
  *   /              Open command palette
  *   ?              Open shortcuts help modal
- *   1-8            Navigate to pages (Swipe, Explore, Portfolio, Passed, Compare, Wallet, Settings, Copy Trade)
+ *   1-9            Navigate to pages (Swipe, Explore, Watchlist, Portfolio, Orders, Graveyard, Alerts, Smart Money, Copy Trade)
  *   b / B          Quick buy (when a token is selected)
  *   s / S          Quick sell (when a token is selected)
  *   w / W          Toggle watchlist for current token
@@ -168,7 +169,7 @@ export function useKeyboardShortcuts({
           break;
         }
 
-        // Number keys 1-7: navigate to page
+        // Number keys 1-9: navigate to page
         case "1":
         case "2":
         case "3":
@@ -176,7 +177,8 @@ export function useKeyboardShortcuts({
         case "5":
         case "6":
         case "7":
-        case "8": {
+        case "8":
+        case "9": {
           const index = parseInt(e.key) - 1;
           const route = NAV_ROUTES[index];
           if (route && pathname !== route) {

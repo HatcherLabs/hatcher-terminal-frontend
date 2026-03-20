@@ -56,6 +56,8 @@ function toTokenData(t: ExploreTokenData): TokenData {
     riskFactors: null,
     priceChange5m: null,
     priceChange1h: null,
+    priceChange6h: null,
+    priceChange24h: null,
     isActive: true,
     twitter: t.twitter ?? null,
     telegram: t.telegram ?? null,
