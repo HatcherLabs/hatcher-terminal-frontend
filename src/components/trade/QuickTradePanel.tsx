@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { VersionedTransaction, Transaction } from "@solana/web3.js";
 import { TokenAvatar } from "@/components/ui/TokenAvatar";
 import { useQuickTrade } from "@/components/providers/QuickTradeProvider";
 import { useQuickBuy } from "@/hooks/useQuickBuy";
 import { usePositions } from "@/hooks/usePositions";
-import { useKey } from "@/components/providers/KeyProvider";
-import { useAuth } from "@/components/providers/AuthProvider";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { useTokenPrice } from "@/hooks/useTokenPrice";
 import { useToast } from "@/components/ui/Toast";
 import { api } from "@/lib/api";
@@ -167,8 +167,7 @@ export function QuickTradePanel() {
   const { selectedToken, isOpen, closePanel } = useQuickTrade();
   const { amount: quickBuyAmount, setAmount: setQuickBuyAmount } = useQuickBuy();
   const { positions, refresh: refreshPositions } = usePositions("open");
-  const { hasKey, signTransactionBase64 } = useKey();
-  const { user } = useAuth();
+  const { connected, signTransaction } = useWallet();
   const addToast = useToast((s) => s.add);
   const txTrackerAdd = useTxTracker((s) => s.add);
   const txTrackerUpdate = useTxTracker((s) => s.update);
@@ -296,8 +295,8 @@ export function QuickTradePanel() {
 
   const handleBuy = async () => {
     if (!selectedToken || txStatus === "building" || txStatus === "signing" || txStatus === "confirming") return;
-    if (!hasKey || !user) {
-      addToast("Import a wallet key to trade", "error");
+    if (!connected) {
+      addToast("Connect wallet to trade", "error");
       return;
     }
     const amount = customAmount ? parseFloat(customAmount) : quickBuyAmount;
@@ -341,7 +340,18 @@ export function QuickTradePanel() {
 
       setTxStatus("signing");
       txTrackerUpdate(txId, { status: "signing" });
-      const signedTx = await signTransactionBase64(swipeRes.unsignedTx);
+      if (!signTransaction) throw new Error("Wallet does not support signing");
+      const txBytes = Uint8Array.from(atob(swipeRes.unsignedTx), (c) => c.charCodeAt(0));
+      let signedTxBase64: string;
+      try {
+        const vtx = VersionedTransaction.deserialize(txBytes);
+        const signed = await signTransaction(vtx);
+        signedTxBase64 = btoa(String.fromCharCode(...signed.serialize()));
+      } catch {
+        const tx = Transaction.from(txBytes);
+        const signed = await signTransaction(tx);
+        signedTxBase64 = btoa(String.fromCharCode(...signed.serialize()));
+      }
 
       setTxStatus("confirming");
       txTrackerUpdate(txId, { status: "submitting" });
@@ -349,7 +359,7 @@ export function QuickTradePanel() {
         txHash: string;
         status: string;
       }>("/api/tx/submit", {
-        signedTx,
+        signedTx: signedTxBase64,
         positionType: "buy",
         mintAddress: selectedToken.mintAddress,
       });
@@ -374,8 +384,8 @@ export function QuickTradePanel() {
 
   const handleSell = async () => {
     if (!selectedToken || txStatus === "building" || txStatus === "signing" || txStatus === "confirming") return;
-    if (!hasKey || !user) {
-      addToast("Import a wallet key to trade", "error");
+    if (!connected) {
+      addToast("Connect wallet to trade", "error");
       return;
     }
     if (!openPosition) {
@@ -415,7 +425,18 @@ export function QuickTradePanel() {
 
       setTxStatus("signing");
       txTrackerUpdate(txId, { status: "signing" });
-      const signedTx = await signTransactionBase64(closeRes.unsignedTx);
+      if (!signTransaction) throw new Error("Wallet does not support signing");
+      const sellTxBytes = Uint8Array.from(atob(closeRes.unsignedTx), (c) => c.charCodeAt(0));
+      let signedSellTxBase64: string;
+      try {
+        const vtx = VersionedTransaction.deserialize(sellTxBytes);
+        const signed = await signTransaction(vtx);
+        signedSellTxBase64 = btoa(String.fromCharCode(...signed.serialize()));
+      } catch {
+        const tx = Transaction.from(sellTxBytes);
+        const signed = await signTransaction(tx);
+        signedSellTxBase64 = btoa(String.fromCharCode(...signed.serialize()));
+      }
 
       setTxStatus("confirming");
       txTrackerUpdate(txId, { status: "submitting" });
@@ -423,7 +444,7 @@ export function QuickTradePanel() {
         txHash: string;
         status: string;
       }>("/api/tx/submit", {
-        signedTx,
+        signedTx: signedSellTxBase64,
         positionType: "sell",
         mintAddress: selectedToken.mintAddress,
         positionId: openPosition.id,
@@ -462,7 +483,7 @@ export function QuickTradePanel() {
 
   const isDisabled =
     isTrading ||
-    !hasKey ||
+    !connected ||
     (activeTab === "buy"
       ? isNaN(tradeAmount) || tradeAmount <= 0
       : !openPosition);
@@ -613,7 +634,7 @@ export function QuickTradePanel() {
         {/* Body */}
         <div className="px-4 pb-4 space-y-3">
           {/* No wallet warning */}
-          {!hasKey && (
+          {!connected && (
             <div
               style={{
                 background: "rgba(245,158,11,0.08)",
@@ -624,7 +645,7 @@ export function QuickTradePanel() {
               }}
               className="px-3 py-2"
             >
-              Import a wallet key in Settings to enable trading.
+              Connect your wallet to enable trading.
             </div>
           )}
 
@@ -1033,8 +1054,8 @@ export function QuickTradePanel() {
                 {txStatus === "signing" && "Sign in wallet..."}
                 {txStatus === "confirming" && "Confirming..."}
               </span>
-            ) : !hasKey ? (
-              "Import Key to Trade"
+            ) : !connected ? (
+              "Connect Wallet to Trade"
             ) : activeTab === "buy" ? (
               `Buy ${isNaN(tradeAmount) ? "" : tradeAmount + " SOL"}`
             ) : !openPosition ? (

@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Lexend, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import { KeyProvider } from "@/components/providers/KeyProvider";
+import { WalletConnectionProvider } from "@/components/providers/WalletConnectionProvider";
 
 const lexend = Lexend({
   subsets: ["latin"],
@@ -41,7 +41,7 @@ export default function RootLayout({
       <body
         className={`${lexend.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
-        <KeyProvider>{children}</KeyProvider>
+        <WalletConnectionProvider>{children}</WalletConnectionProvider>
       </body>
     </html>
   );

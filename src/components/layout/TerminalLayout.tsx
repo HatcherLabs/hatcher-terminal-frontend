@@ -1,123 +1,88 @@
 "use client";
 
-import { ReactNode, useState, useCallback } from "react";
-import { TopBar } from "./TopBar";
-import { Sidebar } from "./Sidebar";
-import { PositionsBar } from "./PositionsBar";
-import { PriceTicker } from "@/components/ui/PriceTicker";
-import { NotificationBell } from "@/components/ui/NotificationBell";
-import { ShortcutsModal } from "@/components/ui/ShortcutsModal";
-import { CommandPalette } from "@/components/ui/CommandPalette";
-import { MobileSearch } from "@/components/ui/MobileSearch";
-import { WelcomeModal } from "@/components/onboarding/WelcomeModal";
+import { ReactNode } from "react";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { TxStatusTracker } from "@/components/trade/TxStatusTracker";
-import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { useWatchlistAlerts } from "@/hooks/useWatchlistAlerts";
 
 interface TerminalLayoutProps {
   children: ReactNode;
 }
 
 export function TerminalLayout({ children }: TerminalLayoutProps) {
-  const [showMobileTicker, setShowMobileTicker] = useState(true);
-  const [shortcutsOpen, setShortcutsOpen] = useState(false);
-  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-
-  const openMobileSearch = useCallback(() => setMobileSearchOpen(true), []);
-  const closeMobileSearch = useCallback(() => setMobileSearchOpen(false), []);
-
-  const openShortcutsModal = useCallback(() => setShortcutsOpen(true), []);
-  const closeShortcutsModal = useCallback(() => setShortcutsOpen(false), []);
-  const openCommandPalette = useCallback(() => setCommandPaletteOpen(true), []);
-  const closeCommandPalette = useCallback(() => setCommandPaletteOpen(false), []);
-
-  useKeyboardShortcuts({
-    onOpenShortcutsModal: openShortcutsModal,
-    onCloseShortcutsModal: closeShortcutsModal,
-    onOpenCommandPalette: openCommandPalette,
-    onCloseCommandPalette: closeCommandPalette,
-    isCommandPaletteOpen: commandPaletteOpen,
-    isShortcutsModalOpen: shortcutsOpen,
-  });
-
-  // Fire notifications when watchlisted tokens have large price moves
-  useWatchlistAlerts();
+  const { publicKey } = useWallet();
 
   return (
     <>
-      {/* Mobile layout: unchanged, shows below 1024px */}
+      {/* Mobile layout */}
       <div className="terminal:hidden w-full max-w-[480px] mx-auto min-h-screen pb-16">
-        {/* Mobile header with notification bell */}
         <div className="flex items-center justify-between px-4 py-2">
-          <span className="font-bold text-sm tracking-widest font-mono" style={{ color: "#8b5cf6" }}>
+          <span
+            className="font-bold text-sm tracking-widest font-mono"
+            style={{ color: "#8b5cf6" }}
+          >
             HATCHER
           </span>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={openMobileSearch}
-              className="w-8 h-8 flex items-center justify-center transition-colors"
-              style={{ color: "#5c6380" }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = "#9ca3b8"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = "#5c6380"; }}
-              aria-label="Search tokens"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="w-4.5 h-4.5"
-              >
-                <circle cx="11" cy="11" r="8" />
-                <path d="M21 21l-4.35-4.35" />
-              </svg>
-            </button>
-            <NotificationBell />
-          </div>
-        </div>
-        {/* Mobile price ticker — dismissable */}
-        {showMobileTicker && (
-          <PriceTicker
-            dismissable
-            onDismiss={() => setShowMobileTicker(false)}
+          <WalletMultiButton
+            style={{
+              height: 32,
+              fontSize: 11,
+              borderRadius: 8,
+              padding: "0 12px",
+              background: "#1a1f2e",
+            }}
           />
-        )}
+        </div>
         <main className="px-4 py-3 animate-fade-in">{children}</main>
       </div>
 
-      {/* Desktop terminal layout: shows at 1024px and above */}
+      {/* Desktop layout */}
       <div className="hidden terminal:flex flex-col h-screen w-screen overflow-hidden">
-        {/* Top Bar */}
-        <TopBar />
-
-        {/* Middle section: sidebar + main content */}
-        <div className="flex flex-1 min-h-0">
-          {/* Sidebar */}
-          <Sidebar onOpenShortcuts={openShortcutsModal} />
-
-          {/* Main Content Area */}
-          <main className="flex-1 min-w-0 overflow-y-auto terminal-scrollbar">
-            <div className="max-w-terminal mx-auto px-6 py-4 animate-fade-in">
-              {children}
-            </div>
-          </main>
+        {/* Simple top bar */}
+        <div
+          className="flex items-center justify-between px-6 h-12 shrink-0"
+          style={{
+            background: "#0a0d14",
+            borderBottom: "1px solid #1a1f2e",
+          }}
+        >
+          <span
+            className="font-bold text-sm tracking-widest font-mono"
+            style={{ color: "#8b5cf6" }}
+          >
+            HATCHER
+          </span>
+          <div className="flex items-center gap-3">
+            {publicKey && (
+              <span
+                className="text-xs font-mono"
+                style={{ color: "#5c6380" }}
+              >
+                {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
+              </span>
+            )}
+            <WalletMultiButton
+              style={{
+                height: 32,
+                fontSize: 11,
+                borderRadius: 8,
+                padding: "0 12px",
+                background: "#1a1f2e",
+              }}
+            />
+          </div>
         </div>
 
-        {/* Bottom Positions Bar */}
-        <PositionsBar />
+        {/* Main content */}
+        <main className="flex-1 min-w-0 overflow-y-auto terminal-scrollbar">
+          <div className="max-w-terminal mx-auto px-6 py-4 animate-fade-in">
+            {children}
+          </div>
+        </main>
       </div>
 
-      {/* Global floating panels */}
+      {/* Floating TX tracker */}
       <TxStatusTracker />
-
-      {/* Global modals */}
-      <WelcomeModal />
-      <ShortcutsModal isOpen={shortcutsOpen} onClose={closeShortcutsModal} />
-      <CommandPalette isOpen={commandPaletteOpen} onClose={closeCommandPalette} />
-      <MobileSearch isOpen={mobileSearchOpen} onClose={closeMobileSearch} />
     </>
   );
 }

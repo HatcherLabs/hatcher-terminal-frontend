@@ -76,9 +76,9 @@ const STATS = [
 ];
 
 const STEPS = [
-  { step: "01", title: "Create Account", desc: "Sign up in seconds. No KYC required." },
-  { step: "02", title: "Generate Wallet", desc: "A Solana wallet is created locally on your device." },
-  { step: "03", title: "Fund & Trade", desc: "Deposit SOL and start swiping through new tokens." },
+  { step: "01", title: "Connect Wallet", desc: "Use Phantom, Solflare, or Backpack. No signup needed." },
+  { step: "02", title: "Fund Your Wallet", desc: "Deposit SOL to your wallet. You keep your keys." },
+  { step: "03", title: "Swipe & Trade", desc: "Swipe right to ape into hot PumpFun tokens." },
 ];
 
 export default function LandingPage() {
@@ -134,14 +134,7 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-3">
             <Link
-              href="/login"
-              className="px-4 py-1.5 text-xs font-medium transition-colors"
-              style={{ color: "#9ca3b8" }}
-            >
-              Log In
-            </Link>
-            <Link
-              href="/signup"
+              href="/swipe"
               className="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all hover:brightness-110"
               style={{
                 background: "linear-gradient(135deg, #00d672 0%, #00cc6a 100%)",
@@ -201,9 +194,9 @@ export default function LandingPage() {
             Discover Pump.fun tokens the moment they launch. Swipe right to ape in.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <div className="flex items-center justify-center">
             <Link
-              href="/signup"
+              href="/swipe"
               className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-semibold text-sm transition-all hover:brightness-110 hover:shadow-lg text-center"
               style={{
                 background: "linear-gradient(135deg, #00d672 0%, #00cc6a 100%)",
@@ -212,17 +205,6 @@ export default function LandingPage() {
               }}
             >
               Launch App
-            </Link>
-            <Link
-              href="/login"
-              className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-medium text-sm transition-all hover:border-opacity-60 text-center backdrop-blur-sm"
-              style={{
-                backgroundColor: "rgba(10,13,20,0.5)",
-                border: "1px solid rgba(26,31,46,0.8)",
-                color: "#c0c0d0",
-              }}
-            >
-              I have an account
             </Link>
           </div>
         </div>
@@ -361,7 +343,7 @@ export default function LandingPage() {
               Join thousands of traders using Hatcher to discover and trade the freshest tokens on Solana.
             </p>
             <Link
-              href="/signup"
+              href="/swipe"
               className="inline-block px-10 py-3.5 rounded-xl font-semibold text-sm transition-all hover:brightness-110"
               style={{
                 background: "linear-gradient(135deg, #00d672 0%, #00cc6a 100%)",

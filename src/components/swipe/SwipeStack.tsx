@@ -13,8 +13,7 @@ import { SwipeCard } from "./SwipeCard";
 import { SwipeOverlay } from "./SwipeOverlay";
 import { TokenDetailModal } from "@/components/token/TokenDetailModal";
 import { useFeed } from "@/components/providers/FeedProvider";
-import { useKey } from "@/components/providers/KeyProvider";
-import { useWatchlist } from "@/components/providers/WatchlistProvider";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { useToast } from "@/components/ui/Toast";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useQuickBuy } from "@/hooks/useQuickBuy";
@@ -60,8 +59,7 @@ function getStoredSwipeCount(): number {
 export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackProps) {
   const feed = useFeed();
   const router = useRouter();
-  const { hasKey } = useKey();
-  const { addToWatchlist } = useWatchlist();
+  const { connected } = useWallet();
   const { amount: quickBuyAmount } = useQuickBuy();
   const { selectToken } = useQuickTrade();
   const toast = useToast();
@@ -196,32 +194,13 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
     incrementSwipeHint();
   }, [incrementSwipeHint]);
 
-  const handleWatchlistSwipe = useCallback(
-    (token: TokenData) => {
-      addToWatchlist({
-        mintAddress: token.mintAddress,
-        name: token.name,
-        ticker: token.ticker,
-        imageUri: token.imageUri,
-      });
-      toast.add(`$${token.ticker} added to watchlist`, "success");
-      updateSession("up", token);
-      advanceToken();
-      requestAnimationFrame(() => {
-        x.set(0);
-        y.set(0);
-      });
-    },
-    [addToWatchlist, toast, updateSession, advanceToken, x, y]
-  );
-
   const handleSwipe = useCallback(
     async (direction: "left" | "right", token: TokenData) => {
       if (swiping) return;
       setSwiping(true);
       setExitDirection(direction);
 
-      if (direction === "right" && !hasKey) {
+      if (direction === "right" && !connected) {
         toast.add("Import your private key to trade", "error");
         setSwiping(false);
         setExitDirection(null);
@@ -301,7 +280,7 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
         setTimeout(() => setExitDirection(null), 350);
       }
     },
-    [swiping, hasKey, advanceToken, toast, x, y, selectToken, updateSession]
+    [swiping, connected, advanceToken, toast, x, y, selectToken, updateSession]
   );
 
   const handleDragEnd = useCallback(
@@ -310,18 +289,6 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
 
       const absX = Math.abs(info.offset.x);
       const absY = Math.abs(info.offset.y);
-
-      // Check for upward swipe (watchlist)
-      if (info.offset.y < -SWIPE_UP_THRESHOLD && absY > absX) {
-        setExitDirection("up");
-        setSwiping(true);
-        handleWatchlistSwipe(currentToken);
-        setTimeout(() => {
-          setSwiping(false);
-          setExitDirection(null);
-        }, 350);
-        return;
-      }
 
       const distanceMet = absX > SWIPE_THRESHOLD;
       const velocityMet = Math.abs(info.velocity.x) > VELOCITY_THRESHOLD;
@@ -337,7 +304,7 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
         handleSwipe(finalDirection, currentToken);
       }
     },
-    [currentToken, handleSwipe, handleWatchlistSwipe]
+    [currentToken, handleSwipe]
   );
 
   // Undo last pass swipe
@@ -365,16 +332,6 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
       if (!currentToken || swiping) return;
       if (e.key === "ArrowLeft") handleSwipe("left", currentToken);
       if (e.key === "ArrowRight") handleSwipe("right", currentToken);
-      if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setExitDirection("up");
-        setSwiping(true);
-        handleWatchlistSwipe(currentToken);
-        setTimeout(() => {
-          setSwiping(false);
-          setExitDirection(null);
-        }, 350);
-      }
       if (e.key === "z" && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         handleUndo();
@@ -382,7 +339,7 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [currentToken, swiping, handleSwipe, handleWatchlistSwipe, handleUndo]);
+  }, [currentToken, swiping, handleSwipe, handleUndo]);
 
   // Loading state
   if (!feed.connected && tokens.length === 0) {
@@ -412,9 +369,9 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
   return (
     <>
       <div className="relative flex flex-col items-center swipe-stack-safe-area">
-        {!hasKey && (
+        {!connected && (
           <div className="mb-3 px-4 py-2 rounded-lg text-xs text-center" style={{ backgroundColor: "rgba(240,160,0,0.08)", border: "1px solid rgba(240,160,0,0.2)", color: "#f0a000" }}>
-            Import your key to trade -- you can still browse
+            Connect your wallet to trade -- you can still browse
           </div>
         )}
 
@@ -486,9 +443,7 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
             <span style={{ color: "rgba(242,54,69,0.5)" }}>&larr; NOPE</span>
-            <span className="mx-4" style={{ color: "#363d54" }}>|</span>
-            <span style={{ color: "rgba(240,160,0,0.5)" }}>&uarr; WATCH</span>
-            <span className="mx-4" style={{ color: "#363d54" }}>|</span>
+            <span className="mx-6" style={{ color: "#363d54" }}>|</span>
             <span style={{ color: "rgba(0,214,114,0.5)" }}>APE IN &rarr;</span>
           </motion.p>
         )}
@@ -511,34 +466,8 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
             &#10005;
           </button>
 
-          {/* Middle cluster: undo, watchlist, SOL amount */}
+          {/* Middle cluster: undo + SOL amount */}
           <div className="flex flex-col items-center gap-1.5">
-            {/* Watchlist button */}
-            <button
-              onClick={() => {
-                if (!currentToken || swiping) return;
-                setExitDirection("up");
-                setSwiping(true);
-                handleWatchlistSwipe(currentToken);
-                setTimeout(() => {
-                  setSwiping(false);
-                  setExitDirection(null);
-                }, 350);
-              }}
-              disabled={swiping}
-              className="w-10 h-10 sm:w-11 sm:h-11 rounded-full text-lg flex items-center justify-center transition-all duration-200 disabled:opacity-30 hover:scale-110 active:scale-90"
-              style={{
-                background: "rgba(240,160,0,0.08)",
-                border: "2px solid #f0a000",
-                color: "#f0a000",
-                boxShadow: "0 0 16px rgba(240,160,0,0.15), 0 0 32px rgba(240,160,0,0.06)",
-              }}
-              aria-label="Add to watchlist"
-              title="Add to watchlist (swipe up)"
-            >
-              &#9733;
-            </button>
-
             <div className="flex items-center gap-2">
               {/* Undo button */}
               <button
