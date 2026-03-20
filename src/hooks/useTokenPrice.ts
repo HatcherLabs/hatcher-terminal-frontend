@@ -12,6 +12,8 @@ export interface LiveTokenData {
   volume1h: number | null;
   priceChange5m: number | null;
   priceChange1h: number | null;
+  priceChange6h: number | null;
+  priceChange24h: number | null;
   buyCount1h: number | null;
   sellCount1h: number | null;
   liquidity: number | null;
@@ -69,6 +71,8 @@ export function useTokenPrice(
         volume1h: json.data.volume1h,
         priceChange5m: json.data.priceChange5m,
         priceChange1h: json.data.priceChange1h,
+        priceChange6h: json.data.priceChange6h ?? null,
+        priceChange24h: json.data.priceChange24h ?? null,
         buyCount1h: json.data.buyCount1h,
         sellCount1h: json.data.sellCount1h,
         liquidity: json.data.liquidity,

@@ -14,6 +14,8 @@ import { WatchlistButton } from "@/components/ui/WatchlistButton";
 import { CompareButton } from "@/components/ui/CompareButton";
 import { PriceAlertButton } from "@/components/ui/PriceAlertButton";
 import { useToast } from "@/components/ui/Toast";
+import { CopyButton } from "@/components/ui/CopyButton";
+import { TokenSocials } from "@/components/token/TokenSocials";
 import { useQuickTrade } from "@/components/providers/QuickTradeProvider";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { api } from "@/lib/api";
@@ -344,7 +346,7 @@ export default function TokenTerminalPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
-  const [activeLeftTab, setActiveLeftTab] = useState<"overview" | "trades" | "holders" | "info">("overview");
+  const [activeLeftTab, setActiveLeftTab] = useState<"overview" | "trade" | "trades" | "holders" | "info">("overview");
   const [activeTradeTab, setActiveTradeTab] = useState<"buy" | "sell">("buy");
   const [customAmount, setCustomAmount] = useState("");
   const [tradeLoading, setTradeLoading] = useState(false);
@@ -633,6 +635,10 @@ export default function TokenTerminalPage() {
     liveData?.priceChange5m ?? token?.priceChange5m ?? null;
   const priceChange1h =
     liveData?.priceChange1h ?? token?.priceChange1h ?? null;
+  const priceChange6h =
+    liveData?.priceChange6h ?? token?.priceChange6h ?? null;
+  const priceChange24h =
+    liveData?.priceChange24h ?? token?.priceChange24h ?? null;
   const priceSol = liveData?.priceSol ?? null;
 
   const bondingPct =
@@ -781,57 +787,13 @@ export default function TokenTerminalPage() {
         <div className="hidden sm:block w-px h-5 shrink-0" style={{ background: "#1a1f2e" }} />
 
         {/* Social links inline */}
-        <div className="hidden sm:flex items-center gap-1 shrink-0">
-          {token.twitter && (
-            <a
-              href={token.twitter}
-              target="_blank"
-              rel="noopener noreferrer"
-              title="Twitter / X"
-              className="w-7 h-7 flex items-center justify-center rounded transition-colors"
-              style={{ color: "#5c6380", background: "#10131c", border: "1px solid #1a1f2e" }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = "#1DA1F2"; e.currentTarget.style.borderColor = "rgba(29,161,242,0.3)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = "#5c6380"; e.currentTarget.style.borderColor = "#1a1f2e"; }}
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-              </svg>
-            </a>
-          )}
-          {token.telegram && (
-            <a
-              href={token.telegram.startsWith("http") ? token.telegram : `https://t.me/${token.telegram}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              title="Telegram"
-              className="w-7 h-7 flex items-center justify-center rounded transition-colors"
-              style={{ color: "#5c6380", background: "#10131c", border: "1px solid #1a1f2e" }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = "#229ED9"; e.currentTarget.style.borderColor = "rgba(34,158,217,0.3)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = "#5c6380"; e.currentTarget.style.borderColor = "#1a1f2e"; }}
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
-              </svg>
-            </a>
-          )}
-          {token.website && (
-            <a
-              href={token.website.startsWith("http") ? token.website : `https://${token.website}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              title="Website"
-              className="w-7 h-7 flex items-center justify-center rounded transition-colors"
-              style={{ color: "#5c6380", background: "#10131c", border: "1px solid #1a1f2e" }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = "#00d672"; e.currentTarget.style.borderColor = "rgba(0,214,114,0.3)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = "#5c6380"; e.currentTarget.style.borderColor = "#1a1f2e"; }}
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="2" y1="12" x2="22" y2="12" />
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-              </svg>
-            </a>
-          )}
+        <div className="hidden sm:flex items-center shrink-0">
+          <TokenSocials
+            twitter={token.twitter}
+            telegram={token.telegram}
+            website={token.website}
+            mintAddress={token.mintAddress}
+          />
         </div>
 
         {/* Divider */}
@@ -856,18 +818,7 @@ export default function TokenTerminalPage() {
             size={14}
           />
           {/* Copy mint button */}
-          <button
-            onClick={() => handleCopy(token.mintAddress, "header-ca")}
-            className="h-7 px-2 flex items-center gap-1 rounded text-[10px] font-mono transition-colors"
-            style={{
-              background: "#10131c",
-              border: "1px solid #1a1f2e",
-              color: copied === "header-ca" ? "#00d672" : "#5c6380",
-            }}
-            title="Copy contract address"
-          >
-            {copied === "header-ca" ? "\u2713" : shortenAddress(token.mintAddress)}
-          </button>
+          <CopyButton text={token.mintAddress} label={shortenAddress(token.mintAddress)} size="sm" />
         </div>
       </div>
 
@@ -902,6 +853,39 @@ export default function TokenTerminalPage() {
         </div>
       </div>
 
+      {/* ====== PRICE CHANGE STATS ROW ====== */}
+      {(priceChange5m !== null || priceChange1h !== null || priceChange6h !== null || priceChange24h !== null) && (
+        <div
+          className="flex items-center gap-1.5 px-3 py-2 mb-3 rounded overflow-x-auto"
+          style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
+        >
+          <span className="text-[9px] uppercase tracking-wider shrink-0" style={{ color: "#5c6380" }}>
+            Change
+          </span>
+          {[
+            { label: "5m", value: priceChange5m },
+            { label: "1h", value: priceChange1h },
+            { label: "6h", value: priceChange6h },
+            { label: "24h", value: priceChange24h },
+          ].map(({ label, value }) =>
+            value !== null ? (
+              <span
+                key={label}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold shrink-0"
+                style={{
+                  color: value > 0 ? "#00d672" : value < 0 ? "#f23645" : "#5c6380",
+                  background: value > 0 ? "rgba(0,214,114,0.08)" : value < 0 ? "rgba(242,54,69,0.08)" : "rgba(92,99,128,0.08)",
+                  border: `1px solid ${value > 0 ? "rgba(0,214,114,0.2)" : value < 0 ? "rgba(242,54,69,0.2)" : "rgba(92,99,128,0.2)"}`,
+                }}
+              >
+                <span style={{ color: "#5c6380", fontWeight: 400 }}>{label}</span>
+                {value > 0 ? "+" : ""}{value.toFixed(1)}%
+              </span>
+            ) : null
+          )}
+        </div>
+      )}
+
       {/* ====== MAIN 2-COLUMN LAYOUT ====== */}
       <div className="flex flex-col lg:flex-row gap-3 items-start">
         {/* ====== LEFT COLUMN: Chart + Metrics ====== */}
@@ -914,7 +898,7 @@ export default function TokenTerminalPage() {
             className="flex gap-0"
             style={{ borderBottom: "1px solid #1a1f2e" }}
           >
-            {(["overview", "trades", "holders", "info"] as const).map((tab) => (
+            {(["overview", "trade", "trades", "holders", "info"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveLeftTab(tab)}

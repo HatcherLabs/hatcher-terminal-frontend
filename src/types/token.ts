@@ -24,6 +24,8 @@ export interface TokenData {
   riskFactors: Record<string, unknown> | null;
   priceChange5m: number | null;
   priceChange1h: number | null;
+  priceChange6h: number | null;
+  priceChange24h: number | null;
   twitter: string | null;
   telegram: string | null;
   website: string | null;
