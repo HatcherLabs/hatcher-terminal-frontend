@@ -130,7 +130,7 @@ export function ShortcutsModal({ isOpen, onClose }: ShortcutsModalProps) {
             className="w-7 h-7 flex items-center justify-center rounded-full transition-colors"
             onMouseEnter={(e) => (e.currentTarget.style.color = "#eef0f6")}
             onMouseLeave={(e) => (e.currentTarget.style.color = "#5c6380")}
-            style={{ backgroundColor: "#181c28" }}
+            style={{ backgroundColor: "#181c28", color: "#5c6380" }}
             aria-label="Close shortcuts modal"
           >
             <svg
@@ -156,8 +156,8 @@ export function ShortcutsModal({ isOpen, onClose }: ShortcutsModalProps) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search shortcuts..."
-            className="w-full h-8 rounded-md px-3 text-xs font-mono text-text-secondary placeholder:text-text-faint outline-none focus:ring-1 focus:ring-accent/40"
-            style={{ backgroundColor: "#10131c", borderWidth: 1, borderColor: "#1a1f2e" }}
+            className="w-full h-8 rounded-md px-3 text-xs font-mono outline-none focus:ring-1"
+            style={{ backgroundColor: "#10131c", borderWidth: 1, borderColor: "#1a1f2e", color: "#9ca3b8", caretColor: "#00d672" }}
           />
         </div>
 
@@ -194,7 +194,7 @@ export function ShortcutsModal({ isOpen, onClose }: ShortcutsModalProps) {
                           </div>
                         </td>
                         <td className="py-1 align-middle">
-                          <span className="text-xs text-text-secondary">
+                          <span className="text-xs" style={{ color: "#9ca3b8" }}>
                             {shortcut.description}
                           </span>
                         </td>
@@ -205,7 +205,7 @@ export function ShortcutsModal({ isOpen, onClose }: ShortcutsModalProps) {
               </div>
             ))
           ) : (
-            <p className="text-xs text-text-faint text-center py-6">
+            <p className="text-xs text-center py-6" style={{ color: "#363d54" }}>
               No shortcuts matching &ldquo;{search}&rdquo;
             </p>
           )}
@@ -216,7 +216,7 @@ export function ShortcutsModal({ isOpen, onClose }: ShortcutsModalProps) {
           className="px-5 py-2.5"
           style={{ borderTopWidth: 1, borderColor: "#1a1f2e" }}
         >
-          <p className="text-[10px] text-text-faint text-center">
+          <p className="text-[10px] text-center" style={{ color: "#363d54" }}>
             Press <Kbd>?</Kbd> to toggle &middot; <Kbd>Esc</Kbd> to close
           </p>
         </div>

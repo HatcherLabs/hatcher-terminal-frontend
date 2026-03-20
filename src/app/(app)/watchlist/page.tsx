@@ -387,15 +387,6 @@ export default function WatchlistPage() {
     saveGroups(next);
   };
 
-  const removeMintFromGroup = (groupId: string, mint: string) => {
-    const next = groups.map((g) => {
-      if (g.id !== groupId) return g;
-      return { ...g, mints: g.mints.filter((m) => m !== mint) };
-    });
-    setGroups(next);
-    saveGroups(next);
-  };
-
   const bulkAddToGroup = (groupId: string) => {
     addMintsToGroup(groupId, [...selected]);
     setSelected(new Set());
