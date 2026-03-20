@@ -110,8 +110,8 @@ export default function SignupPage() {
 
       <div className="max-w-sm w-full space-y-8 relative z-10">
         <div className="text-center space-y-2">
-          <Link href="/" className="inline-block text-xs font-mono text-text-muted hover:text-text-secondary transition-colors mb-4">
-            &larr; Back
+          <Link href="/" className="inline-block text-xs font-mono text-text-muted hover:text-green transition-colors mb-4">
+            &larr; Back to Hatcher
           </Link>
           <h1 className="text-2xl font-bold text-text-primary tracking-tight">Join the Trenches</h1>
           <p className="text-sm text-text-secondary font-light">Create your account to start trading</p>

@@ -29,7 +29,7 @@ export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
 
   return (
     <div
-      className="relative rounded-card p-5 w-full space-y-3 no-select"
+      className="relative rounded-card p-3.5 sm:p-5 w-full space-y-3 no-select"
       style={{
         background: "linear-gradient(145deg, rgba(13,13,26,0.95) 0%, rgba(13,13,26,0.85) 100%)",
         backdropFilter: "blur(12px)",

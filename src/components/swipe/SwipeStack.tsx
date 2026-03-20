@@ -420,7 +420,7 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
 
         <div
           ref={containerRef}
-          className="relative w-full max-w-[360px] aspect-[3/4] mx-auto px-4 sm:px-0"
+          className="relative w-full max-w-[320px] sm:max-w-[360px] aspect-[3/4] mx-auto px-2 sm:px-0"
           style={{ perspective: "1000px" }}
         >
           {/* Card stack effect: 2nd and 3rd cards behind */}
@@ -493,11 +493,11 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
         )}
 
         {/* Action buttons with undo */}
-        <div className="flex items-center gap-4 mt-4">
+        <div className="flex items-center gap-2 sm:gap-4 mt-4">
           <button
             onClick={() => currentToken && handleSwipe("left", currentToken)}
             disabled={swiping}
-            className="w-14 h-14 rounded-full text-2xl flex items-center justify-center transition-all duration-200 disabled:opacity-30 hover:scale-105 active:scale-95"
+            className="w-12 h-12 sm:w-14 sm:h-14 rounded-full text-xl sm:text-2xl flex items-center justify-center transition-all duration-200 disabled:opacity-30 hover:scale-105 active:scale-95"
             style={{
               background: "rgba(255,59,92,0.08)",
               border: "2px solid #ff3b5c",
@@ -513,7 +513,7 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
           <button
             onClick={handleUndo}
             disabled={undoHistory.length === 0 || swiping}
-            className="w-10 h-10 rounded-full bg-bg-elevated border border-border text-text-muted flex items-center justify-center hover:text-text-secondary hover:border-border-hover transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-bg-elevated border border-border text-text-muted flex items-center justify-center hover:text-text-secondary hover:border-border-hover transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
             aria-label="Undo last pass"
             title="Undo last pass (Ctrl+Z)"
           >
@@ -536,7 +536,7 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
               }, 350);
             }}
             disabled={swiping}
-            className="w-10 h-10 rounded-full text-lg flex items-center justify-center transition-all duration-200 disabled:opacity-30 hover:scale-105 active:scale-95"
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full text-lg flex items-center justify-center transition-all duration-200 disabled:opacity-30 hover:scale-105 active:scale-95"
             style={{
               background: "rgba(255,170,0,0.06)",
               border: "2px solid #ffaa00",
@@ -554,7 +554,7 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
           <button
             onClick={() => currentToken && handleSwipe("right", currentToken)}
             disabled={swiping}
-            className="w-14 h-14 rounded-full text-2xl flex items-center justify-center transition-all duration-200 disabled:opacity-30 hover:scale-105 active:scale-95"
+            className="w-12 h-12 sm:w-14 sm:h-14 rounded-full text-xl sm:text-2xl flex items-center justify-center transition-all duration-200 disabled:opacity-30 hover:scale-105 active:scale-95"
             style={{
               background: "rgba(0,255,136,0.08)",
               border: "2px solid #00ff88",
