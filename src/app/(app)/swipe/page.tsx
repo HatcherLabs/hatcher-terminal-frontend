@@ -177,7 +177,7 @@ export default function SwipePage() {
         </div>
 
         {/* Desktop live feed sidebar */}
-        <LiveFeed tokens={liveFeedTokens} />
+        <LiveFeed tokens={liveFeedTokens} graduatingTokens={closeToBondTokens} />
       </div>
     </ErrorBoundary>
   );
