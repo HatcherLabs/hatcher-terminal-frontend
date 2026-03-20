@@ -57,11 +57,54 @@ function saveAlerts(alerts: PriceAlert[]) {
   }
 }
 
+/** Request browser notification permission if not yet decided */
+function requestBrowserNotificationPermission() {
+  if (
+    typeof window === "undefined" ||
+    !("Notification" in window) ||
+    Notification.permission !== "default"
+  ) {
+    return;
+  }
+  Notification.requestPermission();
+}
+
+/** Send a browser notification if permission is granted */
+function sendBrowserNotification(title: string, body: string, mintAddress?: string) {
+  if (
+    typeof window === "undefined" ||
+    !("Notification" in window) ||
+    Notification.permission !== "granted"
+  ) {
+    return;
+  }
+  try {
+    const notification = new Notification(title, {
+      body,
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
+      tag: `price-alert-${mintAddress ?? "unknown"}`,
+    });
+    notification.onclick = () => {
+      window.focus();
+      if (mintAddress) {
+        window.location.href = `/token/${mintAddress}`;
+      }
+      notification.close();
+    };
+  } catch {
+    // Notification constructor can throw in some environments
+  }
+}
+
 export function PriceAlertProvider({ children }: { children: ReactNode }) {
   const [alerts, setAlerts] = useState<PriceAlert[]>([]);
   const { addNotification } = useNotifications();
   const { tokens } = useFeed();
   const checkedRef = useRef<Set<string>>(new Set());
+
+  // Request browser notification permission on first alert creation
+  const hasRequestedPermission = useRef(false);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -108,12 +151,20 @@ export function PriceAlertProvider({ children }: { children: ReactNode }) {
         if (shouldTrigger) {
           changed = true;
           checkedRef.current.add(alert.id);
+
+          const alertTitle = `Price Alert: $${alert.tokenTicker}`;
+          const alertMessage = `${alert.tokenName} price went ${alert.direction} ${alert.targetPriceSol} SOL`;
+
           addNotification({
             type: "price_alert",
-            title: `Price Alert: $${alert.tokenTicker}`,
-            message: `${alert.tokenName} price went ${alert.direction} ${alert.targetPriceSol} SOL`,
+            title: alertTitle,
+            message: alertMessage,
             data: { mintAddress: alert.mintAddress },
           });
+
+          // Also send a browser notification
+          sendBrowserNotification(alertTitle, alertMessage, alert.mintAddress);
+
           return { ...alert, triggered: true };
         }
 
@@ -125,6 +176,12 @@ export function PriceAlertProvider({ children }: { children: ReactNode }) {
 
   const addAlert = useCallback(
     (alert: Omit<PriceAlert, "id" | "createdAt" | "triggered">) => {
+      // Request browser notification permission on first alert creation
+      if (!hasRequestedPermission.current) {
+        hasRequestedPermission.current = true;
+        requestBrowserNotificationPermission();
+      }
+
       const newAlert: PriceAlert = {
         ...alert,
         id: Math.random().toString(36).slice(2) + Date.now().toString(36),

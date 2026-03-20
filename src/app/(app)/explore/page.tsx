@@ -206,9 +206,29 @@ export default function ExplorePage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
 
-  const handleLoadMore = () => {
+  const handleLoadMore = useCallback(() => {
+    if (loadingMore) return;
     fetchTokens(tokens.length, true);
-  };
+  }, [fetchTokens, tokens.length, loadingMore]);
+
+  // Infinite scroll: observe a sentinel element at the bottom of the list
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!hasMore || loadingMore || loading) return;
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          handleLoadMore();
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, loadingMore, loading, handleLoadMore]);
 
   const sortedTokens = useMemo(() => {
     const sorted = [...tokens].sort((a, b) => {
@@ -407,15 +427,15 @@ export default function ExplorePage() {
               ))}
 
               {hasMore && (
-                <button
-                  onClick={handleLoadMore}
-                  disabled={loadingMore}
-                  className="mt-3 w-full py-3 rounded-xl bg-bg-card border border-border
-                             text-text-secondary text-sm font-medium
-                             hover:bg-bg-elevated transition-colors disabled:opacity-50"
-                >
-                  {loadingMore ? "Loading..." : "Load more"}
-                </button>
+                <>
+                  {/* Sentinel for infinite scroll */}
+                  <div ref={sentinelRef} className="h-1" aria-hidden="true" />
+                  {loadingMore && (
+                    <div className="mt-3 flex items-center justify-center py-3">
+                      <span className="w-5 h-5 border-2 border-text-faint/30 border-t-text-faint rounded-full animate-spin" />
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}

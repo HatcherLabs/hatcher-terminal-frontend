@@ -3,6 +3,8 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef, ReactNode } from "react";
 import { api } from "@/lib/api";
 import type { TokenData } from "@/types/token";
+import { useAutoSellAlertStore, type AutoSellAlertData } from "@/components/trade/AutoSellAlert";
+import { useToast } from "@/components/ui/Toast";
 
 export type FeedCategory = "new" | "closeToBond" | "migrated";
 
@@ -44,6 +46,9 @@ export function FeedProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const addToast = useToast.getState().add;
+  const pushAutoSellAlert = useAutoSellAlertStore.getState().push;
+
   const connect = useCallback(() => {
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
@@ -81,6 +86,18 @@ export function FeedProvider({ children }: { children: ReactNode }) {
             : t
         )
       );
+    });
+
+    es.addEventListener("auto-sell-alert", (e) => {
+      const alert = JSON.parse(e.data) as AutoSellAlertData;
+      // Show a brief toast notification
+      const label = alert.reason === "take-profit" ? "Take-profit" : "Stop-loss";
+      addToast(
+        `${label} triggered for $${alert.tokenTicker} (${alert.pnlPercent >= 0 ? "+" : ""}${alert.pnlPercent.toFixed(1)}%)`,
+        alert.reason === "take-profit" ? "success" : "error"
+      );
+      // Push to the modal alert store
+      pushAutoSellAlert(alert);
     });
 
     es.onerror = () => {

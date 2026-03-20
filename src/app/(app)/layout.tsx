@@ -13,6 +13,7 @@ import { ToastContainer } from "@/components/ui/Toast";
 import { QuickTradePanel } from "@/components/trade/QuickTradePanel";
 import { QuickTradeFAB } from "@/components/trade/QuickTradeFAB";
 import { KeyboardShortcutsModal } from "@/components/ui/KeyboardShortcutsModal";
+import { AutoSellAlert } from "@/components/trade/AutoSellAlert";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -28,6 +29,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   </TerminalLayout>
                   <BottomNav />
                   <ToastContainer />
+                  <AutoSellAlert />
                   <QuickTradeFAB />
                   <QuickTradePanel />
                   <KeyboardShortcutsModal />

@@ -117,7 +117,7 @@ export default function LandingPage() {
           borderBottom: "1px solid rgba(26,26,46,0.6)",
         }}
       >
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div
               className="w-2 h-2 rounded-full animate-pulse"
@@ -150,10 +150,10 @@ export default function LandingPage() {
       </nav>
 
       {/* ========== HERO ========== */}
-      <section className="relative pt-32 pb-24 px-6 flex flex-col items-center text-center">
+      <section className="relative pt-24 sm:pt-32 pb-16 sm:pb-24 px-4 sm:px-6 flex flex-col items-center text-center">
         {/* Background glows */}
         <div
-          className="absolute top-20 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full blur-[160px] pointer-events-none"
+          className="absolute top-20 left-1/2 -translate-x-1/2 w-[min(800px,100vw)] h-[600px] rounded-full blur-[160px] pointer-events-none"
           style={{ background: "radial-gradient(circle, rgba(0,255,136,0.08) 0%, rgba(124,77,255,0.04) 50%, transparent 80%)" }}
         />
         <div
@@ -175,7 +175,7 @@ export default function LandingPage() {
           </div>
 
           <h1
-            className="text-5xl sm:text-6xl font-bold tracking-tight leading-[1.1] mb-6"
+            className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-[1.1] mb-6"
             style={{ color: "#e8e8f0" }}
           >
             The Trading Terminal{" "}
@@ -191,7 +191,7 @@ export default function LandingPage() {
             </span>
           </h1>
 
-          <p className="text-lg font-light leading-relaxed mb-10 max-w-lg mx-auto" style={{ color: "#8888a0" }}>
+          <p className="text-base sm:text-lg font-light leading-relaxed mb-10 max-w-lg mx-auto" style={{ color: "#8888a0" }}>
             Discover, analyze, and trade Pump.fun tokens the moment they launch.
             Swipe right to buy. Left to dodge the rug.
           </p>
@@ -224,7 +224,7 @@ export default function LandingPage() {
       </section>
 
       {/* ========== STATS BAR ========== */}
-      <section className="px-6 pb-20">
+      <section className="px-4 sm:px-6 pb-16 sm:pb-20">
         <div
           className="max-w-4xl mx-auto rounded-2xl p-6 grid grid-cols-2 sm:grid-cols-4 gap-6"
           style={{
@@ -247,10 +247,10 @@ export default function LandingPage() {
       </section>
 
       {/* ========== FEATURES GRID ========== */}
-      <section className="px-6 pb-24">
+      <section className="px-4 sm:px-6 pb-16 sm:pb-24">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
-            <h2 className="text-3xl font-bold tracking-tight mb-3" style={{ color: "#e8e8f0" }}>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3" style={{ color: "#e8e8f0" }}>
               Everything You Need to Trade
             </h2>
             <p className="text-sm max-w-md mx-auto" style={{ color: "#666680" }}>
@@ -290,10 +290,10 @@ export default function LandingPage() {
       </section>
 
       {/* ========== HOW IT WORKS ========== */}
-      <section className="px-6 pb-24">
+      <section className="px-4 sm:px-6 pb-16 sm:pb-24">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
-            <h2 className="text-3xl font-bold tracking-tight mb-3" style={{ color: "#e8e8f0" }}>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3" style={{ color: "#e8e8f0" }}>
               Start Trading in 3 Steps
             </h2>
             <p className="text-sm" style={{ color: "#666680" }}>
@@ -336,9 +336,9 @@ export default function LandingPage() {
       </section>
 
       {/* ========== FINAL CTA ========== */}
-      <section className="px-6 pb-24">
+      <section className="px-4 sm:px-6 pb-16 sm:pb-24">
         <div
-          className="max-w-3xl mx-auto rounded-2xl p-10 text-center relative overflow-hidden"
+          className="max-w-3xl mx-auto rounded-2xl p-6 sm:p-10 text-center relative overflow-hidden"
           style={{
             background: "linear-gradient(135deg, rgba(0,255,136,0.06) 0%, rgba(124,77,255,0.06) 100%)",
             border: "1px solid rgba(0,255,136,0.12)",
@@ -372,7 +372,7 @@ export default function LandingPage() {
 
       {/* ========== FOOTER ========== */}
       <footer
-        className="px-6 py-8"
+        className="px-4 sm:px-6 py-8"
         style={{ borderTop: "1px solid rgba(26,26,46,0.6)" }}
       >
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
