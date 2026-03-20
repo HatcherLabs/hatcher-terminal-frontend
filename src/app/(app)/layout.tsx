@@ -12,6 +12,7 @@ import { TerminalLayout } from "@/components/layout/TerminalLayout";
 import { ToastContainer } from "@/components/ui/Toast";
 import { QuickTradePanel } from "@/components/trade/QuickTradePanel";
 import { QuickTradeFAB } from "@/components/trade/QuickTradeFAB";
+import { KeyboardShortcutsModal } from "@/components/ui/KeyboardShortcutsModal";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -29,6 +30,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   <ToastContainer />
                   <QuickTradeFAB />
                   <QuickTradePanel />
+                  <KeyboardShortcutsModal />
                 </QuickTradeProvider>
               </PriceAlertProvider>
             </NotificationProvider>

@@ -388,6 +388,7 @@ export default function TokenTerminalPage() {
   const sellCount = liveData?.sellCount1h ?? token?.sellCount ?? null;
   const priceChange5m = liveData?.priceChange5m ?? token?.priceChange5m ?? null;
   const priceChange1h = liveData?.priceChange1h ?? token?.priceChange1h ?? null;
+  const priceSol = liveData?.priceSol ?? null;
 
   const bondingPct = bondingProgress != null ? Math.min(Math.max(bondingProgress, 0), 100) : 0;
   const bondingSol = (bondingPct / 100) * BONDING_GRADUATION_SOL;
@@ -442,144 +443,172 @@ export default function TokenTerminalPage() {
     <div className="flex flex-col md:flex-row md:gap-6 md:items-start pt-2 pb-24 md:pb-4">
       {/* ====== LEFT COLUMN (chart + metrics + info) ====== */}
       <div className="flex-1 min-w-0 space-y-4">
+        {/* -- BACK BUTTON -- */}
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-1.5 text-sm text-text-muted hover:text-text-primary transition-colors w-fit"
+          aria-label="Go back"
+        >
+          <span className="text-base">&#8592;</span>
+          <span>Back</span>
+        </button>
+
         {/* -- HEADER -- */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.back()}
-            className="shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-bg-card border border-border text-text-muted hover:text-text-primary transition-colors"
-            aria-label="Go back"
-          >
-            &#8592;
-          </button>
-          <TokenAvatar
-            mintAddress={token.mintAddress}
-            imageUri={token.imageUri}
-            size={40}
-            ticker={token.ticker}
-          />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h1 className="text-lg font-bold text-text-primary truncate">
-                {token.name}
-              </h1>
-              <span className="text-sm font-mono text-text-muted shrink-0">
-                ${token.ticker}
-              </span>
-              <RiskBadge level={token.riskLevel} />
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+          {/* Left: Avatar + Token Info */}
+          <div className="flex items-start gap-3 min-w-0">
+            <TokenAvatar
+              mintAddress={token.mintAddress}
+              imageUri={token.imageUri}
+              size={48}
+              ticker={token.ticker}
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl font-bold text-text-primary truncate">
+                  {token.name}
+                </h1>
+                <span className="text-sm font-mono text-text-muted shrink-0">
+                  ${token.ticker}
+                </span>
+                <RiskBadge level={token.riskLevel} />
+                {liveData && (
+                  <div className="flex items-center gap-1 shrink-0">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green" />
+                    </span>
+                    <span className="text-[9px] font-bold text-green uppercase tracking-wider">
+                      Live
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Mint address with copy button */}
+              <button
+                onClick={() => handleCopy(token.mintAddress, "ca")}
+                className="flex items-center gap-1.5 text-[11px] font-mono text-text-muted hover:text-text-secondary transition-colors mt-1 px-2 py-0.5 rounded-md hover:bg-bg-elevated"
+                title="Copy contract address"
+              >
+                <span>{shortenAddress(token.mintAddress)}</span>
+                <span className="text-[10px]">
+                  {copied === "ca" ? "\u2713 Copied" : "\u2398 Copy"}
+                </span>
+              </button>
+
+              {/* Action buttons row */}
+              <div className="flex items-center gap-2 mt-2">
+                <CompareButton
+                  mintAddress={token.mintAddress}
+                  size={20}
+                  className="shrink-0"
+                />
+                <WatchlistButton
+                  token={{
+                    mintAddress: token.mintAddress,
+                    name: token.name,
+                    ticker: token.ticker,
+                    imageUri: token.imageUri,
+                  }}
+                  size={20}
+                  className="shrink-0"
+                />
+                <PriceAlertButton
+                  mintAddress={token.mintAddress}
+                  tokenName={token.name}
+                  tokenTicker={token.ticker}
+                  size={16}
+                  className="shrink-0"
+                />
+              </div>
             </div>
-            <button
-              onClick={() => handleCopy(token.mintAddress, "ca")}
-              className="flex items-center gap-1 text-[11px] font-mono text-text-muted hover:text-text-secondary transition-colors mt-0.5"
-              title="Copy contract address"
-            >
-              <span>{shortenAddress(token.mintAddress)}</span>
-              <span className="text-[10px]">
-                {copied === "ca" ? "\u2713" : "\u2398"}
-              </span>
-            </button>
           </div>
 
-          {/* Live indicator */}
-          {liveData && (
-            <div className="flex items-center gap-1 shrink-0">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-green" />
+          {/* Right: Price + Market Cap */}
+          <div className="flex flex-col items-start md:items-end shrink-0 gap-1">
+            {/* Live price in SOL */}
+            <div className="flex items-center gap-2">
+              <span className="text-2xl md:text-3xl font-bold font-mono text-text-primary">
+                {priceSol != null
+                  ? `${priceSol < 0.0001 ? priceSol.toExponential(2) : priceSol.toFixed(priceSol < 0.01 ? 6 : 4)} SOL`
+                  : "\u2014"}
               </span>
-              <span className="text-[9px] font-bold text-green uppercase tracking-wider">
-                Live
-              </span>
-            </div>
-          )}
-
-          {/* Compare */}
-          <CompareButton
-            mintAddress={token.mintAddress}
-            size={22}
-            className="shrink-0"
-          />
-
-          {/* Watchlist */}
-          <WatchlistButton
-            token={{
-              mintAddress: token.mintAddress,
-              name: token.name,
-              ticker: token.ticker,
-              imageUri: token.imageUri,
-            }}
-            size={22}
-            className="shrink-0"
-          />
-
-          {/* Price Alert */}
-          <PriceAlertButton
-            mintAddress={token.mintAddress}
-            tokenName={token.name}
-            tokenTicker={token.ticker}
-            size={18}
-            className="shrink-0"
-          />
-        </div>
-
-        {/* -- MARKET CAP HEADLINE -- */}
-        <div className="flex items-baseline gap-2 flex-wrap">
-          <span className="text-[10px] text-text-muted uppercase tracking-wider">
-            MCap
-          </span>
-          {marketCapUsd != null ? (
-            <>
-              <span className="text-2xl font-bold font-mono text-text-primary">
-                {formatUsd(marketCapUsd)}
-              </span>
-              {marketCapSol != null && (
-                <span className="text-xs font-mono text-text-muted">
-                  ({formatNumber(marketCapSol)} SOL)
-                </span>
-              )}
-            </>
-          ) : marketCapSol != null ? (
-            <span className="text-2xl font-bold font-mono text-text-primary">
-              {formatNumber(marketCapSol)} SOL
-            </span>
-          ) : (
-            <span className="text-sm font-mono text-text-faint italic">
-              Pending...
-            </span>
-          )}
-
-          {/* Price change badges */}
-          {(priceChange5m !== null || priceChange1h !== null) && (
-            <div className="flex items-center gap-2 ml-auto text-xs font-mono">
-              {priceChange5m !== null && (
-                <span
-                  className={
-                    priceChange5m > 0
-                      ? "text-green"
-                      : priceChange5m < 0
-                        ? "text-red"
-                        : "text-text-muted"
-                  }
-                >
-                  5m: {priceChange5m > 0 ? "+" : ""}
-                  {priceChange5m.toFixed(1)}%
-                </span>
-              )}
+              {/* Price change badge (1h) */}
               {priceChange1h !== null && (
                 <span
-                  className={
+                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold font-mono ${
                     priceChange1h > 0
-                      ? "text-green"
+                      ? "bg-green/15 text-green"
                       : priceChange1h < 0
-                        ? "text-red"
-                        : "text-text-muted"
-                  }
+                        ? "bg-red/15 text-red"
+                        : "bg-bg-elevated text-text-muted"
+                  }`}
                 >
-                  1h: {priceChange1h > 0 ? "+" : ""}
+                  {priceChange1h > 0 ? "+" : ""}
                   {priceChange1h.toFixed(1)}%
                 </span>
               )}
             </div>
-          )}
+
+            {/* 5m change as secondary */}
+            {priceChange5m !== null && (
+              <span
+                className={`text-xs font-mono ${
+                  priceChange5m > 0
+                    ? "text-green"
+                    : priceChange5m < 0
+                      ? "text-red"
+                      : "text-text-muted"
+                }`}
+              >
+                5m: {priceChange5m > 0 ? "+" : ""}
+                {priceChange5m.toFixed(1)}%
+              </span>
+            )}
+
+            {/* Market cap in USD */}
+            <div className="flex items-baseline gap-2 mt-1">
+              <span className="text-[10px] text-text-muted uppercase tracking-wider">
+                MCap
+              </span>
+              {marketCapUsd != null ? (
+                <>
+                  <span className="text-sm font-semibold font-mono text-text-secondary">
+                    {formatUsd(marketCapUsd)}
+                  </span>
+                  {marketCapSol != null && (
+                    <span className="text-xs font-mono text-text-muted">
+                      ({formatNumber(marketCapSol)} SOL)
+                    </span>
+                  )}
+                </>
+              ) : marketCapSol != null ? (
+                <span className="text-sm font-semibold font-mono text-text-secondary">
+                  {formatNumber(marketCapSol)} SOL
+                </span>
+              ) : (
+                <span className="text-xs font-mono text-text-faint italic">
+                  Pending...
+                </span>
+              )}
+            </div>
+
+            {/* Bonding curve progress (only if not graduated) */}
+            {!token.isGraduated && bondingProgress != null && (
+              <div className="flex items-center gap-2 mt-1 w-full md:w-48">
+                <div className="flex-1 h-1.5 bg-bg-elevated rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-accent rounded-full transition-all duration-500"
+                    style={{ width: `${bondingPct}%` }}
+                  />
+                </div>
+                <span className="text-[10px] font-mono text-text-muted shrink-0">
+                  {bondingPct.toFixed(0)}%
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* -- CHART (larger) -- */}
