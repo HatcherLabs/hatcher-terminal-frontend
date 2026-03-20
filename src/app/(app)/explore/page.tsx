@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import Link from "next/link";
 import { WatchlistButton } from "@/components/ui/WatchlistButton";
 import { CompareButton } from "@/components/ui/CompareButton";
 import { AnimatedPrice } from "@/components/ui/AnimatedPrice";
@@ -10,11 +10,21 @@ import { useToast } from "@/components/ui/Toast";
 import { api } from "@/lib/api";
 
 type ExploreCategory = "new" | "graduating" | "migrated";
+type SortKey = "newest" | "marketCap" | "holders" | "volume" | "bonding";
+type SortDirection = "desc" | "asc";
 
 const TABS: { key: ExploreCategory; label: string }[] = [
   { key: "new", label: "New Pairs" },
   { key: "graduating", label: "Close to Bond" },
   { key: "migrated", label: "Migrated" },
+];
+
+const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+  { key: "newest", label: "Newest" },
+  { key: "marketCap", label: "Market Cap" },
+  { key: "holders", label: "Holders" },
+  { key: "volume", label: "Volume" },
+  { key: "bonding", label: "Bonding %" },
 ];
 
 const SOL_PRICE_USD = Number(process.env.NEXT_PUBLIC_SOL_PRICE_USD || 150);
@@ -80,6 +90,10 @@ export default function ExplorePage() {
   const refreshTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const fetchFailCountRef = useRef(0);
   const toast = useToast();
+
+  // Sort state
+  const [sortKey, setSortKey] = useState<SortKey>("newest");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -192,16 +206,56 @@ export default function ExplorePage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
 
-  // Navigation
-  const router = useRouter();
-
-  const handleSelectToken = useCallback((token: ExploreToken) => {
-    router.push(`/token/${token.mintAddress}`);
-  }, [router]);
-
   const handleLoadMore = () => {
     fetchTokens(tokens.length, true);
   };
+
+  const sortedTokens = useMemo(() => {
+    const sorted = [...tokens].sort((a, b) => {
+      let aVal: number;
+      let bVal: number;
+
+      switch (sortKey) {
+        case "newest":
+          aVal = new Date(a.detectedAt).getTime();
+          bVal = new Date(b.detectedAt).getTime();
+          break;
+        case "marketCap":
+          aVal = a.marketCapSol ?? 0;
+          bVal = b.marketCapSol ?? 0;
+          break;
+        case "holders":
+          aVal = a.holders ?? 0;
+          bVal = b.holders ?? 0;
+          break;
+        case "volume":
+          aVal = (a.buyCount ?? 0) + (a.sellCount ?? 0);
+          bVal = (b.buyCount ?? 0) + (b.sellCount ?? 0);
+          break;
+        case "bonding":
+          aVal = a.bondingProgress ?? 0;
+          bVal = b.bondingProgress ?? 0;
+          break;
+        default:
+          return 0;
+      }
+
+      return sortDirection === "desc" ? bVal - aVal : aVal - bVal;
+    });
+    return sorted;
+  }, [tokens, sortKey, sortDirection]);
+
+  const handleSortToggle = useCallback(
+    (key: SortKey) => {
+      if (sortKey === key) {
+        setSortDirection((prev) => (prev === "desc" ? "asc" : "desc"));
+      } else {
+        setSortKey(key);
+        setSortDirection("desc");
+      }
+    },
+    [sortKey]
+  );
 
   return (
     <div className="flex flex-col pt-2">
@@ -271,6 +325,36 @@ export default function ExplorePage() {
         })}
       </nav>
 
+      {/* Sort bar */}
+      <div className="flex items-center gap-1.5 mb-3 flex-wrap">
+        <span className="text-[11px] text-text-faint mr-0.5">Sort:</span>
+        {SORT_OPTIONS.map((opt) => {
+          const isActive = sortKey === opt.key;
+          return (
+            <button
+              key={opt.key}
+              onClick={() => handleSortToggle(opt.key)}
+              className={`
+                px-2.5 py-1 rounded-full text-[11px] font-medium border
+                transition-all duration-150 whitespace-nowrap
+                ${
+                  isActive
+                    ? "bg-accent/15 text-accent border-accent/30"
+                    : "text-text-muted border-transparent hover:text-text-secondary"
+                }
+              `}
+            >
+              {opt.label}
+              {isActive && (
+                <span className="ml-1 inline-block">
+                  {sortDirection === "desc" ? "\u2193" : "\u2191"}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Token list / Search results */}
       {searchQuery.length >= 2 ? (
         <div className="flex flex-col gap-[1px]">
@@ -290,7 +374,7 @@ export default function ExplorePage() {
                 key={token.id}
                 token={token}
                 isNew={false}
-                onSelect={handleSelectToken}
+
               />
             ))
           )}
@@ -307,18 +391,18 @@ export default function ExplorePage() {
                 <SkeletonRow key={i} />
               ))}
             </div>
-          ) : tokens.length === 0 ? (
+          ) : sortedTokens.length === 0 ? (
             <div className="text-center py-12 text-text-muted text-sm">
               No tokens found in this category.
             </div>
           ) : (
             <>
-              {tokens.map((token) => (
+              {sortedTokens.map((token) => (
                 <TokenRow
                   key={token.id}
                   token={token}
                   isNew={newIds.has(token.id)}
-                  onSelect={handleSelectToken}
+  
                 />
               ))}
 
@@ -347,7 +431,6 @@ export default function ExplorePage() {
 function TokenRow({
   token,
   isNew,
-  onSelect,
 }: {
   token: ExploreToken;
   isNew: boolean;
@@ -357,8 +440,8 @@ function TokenRow({
     token.marketCapSol != null ? token.marketCapSol * SOL_PRICE_USD : null;
 
   return (
-    <button
-      onClick={() => onSelect?.(token)}
+    <Link
+      href={`/token/${token.mintAddress}`}
       className={`
         w-full text-left flex items-center gap-3 px-3 py-3 bg-bg-card border border-border rounded-xl
         hover:bg-bg-elevated hover:border-border-hover transition-all duration-200 cursor-pointer
@@ -471,7 +554,7 @@ function TokenRow({
           size={18}
         />
       </div>
-    </button>
+    </Link>
   );
 }
 

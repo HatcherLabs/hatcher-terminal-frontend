@@ -322,42 +322,103 @@ export default function SettingsPage() {
           />
         </div>
 
-        {/* Slippage */}
-        <div className="bg-bg-card border border-border rounded-xl p-4">
-          <label className="text-xs text-text-muted uppercase tracking-wider">
-            Slippage (%)
-          </label>
-          <input
-            type="number"
-            step="0.5"
-            min="0.1"
-            max="50"
-            value={settings.slippageBps / 100}
-            onChange={(e) =>
-              setSettings({
-                ...settings,
-                slippageBps: Math.round(parseFloat(e.target.value || "0") * 100),
-              })
-            }
-            className="w-full mt-2 bg-bg-primary border border-border rounded-lg px-3 py-2 text-sm font-mono text-text-primary focus:border-green focus:outline-none"
-          />
-        </div>
+        {/* ===== Transaction Settings ===== */}
+        <div className="bg-bg-card border border-border rounded-xl p-4 space-y-4">
+          <div>
+            <h2 className="text-xs text-text-muted uppercase tracking-wider font-semibold">
+              Transaction Settings
+            </h2>
+            <p className="text-[11px] text-text-muted mt-1">
+              Configure slippage, fees, and MEV protection.
+            </p>
+          </div>
 
-        {/* Priority Fee */}
-        <div className="bg-bg-card border border-border rounded-xl p-4">
-          <label className="text-xs text-text-muted uppercase tracking-wider">
-            Priority Fee (SOL)
-          </label>
-          <input
-            type="number"
-            step="0.001"
-            min="0"
-            value={settings.priorityFeeSol}
-            onChange={(e) =>
-              setSettings({ ...settings, priorityFeeSol: parseFloat(e.target.value) || 0 })
-            }
-            className="w-full mt-2 bg-bg-primary border border-border rounded-lg px-3 py-2 text-sm font-mono text-text-primary focus:border-green focus:outline-none"
-          />
+          {/* Slippage */}
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-text-secondary">
+              Slippage (%)
+            </label>
+            <div className="flex flex-wrap gap-1.5">
+              {[1, 5, 10, 15, 25].map((pct) => (
+                <button
+                  key={pct}
+                  onClick={() =>
+                    setSettings({ ...settings, slippageBps: pct * 100 })
+                  }
+                  className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all border ${
+                    settings.slippageBps === pct * 100
+                      ? "bg-green/15 border-green/40 text-green"
+                      : "bg-bg-primary border-border text-text-secondary hover:border-green/30"
+                  }`}
+                >
+                  {pct}%
+                </button>
+              ))}
+            </div>
+            <input
+              type="number"
+              step="0.5"
+              min="0.1"
+              max="50"
+              value={settings.slippageBps / 100}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  slippageBps: Math.round(parseFloat(e.target.value || "0") * 100),
+                })
+              }
+              className="w-full bg-bg-primary border border-border rounded-lg px-3 py-2 text-sm font-mono text-text-primary focus:border-green focus:outline-none"
+              placeholder="Custom slippage %"
+            />
+            {settings.slippageBps > 1500 && (
+              <p className="text-[10px] text-amber">
+                High slippage may result in unfavorable trade execution.
+              </p>
+            )}
+          </div>
+
+          {/* Priority Fee */}
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-text-secondary">
+              Priority Fee (SOL)
+            </label>
+            <p className="text-[10px] text-text-muted">
+              Higher fee = faster confirmation. Recommended: 0.001-0.01 SOL.
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                { label: "Low", value: 0.0001 },
+                { label: "Normal", value: 0.001 },
+                { label: "Fast", value: 0.005 },
+                { label: "Turbo", value: 0.01 },
+              ].map(({ label, value }) => (
+                <button
+                  key={label}
+                  onClick={() =>
+                    setSettings({ ...settings, priorityFeeSol: value })
+                  }
+                  className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all border ${
+                    settings.priorityFeeSol === value
+                      ? "bg-green/15 border-green/40 text-green"
+                      : "bg-bg-primary border-border text-text-secondary hover:border-green/30"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <input
+              type="number"
+              step="0.001"
+              min="0"
+              value={settings.priorityFeeSol}
+              onChange={(e) =>
+                setSettings({ ...settings, priorityFeeSol: parseFloat(e.target.value) || 0 })
+              }
+              className="w-full bg-bg-primary border border-border rounded-lg px-3 py-2 text-sm font-mono text-text-primary focus:border-green focus:outline-none"
+              placeholder="Custom priority fee"
+            />
+          </div>
         </div>
 
         {/* Max Risk Level */}

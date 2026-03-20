@@ -155,9 +155,9 @@ function NotificationItem({
 }
 
 export function NotificationPanel({ onClose }: { onClose: () => void }) {
-  const { notifications, markAllRead, clearAll, unreadCount } =
-    useNotifications();
+  const { notifications, clearAll } = useNotifications();
   const router = useRouter();
+  const visibleNotifications = notifications.slice(0, 10);
 
   const handleNavigate = (mint: string) => {
     onClose();
@@ -168,39 +168,14 @@ export function NotificationPanel({ onClose }: { onClose: () => void }) {
     <div className="absolute right-0 top-full mt-2 w-80 bg-bg-elevated rounded-lg shadow-xl border border-border z-[80] overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2.5 border-b border-border">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-text-primary">
-            Notifications
-          </span>
-          {unreadCount > 0 && (
-            <span className="text-[10px] text-text-muted">
-              {unreadCount} new
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-1">
-          {unreadCount > 0 && (
-            <button
-              onClick={markAllRead}
-              className="text-[10px] text-accent hover:text-accent/80 transition-colors px-1.5 py-0.5 rounded hover:bg-bg-hover"
-            >
-              Mark all read
-            </button>
-          )}
-          {notifications.length > 0 && (
-            <button
-              onClick={clearAll}
-              className="text-[10px] text-text-muted hover:text-text-secondary transition-colors px-1.5 py-0.5 rounded hover:bg-bg-hover"
-            >
-              Clear
-            </button>
-          )}
-        </div>
+        <span className="text-xs font-semibold text-text-primary">
+          Notifications
+        </span>
       </div>
 
       {/* Notification list */}
-      <div className="max-h-96 overflow-y-auto overscroll-contain scrollbar-thin">
-        {notifications.length === 0 ? (
+      <div className="max-h-80 overflow-y-auto overscroll-contain terminal-scrollbar">
+        {visibleNotifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 px-4">
             <svg
               viewBox="0 0 24 24"
@@ -218,7 +193,7 @@ export function NotificationPanel({ onClose }: { onClose: () => void }) {
           </div>
         ) : (
           <div className="divide-y divide-border/50">
-            {notifications.map((n) => (
+            {visibleNotifications.map((n) => (
               <NotificationItem
                 key={n.id}
                 notification={n}
@@ -228,6 +203,18 @@ export function NotificationPanel({ onClose }: { onClose: () => void }) {
           </div>
         )}
       </div>
+
+      {/* Footer with Clear all */}
+      {notifications.length > 0 && (
+        <div className="border-t border-border px-3 py-2 flex items-center justify-center">
+          <button
+            onClick={clearAll}
+            className="text-[10px] text-text-muted hover:text-text-secondary transition-colors px-2 py-1 rounded hover:bg-bg-hover font-mono"
+          >
+            Clear all
+          </button>
+        </div>
+      )}
     </div>
   );
 }

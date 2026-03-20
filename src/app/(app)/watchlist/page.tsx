@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useWatchlist, WatchlistItem } from "@/components/providers/WatchlistProvider";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { api } from "@/lib/api";
@@ -118,15 +119,10 @@ export default function WatchlistPage() {
             const change1h = live?.priceChange1h ?? null;
 
             return (
-              <div
+              <Link
                 key={item.mintAddress}
+                href={`/token/${item.mintAddress}`}
                 className="w-full flex items-center gap-3 px-3 py-3 bg-bg-card border border-border rounded-xl hover:bg-bg-elevated hover:border-border-hover transition-all duration-200 cursor-pointer group"
-                onClick={() => router.push(`/token/${item.mintAddress}`)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") router.push(`/token/${item.mintAddress}`);
-                }}
               >
                 {/* Avatar */}
                 <div className="flex-shrink-0 w-10 h-10 rounded-full bg-bg-elevated overflow-hidden">
@@ -212,7 +208,7 @@ export default function WatchlistPage() {
                     </svg>
                   </button>
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>

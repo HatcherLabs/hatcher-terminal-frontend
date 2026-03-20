@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { TokenAvatar } from "@/components/ui/TokenAvatar";
 import { RiskBadge } from "@/components/ui/RiskBadge";
@@ -103,7 +104,10 @@ function GraveyardCard({ item }: { item: GraveyardToken }) {
   const isUp = pctChange !== null && pctChange > 0;
 
   return (
-    <div className="bg-bg-card border border-border rounded-xl p-3">
+    <Link
+      href={`/token/${item.token.mintAddress}`}
+      className="block bg-bg-card border border-border rounded-xl p-3 hover:bg-bg-elevated hover:border-border-hover transition-all duration-200 cursor-pointer"
+    >
       <div className="flex items-center gap-3">
         <TokenAvatar
           mintAddress={item.token.mintAddress}
@@ -170,7 +174,7 @@ function GraveyardCard({ item }: { item: GraveyardToken }) {
           </span>
         </div>
       )}
-    </div>
+    </Link>
   );
 }
 

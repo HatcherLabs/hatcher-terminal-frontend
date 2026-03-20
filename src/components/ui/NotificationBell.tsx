@@ -5,9 +5,19 @@ import { useNotifications } from "@/components/providers/NotificationProvider";
 import { NotificationPanel } from "@/components/ui/NotificationPanel";
 
 export function NotificationBell() {
-  const { unreadCount } = useNotifications();
+  const { unreadCount, markAllRead } = useNotifications();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleToggle = () => {
+    setOpen((prev) => {
+      const willOpen = !prev;
+      if (willOpen && unreadCount > 0) {
+        markAllRead();
+      }
+      return willOpen;
+    });
+  };
 
   // Close panel when clicking outside
   useEffect(() => {
@@ -27,7 +37,7 @@ export function NotificationBell() {
   return (
     <div ref={containerRef} className="relative">
       <button
-        onClick={() => setOpen((prev) => !prev)}
+        onClick={handleToggle}
         className="relative flex items-center justify-center w-8 h-8 rounded hover:bg-bg-hover transition-colors"
         aria-label="Notifications"
       >
@@ -45,11 +55,9 @@ export function NotificationBell() {
           <path d="M13.73 21a2 2 0 0 1-3.46 0" />
         </svg>
 
-        {/* Unread badge */}
+        {/* Unread dot */}
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-danger text-white text-[9px] font-bold px-1 leading-none">
-            {unreadCount > 99 ? "99+" : unreadCount}
-          </span>
+          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red" />
         )}
       </button>
 
