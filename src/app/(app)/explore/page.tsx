@@ -4,21 +4,19 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import Link from "next/link";
 import { WatchlistButton } from "@/components/ui/WatchlistButton";
 import { QuickTradeButton } from "@/components/trade/QuickTradeButton";
-import { AnimatedPrice } from "@/components/ui/AnimatedPrice";
 import { Sparkline } from "@/components/ui/Sparkline";
-import { HeatBadge } from "@/components/ui/HeatBadge";
 import { SecurityDots } from "@/components/ui/SecurityDots";
 import { useToast } from "@/components/ui/Toast";
 import { api } from "@/lib/api";
 
 type ExploreCategory = "new" | "graduating" | "migrated";
-type SortKey = "newest" | "marketCap" | "holders" | "volume" | "bonding" | "devHold" | "heat";
+type SortKey = "newest" | "marketCap" | "holders" | "volume" | "bonding" | "devHold" | "heat" | "buySellRatio" | "topHolders" | "risk";
 type SortDirection = "desc" | "asc";
 
-const TABS: { key: ExploreCategory; label: string; desc: string }[] = [
-  { key: "new", label: "New Pairs", desc: "Just created" },
-  { key: "graduating", label: "Close to Bond", desc: "Near graduation" },
-  { key: "migrated", label: "Graduated", desc: "On Raydium" },
+const TABS: { key: ExploreCategory; label: string; desc: string; icon: string }[] = [
+  { key: "new", label: "New Pairs", desc: "Just created", icon: "+" },
+  { key: "graduating", label: "Close to Bond", desc: "60%+ bonding", icon: "\uD83D\uDD25" },
+  { key: "migrated", label: "Graduated", desc: "On Raydium", icon: "\u2713" },
 ];
 
 const SOL_PRICE_USD = Number(process.env.NEXT_PUBLIC_SOL_PRICE_USD || 150);
@@ -27,14 +25,17 @@ const REFRESH_INTERVAL = 10_000;
 
 // ---- helpers ----
 
-function formatNumber(n: number | null | undefined): string {
+function formatCompact(n: number | null | undefined): string {
   if (n === null || n === undefined) return "\u2014";
+  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B`;
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return n.toFixed(n < 10 ? 1 : 0);
 }
 
-function formatUsd(n: number): string {
+function formatUsdCompact(n: number | null | undefined): string {
+  if (n === null || n === undefined) return "\u2014";
+  if (n >= 1_000_000_000) return `$${(n / 1_000_000_000).toFixed(2)}B`;
   if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
   if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}K`;
   return `$${n.toFixed(0)}`;
@@ -69,6 +70,18 @@ function computeHeat(t: { holders?: number | null; buyCount?: number | null; sel
   return Math.min(99, Math.max(10, score));
 }
 
+function getRiskColor(riskLevel: string | null | undefined): string {
+  if (riskLevel === "LOW" || riskLevel === undefined || riskLevel === null) return "#00d672";
+  if (riskLevel === "MED") return "#f0a000";
+  if (riskLevel === "HIGH") return "#ff6d00";
+  return "#f23645";
+}
+
+function getRiskLabel(riskLevel: string | null | undefined): string {
+  if (!riskLevel) return "\u2014";
+  return riskLevel;
+}
+
 // ---- types ----
 
 interface ExploreToken {
@@ -85,6 +98,7 @@ interface ExploreToken {
   buyCount: number | null;
   sellCount: number | null;
   devHoldPct: number | null;
+  topHoldersPct: number | null;
   isGraduated: boolean;
   riskLevel: string | null;
   twitter?: string | null;
@@ -102,7 +116,125 @@ interface ExploreToken {
   freezeRevoked?: boolean;
 }
 
-// ---- sort header ----
+// ---- Buy/Sell ratio bar ----
+
+function BuySellBar({ buys, sells }: { buys: number; sells: number }) {
+  const total = buys + sells;
+  if (total === 0) {
+    return (
+      <div className="flex items-center gap-1" style={{ width: "100%" }}>
+        <span className="font-mono text-[9px]" style={{ color: "#363d54" }}>{"\u2014"}</span>
+      </div>
+    );
+  }
+  const buyPct = (buys / total) * 100;
+
+  return (
+    <div className="flex flex-col gap-[2px]" style={{ width: "100%" }}>
+      <div className="flex items-center justify-between">
+        <span className="font-mono text-[9px] font-bold" style={{ color: "#00d672" }}>
+          {formatCompact(buys)}
+        </span>
+        <span className="font-mono text-[9px] font-bold" style={{ color: "#f23645" }}>
+          {formatCompact(sells)}
+        </span>
+      </div>
+      <div className="flex h-[3px] rounded-full overflow-hidden" style={{ background: "#f2364530" }}>
+        <div
+          className="h-full rounded-full"
+          style={{
+            width: `${buyPct}%`,
+            background: buyPct > 65 ? "#00d672" : buyPct > 45 ? "#f0a000" : "#f23645",
+            transition: "width 0.3s ease",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ---- Heat score display (prominent) ----
+
+function HeatDisplay({ heat }: { heat: number }) {
+  const isHot = heat > 70;
+  const isWarm = heat > 40;
+  const color = isHot ? "#00d672" : isWarm ? "#f0a000" : "#5c6380";
+  const bgOpacity = isHot ? "20" : isWarm ? "15" : "10";
+
+  return (
+    <div className="flex items-center gap-1">
+      <div
+        className="relative flex items-center justify-center font-mono text-[11px] font-black rounded-[4px]"
+        style={{
+          background: `${color}${bgOpacity}`,
+          color: color,
+          border: `1px solid ${color}30`,
+          padding: "1px 6px",
+          minWidth: 32,
+          textAlign: "center",
+        }}
+      >
+        {heat}
+        {isHot && (
+          <span
+            className="absolute -top-[2px] -right-[2px] w-[5px] h-[5px] rounded-full animate-pulse"
+            style={{ background: color }}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---- Bonding progress bar (with urgency for graduating tab) ----
+
+function BondingBar({ progress, isGraduated, urgent }: { progress: number | null; isGraduated: boolean; urgent?: boolean }) {
+  if (isGraduated) {
+    return (
+      <span
+        className="font-mono text-[8px] font-bold px-1.5 py-[2px] rounded-[3px] uppercase tracking-wider"
+        style={{ background: "#00d67218", color: "#00d672", border: "1px solid #00d67225" }}
+      >
+        Graduated
+      </span>
+    );
+  }
+
+  if (progress === null || progress === undefined) {
+    return <span className="font-mono text-[9px]" style={{ color: "#363d54" }}>{"\u2014"}</span>;
+  }
+
+  const isNearGrad = progress >= 80;
+  const isClose = progress >= 60;
+  const barColor = isNearGrad ? "#00d672" : isClose ? "#f0a000" : "#3b82f6";
+
+  return (
+    <div className="flex items-center gap-1.5 w-full">
+      <div className="flex-1 h-[4px] rounded-full overflow-hidden" style={{ background: "#04060b" }}>
+        <div
+          className={`h-full rounded-full ${isNearGrad && urgent ? "animate-pulse" : ""}`}
+          style={{
+            width: `${Math.min(progress, 100)}%`,
+            background: barColor,
+            boxShadow: isNearGrad ? `0 0 6px ${barColor}60` : "none",
+            transition: "width 0.5s ease",
+          }}
+        />
+      </div>
+      <span
+        className="font-mono text-[9px] font-bold shrink-0"
+        style={{
+          color: barColor,
+          textShadow: isNearGrad && urgent ? `0 0 4px ${barColor}40` : "none",
+        }}
+      >
+        {progress.toFixed(0)}%
+      </span>
+    </div>
+  );
+}
+
+// ---- sort header with arrow indicators ----
 
 function SortHeader({
   label,
@@ -125,16 +257,96 @@ function SortHeader({
       onClick={() => onSort(key)}
       className={`flex items-center gap-0.5 text-[10px] uppercase tracking-wider font-semibold transition-colors whitespace-nowrap ${
         align === "right" ? "ml-auto" : ""
-      } ${isActive ? "text-[#8b5cf6]" : "text-[#5c6380] hover:text-[#9ca3b8]"}`}
+      }`}
+      style={{
+        color: isActive ? "#8b5cf6" : "#5c6380",
+        background: "none",
+        border: "none",
+        cursor: "pointer",
+        padding: 0,
+      }}
     >
       {label}
-      {isActive && (
-        <span className="text-[9px]">
-          {currentDirection === "desc" ? "\u25BE" : "\u25B4"}
+      <span
+        className="inline-flex flex-col leading-none text-[7px] ml-[1px]"
+        style={{ gap: 0, lineHeight: 1 }}
+      >
+        <span style={{ color: isActive && currentDirection === "asc" ? "#8b5cf6" : "#363d54" }}>
+          {"\u25B2"}
         </span>
-      )}
+        <span style={{ color: isActive && currentDirection === "desc" ? "#8b5cf6" : "#363d54" }}>
+          {"\u25BC"}
+        </span>
+      </span>
     </button>
   );
+}
+
+// ---- column configs per tab ----
+
+interface ColumnDef {
+  key: string;
+  label: string;
+  sortKey?: SortKey;
+  width: number;
+  align?: "left" | "right";
+}
+
+const BASE_COLUMNS: ColumnDef[] = [
+  { key: "token", label: "Token", sortKey: "newest", width: 170, align: "left" },
+  { key: "heat", label: "Heat", sortKey: "heat", width: 48, align: "left" },
+  { key: "age", label: "Age", width: 42, align: "left" },
+  { key: "mcap", label: "MCap", sortKey: "marketCap", width: 68, align: "left" },
+  { key: "volume", label: "Vol 1H", sortKey: "volume", width: 62, align: "left" },
+  { key: "buySell", label: "B/S", sortKey: "buySellRatio", width: 72, align: "left" },
+  { key: "holders", label: "Holders", sortKey: "holders", width: 52, align: "left" },
+  { key: "devPct", label: "Dev%", sortKey: "devHold", width: 46, align: "left" },
+  { key: "topHolders", label: "Top10%", sortKey: "topHolders", width: 50, align: "left" },
+  { key: "bonding", label: "Bonding", sortKey: "bonding", width: 80, align: "left" },
+  { key: "chart", label: "5m", width: 70, align: "left" },
+  { key: "risk", label: "Risk", sortKey: "risk", width: 50, align: "left" },
+  { key: "sec", label: "Sec", width: 32, align: "left" },
+  { key: "action", label: "", width: 36, align: "right" },
+];
+
+const GRADUATING_COLUMNS: ColumnDef[] = [
+  { key: "token", label: "Token", sortKey: "newest", width: 170, align: "left" },
+  { key: "heat", label: "Heat", sortKey: "heat", width: 48, align: "left" },
+  { key: "age", label: "Age", width: 42, align: "left" },
+  { key: "mcap", label: "MCap", sortKey: "marketCap", width: 68, align: "left" },
+  { key: "bonding", label: "Bonding", sortKey: "bonding", width: 100, align: "left" },
+  { key: "volume", label: "Vol 1H", sortKey: "volume", width: 62, align: "left" },
+  { key: "buySell", label: "B/S", sortKey: "buySellRatio", width: 72, align: "left" },
+  { key: "holders", label: "Holders", sortKey: "holders", width: 52, align: "left" },
+  { key: "devPct", label: "Dev%", sortKey: "devHold", width: 46, align: "left" },
+  { key: "topHolders", label: "Top10%", sortKey: "topHolders", width: 50, align: "left" },
+  { key: "chart", label: "5m", width: 70, align: "left" },
+  { key: "risk", label: "Risk", sortKey: "risk", width: 50, align: "left" },
+  { key: "sec", label: "Sec", width: 32, align: "left" },
+  { key: "action", label: "", width: 36, align: "right" },
+];
+
+const MIGRATED_COLUMNS: ColumnDef[] = [
+  { key: "token", label: "Token", sortKey: "newest", width: 170, align: "left" },
+  { key: "heat", label: "Heat", sortKey: "heat", width: 48, align: "left" },
+  { key: "age", label: "Age", width: 42, align: "left" },
+  { key: "mcap", label: "MCap", sortKey: "marketCap", width: 72, align: "left" },
+  { key: "volume", label: "Vol 1H", sortKey: "volume", width: 62, align: "left" },
+  { key: "buySell", label: "B/S", sortKey: "buySellRatio", width: 72, align: "left" },
+  { key: "holders", label: "Holders", sortKey: "holders", width: 52, align: "left" },
+  { key: "devPct", label: "Dev%", sortKey: "devHold", width: 46, align: "left" },
+  { key: "topHolders", label: "Top10%", sortKey: "topHolders", width: 50, align: "left" },
+  { key: "priceChange", label: "5m / 1h", width: 80, align: "left" },
+  { key: "chart", label: "Chart", width: 70, align: "left" },
+  { key: "risk", label: "Risk", sortKey: "risk", width: 50, align: "left" },
+  { key: "sec", label: "Sec", width: 32, align: "left" },
+  { key: "action", label: "", width: 36, align: "right" },
+];
+
+function getColumns(tab: ExploreCategory): ColumnDef[] {
+  if (tab === "graduating") return GRADUATING_COLUMNS;
+  if (tab === "migrated") return MIGRATED_COLUMNS;
+  return BASE_COLUMNS;
 }
 
 // ---- component ----
@@ -163,6 +375,9 @@ export default function TrenchesPage() {
 
   // View mode
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
+
+  // Token count for header
+  const tokenCount = tokens.length;
 
   const fetchTokens = useCallback(
     async (offset: number, append: boolean) => {
@@ -322,8 +537,8 @@ export default function TrenchesPage() {
           bVal = b.holders ?? 0;
           break;
         case "volume":
-          aVal = (a.buyCount ?? 0) + (a.sellCount ?? 0);
-          bVal = (b.buyCount ?? 0) + (b.sellCount ?? 0);
+          aVal = a.volume1h ?? 0;
+          bVal = b.volume1h ?? 0;
           break;
         case "bonding":
           aVal = a.bondingProgress ?? 0;
@@ -334,9 +549,26 @@ export default function TrenchesPage() {
           bVal = b.devHoldPct ?? 0;
           break;
         case "heat":
-          aVal = a.heatScore ?? 0;
-          bVal = b.heatScore ?? 0;
+          aVal = a.heatScore ?? computeHeat(a);
+          bVal = b.heatScore ?? computeHeat(b);
           break;
+        case "buySellRatio": {
+          const aTot = (a.buyCount ?? 0) + (a.sellCount ?? 0);
+          const bTot = (b.buyCount ?? 0) + (b.sellCount ?? 0);
+          aVal = aTot > 0 ? (a.buyCount ?? 0) / aTot : 0;
+          bVal = bTot > 0 ? (b.buyCount ?? 0) / bTot : 0;
+          break;
+        }
+        case "topHolders":
+          aVal = a.topHoldersPct ?? 0;
+          bVal = b.topHoldersPct ?? 0;
+          break;
+        case "risk": {
+          const riskOrder: Record<string, number> = { LOW: 1, MED: 2, HIGH: 3, EXTREME: 4 };
+          aVal = riskOrder[a.riskLevel ?? "LOW"] ?? 0;
+          bVal = riskOrder[b.riskLevel ?? "LOW"] ?? 0;
+          break;
+        }
         default:
           return 0;
       }
@@ -347,11 +579,13 @@ export default function TrenchesPage() {
   }, [tokens, sortKey, sortDirection]);
 
   const displayTokens = searchQuery.length >= 2 ? searchResults : sortedTokens;
+  const columns = getColumns(activeTab);
+  const tableMinWidth = columns.reduce((acc, col) => acc + col.width, 0);
 
   return (
     <div className="flex flex-col pt-2">
       {/* Header */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <h1 className="text-lg font-bold tracking-tight" style={{ color: "#eef0f6" }}>
             THE{" "}
@@ -367,46 +601,62 @@ export default function TrenchesPage() {
             </span>
             Live
           </span>
+          <span className="font-mono text-[10px] px-1.5 py-0.5 rounded" style={{ color: "#5c6380", background: "#0a0d14" }}>
+            {tokenCount} tokens
+          </span>
         </div>
 
-        {/* View toggle */}
-        <div className="flex items-center gap-1 p-0.5 rounded-lg" style={{ background: "#04060b", border: "1px solid #1a1f2e" }}>
+        {/* View toggle + refresh */}
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => setViewMode("table")}
+            onClick={() => fetchTokens(0, false)}
             className="p-1.5 rounded transition-colors"
-            style={viewMode === "table" ? { background: "#181c28", color: "#eef0f6" } : { color: "#5c6380" }}
-            aria-label="Table view"
+            style={{ color: "#5c6380", border: "1px solid #1a1f2e" }}
+            title="Refresh"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <line x1="3" y1="12" x2="21" y2="12" />
-              <line x1="3" y1="18" x2="21" y2="18" />
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+              <polyline points="21 3 21 9 15 9" />
             </svg>
           </button>
-          <button
-            onClick={() => setViewMode("cards")}
-            className="p-1.5 rounded transition-colors"
-            style={viewMode === "cards" ? { background: "#181c28", color: "#eef0f6" } : { color: "#5c6380" }}
-            aria-label="Card view"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <rect x="3" y="3" width="7" height="7" rx="1" />
-              <rect x="14" y="3" width="7" height="7" rx="1" />
-              <rect x="3" y="14" width="7" height="7" rx="1" />
-              <rect x="14" y="14" width="7" height="7" rx="1" />
-            </svg>
-          </button>
+          <div className="flex items-center gap-0 p-0.5 rounded-lg" style={{ background: "#04060b", border: "1px solid #1a1f2e" }}>
+            <button
+              onClick={() => setViewMode("table")}
+              className="p-1.5 rounded transition-colors"
+              style={viewMode === "table" ? { background: "#181c28", color: "#eef0f6" } : { color: "#5c6380" }}
+              aria-label="Table view"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            </button>
+            <button
+              onClick={() => setViewMode("cards")}
+              className="p-1.5 rounded transition-colors"
+              style={viewMode === "cards" ? { background: "#181c28", color: "#eef0f6" } : { color: "#5c6380" }}
+              aria-label="Card view"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <rect x="3" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="3" width="7" height="7" rx="1" />
+                <rect x="3" y="14" width="7" height="7" rx="1" />
+                <rect x="14" y="14" width="7" height="7" rx="1" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Search bar */}
-      <div className="relative mb-3">
+      <div className="relative mb-2">
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search by name, ticker, or address..."
-          className="w-full px-4 py-2.5 pl-10 text-sm rounded-xl focus:outline-none transition-all"
+          className="w-full px-4 py-2 pl-9 text-[12px] rounded-lg focus:outline-none transition-all font-mono"
           style={{
             background: "#04060b",
             border: "1px solid #1a1f2e",
@@ -414,7 +664,7 @@ export default function TrenchesPage() {
           }}
         />
         <svg
-          className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4"
+          className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5"
           style={{ color: "#363d54" }}
           viewBox="0 0 24 24"
           fill="none"
@@ -439,7 +689,7 @@ export default function TrenchesPage() {
 
       {/* Tab bar */}
       <nav
-        className="flex items-center gap-1 p-1 mb-4 rounded-full self-start"
+        className="flex items-center gap-1 p-[3px] mb-3 rounded-lg self-start"
         style={{ background: "#04060b", border: "1px solid #1a1f2e" }}
         role="tablist"
         aria-label="Token categories"
@@ -451,15 +701,32 @@ export default function TrenchesPage() {
               key={tab.key}
               role="tab"
               aria-selected={isActive}
-              onClick={() => setActiveTab(tab.key)}
-              className="relative px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 whitespace-nowrap"
+              onClick={() => {
+                setActiveTab(tab.key);
+                setSortKey(tab.key === "graduating" ? "bonding" : "newest");
+                setSortDirection("desc");
+              }}
+              className="relative px-3 py-1 rounded-md text-[11px] font-semibold transition-all duration-200 whitespace-nowrap flex items-center gap-1.5"
               style={
                 isActive
-                  ? { background: "#00d672", color: "#04060b", boxShadow: "0 0 8px rgba(0,214,114,0.2)" }
+                  ? tab.key === "graduating"
+                    ? { background: "#f0a00025", color: "#f0a000", boxShadow: "0 0 8px rgba(240,160,0,0.15)" }
+                    : tab.key === "migrated"
+                      ? { background: "#00d67220", color: "#00d672", boxShadow: "0 0 8px rgba(0,214,114,0.15)" }
+                      : { background: "#8b5cf620", color: "#8b5cf6", boxShadow: "0 0 8px rgba(139,92,246,0.15)" }
                   : { color: "#5c6380" }
               }
             >
+              <span className="text-[10px]">{tab.icon}</span>
               {tab.label}
+              {isActive && (
+                <span
+                  className="font-mono text-[9px] ml-0.5 px-1 py-[0px] rounded"
+                  style={{ background: "rgba(255,255,255,0.1)" }}
+                >
+                  {tokenCount}
+                </span>
+              )}
             </button>
           );
         })}
@@ -467,13 +734,13 @@ export default function TrenchesPage() {
 
       {/* Content */}
       {loading ? (
-        <div className="flex flex-col gap-[1px]">
-          {Array.from({ length: 8 }).map((_, i) => (
+        <div className="flex flex-col">
+          {Array.from({ length: 12 }).map((_, i) => (
             <SkeletonRow key={i} />
           ))}
         </div>
       ) : searching ? (
-        <div className="flex flex-col gap-[1px]">
+        <div className="flex flex-col">
           {Array.from({ length: 3 }).map((_, i) => (
             <SkeletonRow key={i} />
           ))}
@@ -493,51 +760,47 @@ export default function TrenchesPage() {
           </p>
         </div>
       ) : viewMode === "table" ? (
-        <div className="overflow-x-auto -mx-2 px-2">
+        <div className="overflow-x-auto -mx-2 px-2 terminal-scrollbar-x">
           {/* Table header */}
           <div
-            className="flex items-center gap-0 px-3 py-1.5 text-[9px] uppercase tracking-[.06em] font-bold rounded-t-lg min-w-[900px]"
+            className="flex items-center gap-0 px-2 py-1.5 text-[9px] uppercase tracking-[.06em] font-bold rounded-t-md sticky top-0 z-10"
             style={{
               borderBottom: "1px solid #1a1f2e",
+              background: "#0a0d14",
               color: "#363d54",
+              minWidth: tableMinWidth,
             }}
           >
-            <div style={{ width: 180 }}>
-              <SortHeader label="Token" sortKey="newest" currentSort={sortKey} currentDirection={sortDirection} onSort={handleSortToggle} align="left" />
-            </div>
-            <div style={{ width: 50 }}>
-              <SortHeader label="Heat" sortKey="heat" currentSort={sortKey} currentDirection={sortDirection} onSort={handleSortToggle} align="left" />
-            </div>
-            <div style={{ width: 70 }}>
-              <SortHeader label="MCap" sortKey="marketCap" currentSort={sortKey} currentDirection={sortDirection} onSort={handleSortToggle} align="left" />
-            </div>
-            <div style={{ width: 45 }}>Age</div>
-            <div style={{ width: 55 }}>
-              <SortHeader label="Holders" sortKey="holders" currentSort={sortKey} currentDirection={sortDirection} onSort={handleSortToggle} align="left" />
-            </div>
-            <div style={{ width: 50 }}>
-              <SortHeader label="Dev%" sortKey="devHold" currentSort={sortKey} currentDirection={sortDirection} onSort={handleSortToggle} align="left" />
-            </div>
-            <div style={{ width: 65 }}>
-              <SortHeader label="Vol" sortKey="volume" currentSort={sortKey} currentDirection={sortDirection} onSort={handleSortToggle} align="left" />
-            </div>
-            <div style={{ width: 60 }}>B/S</div>
-            <div style={{ width: 75 }}>
-              <SortHeader label="Bonding" sortKey="bonding" currentSort={sortKey} currentDirection={sortDirection} onSort={handleSortToggle} align="left" />
-            </div>
-            <div style={{ width: 90 }}>Chart</div>
-            <div style={{ width: 50 }}>Risk</div>
-            <div style={{ width: 35 }}>Sec</div>
-            <div style={{ flex: 1, textAlign: "right" }}>Action</div>
+            {columns.map((col) => (
+              <div key={col.key} style={{ width: col.width, flexShrink: 0 }}>
+                {col.sortKey ? (
+                  <SortHeader
+                    label={col.label}
+                    sortKey={col.sortKey}
+                    currentSort={sortKey}
+                    currentDirection={sortDirection}
+                    onSort={handleSortToggle}
+                    align={col.align ?? "left"}
+                  />
+                ) : col.label ? (
+                  <span className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "#5c6380" }}>
+                    {col.label}
+                  </span>
+                ) : null}
+              </div>
+            ))}
           </div>
 
           {/* Table rows */}
-          <div className="flex flex-col min-w-[900px]">
-            {displayTokens.map((token) => (
+          <div className="flex flex-col" style={{ minWidth: tableMinWidth }}>
+            {displayTokens.map((token, idx) => (
               <TableRow
                 key={token.id}
                 token={token}
                 isNew={newIds.has(token.id)}
+                columns={columns}
+                activeTab={activeTab}
+                rowIndex={idx}
               />
             ))}
           </div>
@@ -550,6 +813,7 @@ export default function TrenchesPage() {
               key={token.id}
               token={token}
               isNew={newIds.has(token.id)}
+              activeTab={activeTab}
             />
           ))}
         </div>
@@ -573,206 +837,241 @@ export default function TrenchesPage() {
   );
 }
 
-// ---- Table Row (Terminal style — matches ui-demo.jsx Trenches) ----
+// ---- Table Row ----
 
 function TableRow({
   token,
   isNew,
+  columns,
+  activeTab,
+  rowIndex,
 }: {
   token: ExploreToken;
   isNew: boolean;
+  columns: ColumnDef[];
+  activeTab: ExploreCategory;
+  rowIndex: number;
 }) {
   const mcapUsd = token.marketCapSol != null ? token.marketCapSol * SOL_PRICE_USD : null;
   const heat = token.heatScore ?? computeHeat(token);
-  const riskLevel = token.riskLevel;
-  const riskColor = riskLevel === "LOW" || riskLevel === undefined ? "#00d672"
-    : riskLevel === "MED" ? "#f0a000"
-    : riskLevel === "HIGH" ? "#ff6d00" : "#f23645";
-  const riskLabel = riskLevel === "LOW" ? "LOW" : riskLevel === "MED" ? "MED" : riskLevel === "HIGH" ? "HIGH" : riskLevel === "EXTREME" ? "EXTREME" : "—";
+  const riskColor = getRiskColor(token.riskLevel);
+  const riskLabel = getRiskLabel(token.riskLevel);
+  const isUrgentBonding = activeTab === "graduating" && (token.bondingProgress ?? 0) >= 80;
 
-  return (
-    <Link
-      href={`/token/${token.mintAddress}`}
-      className="flex items-center px-3 py-[5px] transition-[background] duration-75 cursor-pointer group"
-      style={{
-        borderBottom: "1px solid #1a1f2e06",
-        fontSize: 11,
-      }}
-      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#10131c"; }}
-      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
-    >
-      {/* TOKEN — avatar + ticker + address */}
-      <div style={{ width: 180 }} className="flex items-center gap-2">
-        <div
-          className="flex-shrink-0 w-[26px] h-[26px] rounded-full overflow-hidden"
-          style={{ background: "#0a0d14" }}
-        >
-          {token.imageUri ? (
-            <img src={token.imageUri} alt="" className="w-full h-full object-cover" loading="lazy" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-[9px] font-bold font-mono" style={{ color: "#5c6380" }}>
-              {token.ticker.slice(0, 3)}
+  // Alternating row bg
+  const rowBg = isNew ? "#00d67208" : rowIndex % 2 === 0 ? "transparent" : "#0a0d1440";
+
+  const renderCell = (col: ColumnDef) => {
+    switch (col.key) {
+      case "token":
+        return (
+          <div className="flex items-center gap-2">
+            <div
+              className="flex-shrink-0 w-[24px] h-[24px] rounded-full overflow-hidden"
+              style={{ background: "#0a0d14" }}
+            >
+              {token.imageUri ? (
+                <img src={token.imageUri} alt="" className="w-full h-full object-cover" loading="lazy" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-[8px] font-bold font-mono" style={{ color: "#5c6380" }}>
+                  {token.ticker.slice(0, 3)}
+                </div>
+              )}
             </div>
-          )}
-        </div>
-        <div className="min-w-0">
-          <div className="flex items-center gap-1">
-            <span className="font-bold font-mono text-[11px] truncate" style={{ color: "#eef0f6" }}>
-              ${token.ticker}
-            </span>
-            {isNew && (
-              <span className="text-[8px] font-bold px-1 py-0.5 rounded animate-pulse" style={{ background: "#00d67218", color: "#00d672" }}>
-                NEW
-              </span>
-            )}
-          </div>
-          <div className="text-[8px] font-mono truncate" style={{ color: "#363d54" }}>
-            {token.mintAddress.slice(0, 6)}...{token.mintAddress.slice(-4)}
-          </div>
-        </div>
-      </div>
-
-      {/* HEAT */}
-      <div style={{ width: 50 }}>
-        <HeatBadge heat={heat} />
-      </div>
-
-      {/* MCAP */}
-      <div style={{ width: 70 }}>
-        <span className="font-mono text-[11px] font-semibold" style={{ color: "#eef0f6" }}>
-          {mcapUsd != null ? `$${formatNumber(mcapUsd)}` : "—"}
-        </span>
-      </div>
-
-      {/* AGE */}
-      <div style={{ width: 45 }}>
-        <span className="font-mono text-[11px]" style={{ color: "#9ca3b8" }}>
-          {relativeTime(token.detectedAt)}
-        </span>
-      </div>
-
-      {/* HOLDERS */}
-      <div style={{ width: 55 }}>
-        <span className="font-mono text-[11px]" style={{ color: "#eef0f6" }}>
-          {token.holders != null ? formatNumber(token.holders) : "—"}
-        </span>
-      </div>
-
-      {/* DEV% */}
-      <div style={{ width: 50 }}>
-        <span
-          className="font-mono text-[11px]"
-          style={{
-            color: (token.devHoldPct ?? 0) > 15 ? "#f23645"
-              : (token.devHoldPct ?? 0) > 8 ? "#f0a000"
-              : "#eef0f6",
-          }}
-        >
-          {token.devHoldPct != null ? `${token.devHoldPct.toFixed(1)}%` : "—"}
-        </span>
-      </div>
-
-      {/* VOL */}
-      <div style={{ width: 65 }}>
-        <span className="font-mono text-[11px]" style={{ color: "#eef0f6" }}>
-          {token.volume1h != null ? `$${formatNumber(token.volume1h)}` : mcapUsd != null ? `$${formatNumber(mcapUsd * 0.3)}` : "—"}
-        </span>
-      </div>
-
-      {/* B/S */}
-      <div style={{ width: 60 }} className="flex items-center gap-0">
-        <span className="font-mono text-[10px] font-bold" style={{ color: "#00d672" }}>
-          {token.buyCount != null ? formatNumber(token.buyCount) : "0"}
-        </span>
-        <span className="font-mono text-[9px]" style={{ color: "#363d54" }}>/</span>
-        <span className="font-mono text-[10px] font-bold" style={{ color: "#f23645" }}>
-          {token.sellCount != null ? formatNumber(token.sellCount) : "0"}
-        </span>
-      </div>
-
-      {/* BONDING */}
-      <div style={{ width: 75 }} className="flex items-center gap-1.5">
-        {token.bondingProgress != null ? (
-          <>
-            <div className="flex-1 h-[5px] rounded-full overflow-hidden" style={{ background: "#04060b" }}>
-              <div
-                className="h-full rounded-full"
-                style={{
-                  width: `${Math.min(token.bondingProgress, 100)}%`,
-                  background: token.bondingProgress >= 90 ? "#00d672"
-                    : token.bondingProgress >= 50 ? "#f0a000"
-                    : "#3b82f6",
-                  transition: "width 0.5s ease",
-                }}
-              />
+            <div className="min-w-0">
+              <div className="flex items-center gap-1">
+                <span className="font-bold font-mono text-[11px] truncate" style={{ color: "#eef0f6" }}>
+                  ${token.ticker}
+                </span>
+                {isNew && (
+                  <span className="text-[7px] font-bold px-[3px] py-[1px] rounded animate-pulse" style={{ background: "#00d67220", color: "#00d672" }}>
+                    NEW
+                  </span>
+                )}
+                {isUrgentBonding && (
+                  <span className="text-[7px] font-bold px-[3px] py-[1px] rounded animate-pulse" style={{ background: "#f0a00025", color: "#f0a000" }}>
+                    GRADUATING
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-[8px] font-mono truncate" style={{ color: "#363d54" }}>
+                  {token.mintAddress.slice(0, 4)}...{token.mintAddress.slice(-3)}
+                </span>
+                {token.twitter && (
+                  <span className="text-[8px]" style={{ color: "#3b82f6" }} title="Has Twitter">{"\uD835\uDD4F"}</span>
+                )}
+                {token.website && (
+                  <span className="text-[8px]" style={{ color: "#5c6380" }} title="Has Website">{"\uD83C\uDF10"}</span>
+                )}
+              </div>
             </div>
-            <span className="font-mono text-[9px] font-bold shrink-0" style={{
-              color: token.bondingProgress >= 90 ? "#00d672"
-                : token.bondingProgress >= 50 ? "#f0a000"
-                : "#5c6380",
-            }}>
-              {token.bondingProgress.toFixed(0)}%
-            </span>
-          </>
-        ) : token.isGraduated ? (
-          <span className="font-mono text-[8px] font-bold px-1.5 py-0.5 rounded" style={{ background: "#00d67218", color: "#00d672" }}>
-            GRADUATED
+          </div>
+        );
+
+      case "heat":
+        return <HeatDisplay heat={heat} />;
+
+      case "age":
+        return (
+          <span className="font-mono text-[11px]" style={{ color: "#9ca3b8" }}>
+            {relativeTime(token.detectedAt)}
           </span>
-        ) : (
-          <span className="font-mono text-[9px]" style={{ color: "#363d54" }}>—</span>
-        )}
-      </div>
+        );
 
-      {/* CHART (sparkline) */}
-      <div style={{ width: 90 }}>
-        {token.sparkline && token.sparkline.length > 2 ? (
-          <Sparkline data={token.sparkline} width={82} height={22} />
-        ) : (
-          <div className="w-[82px] h-[22px] rounded" style={{ background: "#0a0d14" }} />
-        )}
-      </div>
+      case "mcap":
+        return (
+          <span className="font-mono text-[11px] font-semibold" style={{ color: "#eef0f6" }}>
+            {formatUsdCompact(mcapUsd)}
+          </span>
+        );
 
-      {/* RISK */}
-      <div style={{ width: 50 }}>
-        {riskLevel ? (
+      case "volume":
+        return (
+          <span className="font-mono text-[11px]" style={{ color: "#eef0f6" }}>
+            {token.volume1h != null ? formatUsdCompact(token.volume1h) : mcapUsd != null ? formatUsdCompact(mcapUsd * 0.3) : "\u2014"}
+          </span>
+        );
+
+      case "buySell":
+        return <BuySellBar buys={token.buyCount ?? 0} sells={token.sellCount ?? 0} />;
+
+      case "holders":
+        return (
+          <span className="font-mono text-[11px]" style={{ color: "#eef0f6" }}>
+            {token.holders != null ? formatCompact(token.holders) : "\u2014"}
+          </span>
+        );
+
+      case "devPct":
+        return (
           <span
-            className="font-mono text-[9px] font-bold px-[6px] py-[1px] rounded-[3px]"
+            className="font-mono text-[11px]"
             style={{
-              background: `${riskColor}15`,
+              color: (token.devHoldPct ?? 0) > 15 ? "#f23645"
+                : (token.devHoldPct ?? 0) > 8 ? "#f0a000"
+                : "#9ca3b8",
+            }}
+          >
+            {token.devHoldPct != null ? `${token.devHoldPct.toFixed(1)}%` : "\u2014"}
+          </span>
+        );
+
+      case "topHolders":
+        return (
+          <span
+            className="font-mono text-[11px]"
+            style={{
+              color: (token.topHoldersPct ?? 0) > 50 ? "#f23645"
+                : (token.topHoldersPct ?? 0) > 30 ? "#f0a000"
+                : "#9ca3b8",
+            }}
+          >
+            {token.topHoldersPct != null ? `${token.topHoldersPct.toFixed(0)}%` : "\u2014"}
+          </span>
+        );
+
+      case "bonding":
+        return (
+          <BondingBar
+            progress={token.bondingProgress}
+            isGraduated={token.isGraduated}
+            urgent={activeTab === "graduating"}
+          />
+        );
+
+      case "chart":
+        return token.sparkline && token.sparkline.length > 2 ? (
+          <Sparkline data={token.sparkline} width={60} height={20} />
+        ) : (
+          <div className="w-[60px] h-[20px] rounded" style={{ background: "#0a0d14" }} />
+        );
+
+      case "priceChange":
+        return (
+          <div className="flex items-center gap-1">
+            <span
+              className="font-mono text-[10px] font-semibold"
+              style={{
+                color: (token.priceChange5m ?? 0) >= 0 ? "#00d672" : "#f23645",
+              }}
+            >
+              {token.priceChange5m != null ? `${token.priceChange5m > 0 ? "+" : ""}${token.priceChange5m.toFixed(1)}%` : "\u2014"}
+            </span>
+            <span style={{ color: "#363d54" }} className="text-[8px]">/</span>
+            <span
+              className="font-mono text-[10px]"
+              style={{
+                color: (token.priceChange1h ?? 0) >= 0 ? "#00d672" : "#f23645",
+              }}
+            >
+              {token.priceChange1h != null ? `${token.priceChange1h > 0 ? "+" : ""}${token.priceChange1h.toFixed(1)}%` : "\u2014"}
+            </span>
+          </div>
+        );
+
+      case "risk":
+        return token.riskLevel ? (
+          <span
+            className="font-mono text-[8px] font-bold px-[5px] py-[1px] rounded-[3px] uppercase"
+            style={{
+              background: `${riskColor}12`,
               color: riskColor,
-              border: `1px solid ${riskColor}25`,
+              border: `1px solid ${riskColor}20`,
             }}
           >
             {riskLabel}
           </span>
         ) : (
-          <span className="font-mono text-[9px]" style={{ color: "#363d54" }}>—</span>
-        )}
-      </div>
+          <span className="font-mono text-[9px]" style={{ color: "#363d54" }}>{"\u2014"}</span>
+        );
 
-      {/* SEC (security dots) */}
-      <div style={{ width: 35 }}>
-        <SecurityDots
-          lpBurned={token.lpBurned}
-          mintRevoked={token.mintRevoked}
-          devHoldPct={token.devHoldPct ?? undefined}
-        />
-      </div>
+      case "sec":
+        return (
+          <SecurityDots
+            lpBurned={token.lpBurned}
+            mintRevoked={token.mintRevoked}
+            devHoldPct={token.devHoldPct ?? undefined}
+          />
+        );
 
-      {/* ACTION */}
-      <div style={{ flex: 1 }} className="flex justify-end">
-        <button
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-          className="px-[10px] py-[4px] rounded-[6px] text-[10px] font-bold font-sans transition-all opacity-0 group-hover:opacity-100"
+      case "action":
+        return (
+          <QuickTradeButton
+            token={{ mintAddress: token.mintAddress, name: token.name, ticker: token.ticker, imageUri: token.imageUri }}
+            size={16}
+          />
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <Link
+      href={`/token/${token.mintAddress}`}
+      className="flex items-center px-2 py-[4px] transition-[background] duration-75 cursor-pointer group"
+      style={{
+        borderBottom: "1px solid #1a1f2e08",
+        fontSize: 11,
+        background: rowBg,
+      }}
+      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#10131c"; }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = rowBg; }}
+    >
+      {columns.map((col) => (
+        <div
+          key={col.key}
           style={{
-            background: "#00d67215",
-            color: "#00d672",
-            border: "1px solid #00d67240",
+            width: col.width,
+            flexShrink: 0,
           }}
+          className="flex items-center"
         >
-          BUY
-        </button>
-      </div>
+          {renderCell(col)}
+        </div>
+      ))}
     </Link>
   );
 }
@@ -782,29 +1081,32 @@ function TableRow({
 function CardRow({
   token,
   isNew,
+  activeTab,
 }: {
   token: ExploreToken;
   isNew: boolean;
+  activeTab: ExploreCategory;
 }) {
   const mcapUsd =
     token.marketCapSol != null ? token.marketCapSol * SOL_PRICE_USD : null;
   const heat = token.heatScore ?? computeHeat(token);
+  const isUrgentBonding = activeTab === "graduating" && (token.bondingProgress ?? 0) >= 80;
 
   return (
     <Link
       href={`/token/${token.mintAddress}`}
-      className="w-full text-left flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 cursor-pointer"
+      className="w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 cursor-pointer"
       style={{
-        background: isNew ? "#00d67208" : "#0a0d14",
-        border: "1px solid #1a1f2e",
+        background: isUrgentBonding ? "#f0a00008" : isNew ? "#00d67208" : "#0a0d14",
+        border: isUrgentBonding ? "1px solid #f0a00020" : "1px solid #1a1f2e",
       }}
     >
       {/* Avatar */}
-      <div className="flex-shrink-0 w-10 h-10 rounded-full overflow-hidden" style={{ background: "#04060b" }}>
+      <div className="flex-shrink-0 w-9 h-9 rounded-full overflow-hidden" style={{ background: "#04060b" }}>
         {token.imageUri ? (
           <img src={token.imageUri} alt={token.name} className="w-full h-full object-cover" loading="lazy" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-sm font-bold" style={{ color: "#5c6380" }}>
+          <div className="w-full h-full flex items-center justify-center text-[10px] font-bold font-mono" style={{ color: "#5c6380" }}>
             {token.ticker.charAt(0)}
           </div>
         )}
@@ -813,45 +1115,61 @@ function CardRow({
       {/* Name + ticker + metrics */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
-          <span className="text-sm font-semibold truncate" style={{ color: "#eef0f6" }}>
+          <span className="text-[12px] font-semibold truncate" style={{ color: "#eef0f6" }}>
             {token.name}
           </span>
-          <span className="text-xs flex-shrink-0" style={{ color: "#5c6380" }}>
+          <span className="text-[10px] font-mono flex-shrink-0" style={{ color: "#5c6380" }}>
             ${token.ticker}
           </span>
-          <HeatBadge heat={heat} />
+          <HeatDisplay heat={heat} />
           {isNew && (
-            <span className="text-[8px] font-bold px-1 py-0.5 rounded animate-pulse" style={{ background: "#00d67218", color: "#00d672" }}>
+            <span className="text-[7px] font-bold px-1 py-0.5 rounded animate-pulse" style={{ background: "#00d67218", color: "#00d672" }}>
               NEW
+            </span>
+          )}
+          {isUrgentBonding && (
+            <span className="text-[7px] font-bold px-1 py-0.5 rounded animate-pulse" style={{ background: "#f0a00020", color: "#f0a000" }}>
+              GRADUATING
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-2 mt-1 text-[11px]">
-          <span style={{ color: "#5c6380" }}>{relativeTime(token.detectedAt)}</span>
-          <span style={{ color: "#363d54" }}>|</span>
-          <AnimatedPrice value={mcapUsd} format="usd" showArrow className="text-[11px]" />
-          <span style={{ color: "#363d54" }}>|</span>
-          <span className="font-mono" style={{ color: "#9ca3b8" }}>
-            {token.holders != null ? `${formatNumber(token.holders)} H` : "\u2014"}
+        {/* Metric row */}
+        <div className="flex items-center gap-2 mt-0.5 text-[10px] font-mono">
+          <span style={{ color: "#9ca3b8" }}>{relativeTime(token.detectedAt)}</span>
+          <span style={{ color: "#1a1f2e" }}>|</span>
+          <span style={{ color: "#eef0f6" }}>{formatUsdCompact(mcapUsd)}</span>
+          <span style={{ color: "#1a1f2e" }}>|</span>
+          <span style={{ color: "#9ca3b8" }}>
+            {token.holders != null ? `${formatCompact(token.holders)}H` : "\u2014"}
           </span>
-          <span style={{ color: "#363d54" }}>|</span>
+          <span style={{ color: "#1a1f2e" }}>|</span>
+          <span style={{ color: "#00d672" }}>{formatCompact(token.buyCount ?? 0)}</span>
+          <span style={{ color: "#363d54" }}>/</span>
+          <span style={{ color: "#f23645" }}>{formatCompact(token.sellCount ?? 0)}</span>
+          <span style={{ color: "#1a1f2e" }}>|</span>
+          <span style={{
+            color: (token.devHoldPct ?? 0) > 15 ? "#f23645" : (token.devHoldPct ?? 0) > 8 ? "#f0a000" : "#9ca3b8"
+          }}>
+            {token.devHoldPct != null ? `D${token.devHoldPct.toFixed(1)}%` : ""}
+          </span>
           <SecurityDots lpBurned={token.lpBurned} mintRevoked={token.mintRevoked} devHoldPct={token.devHoldPct ?? undefined} />
         </div>
 
+        {/* Bonding bar for non-graduated */}
         {token.bondingProgress != null && !token.isGraduated && (
-          <div className="mt-1.5 flex items-center gap-2">
-            <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: "#04060b" }}>
-              <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{
-                  width: `${Math.min(token.bondingProgress, 100)}%`,
-                  background: token.bondingProgress > 80 ? "#00d672" : token.bondingProgress > 50 ? "#f0a000" : "#5c6380",
-                }}
-              />
-            </div>
-            <span className="text-[10px] font-mono flex-shrink-0" style={{ color: "#5c6380" }}>
-              {token.bondingProgress.toFixed(0)}%
+          <div className="mt-1 max-w-[200px]">
+            <BondingBar
+              progress={token.bondingProgress}
+              isGraduated={token.isGraduated}
+              urgent={activeTab === "graduating"}
+            />
+          </div>
+        )}
+        {token.isGraduated && (
+          <div className="mt-1">
+            <span className="font-mono text-[8px] font-bold px-1.5 py-[2px] rounded" style={{ background: "#00d67218", color: "#00d672" }}>
+              GRADUATED - RAYDIUM
             </span>
           </div>
         )}
@@ -862,22 +1180,6 @@ function CardRow({
         {token.sparkline && token.sparkline.length > 2 && (
           <Sparkline data={token.sparkline} width={48} height={18} />
         )}
-        <div className="flex flex-col items-end gap-0.5">
-          <div className="flex items-center gap-1 text-[11px] font-mono">
-            <span style={{ color: "#00d672" }}>
-              {token.buyCount != null ? formatNumber(token.buyCount) : "\u2014"}
-            </span>
-            <span style={{ color: "#363d54" }}>/</span>
-            <span style={{ color: "#f23645" }}>
-              {token.sellCount != null ? formatNumber(token.sellCount) : "\u2014"}
-            </span>
-          </div>
-          {token.devHoldPct != null && (
-            <span className="text-[10px] font-mono" style={{ color: token.devHoldPct > 15 ? "#f23645" : "#5c6380" }}>
-              Dev {token.devHoldPct.toFixed(1)}%
-            </span>
-          )}
-        </div>
         <QuickTradeButton
           token={{ mintAddress: token.mintAddress, name: token.name, ticker: token.ticker, imageUri: token.imageUri }}
           size={18}
@@ -895,13 +1197,17 @@ function CardRow({
 
 function SkeletonRow() {
   return (
-    <div className="flex items-center gap-3 px-3 py-3 animate-pulse rounded-xl" style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}>
-      <div className="w-8 h-8 rounded-full" style={{ background: "#10131c" }} />
-      <div className="flex-1 space-y-2">
-        <div className="h-3 w-24 rounded" style={{ background: "#10131c" }} />
-        <div className="h-2 w-36 rounded" style={{ background: "#10131c" }} />
+    <div className="flex items-center gap-2 px-2 py-[6px] animate-pulse" style={{ borderBottom: "1px solid #1a1f2e08" }}>
+      <div className="w-6 h-6 rounded-full" style={{ background: "#10131c" }} />
+      <div className="flex-1 flex items-center gap-3">
+        <div className="h-3 w-16 rounded" style={{ background: "#10131c" }} />
+        <div className="h-3 w-10 rounded" style={{ background: "#10131c" }} />
+        <div className="h-3 w-12 rounded" style={{ background: "#10131c" }} />
+        <div className="h-3 w-8 rounded" style={{ background: "#10131c" }} />
+        <div className="h-3 w-14 rounded" style={{ background: "#10131c" }} />
+        <div className="h-3 w-10 rounded" style={{ background: "#10131c" }} />
+        <div className="h-3 w-16 rounded" style={{ background: "#10131c" }} />
       </div>
-      <div className="h-4 w-12 rounded" style={{ background: "#10131c" }} />
     </div>
   );
 }
