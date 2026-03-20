@@ -474,3 +474,117 @@ form {
   backdrop-filter: blur(12px);
   border: 1px solid rgba(26, 31, 46, 0.6);
 }
+
+/* ===== Live Indicator Pulse ===== */
+@keyframes livePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.animate-live-pulse {
+  animation: livePulse 1.5s ease-in-out infinite;
+}
+
+/* ===== Slide-in Animations for Panels/Sidebars ===== */
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes slideInUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.animate-slide-in-right {
+  animation: slideInRight 0.25s ease-out both;
+}
+.animate-slide-in-left {
+  animation: slideInLeft 0.25s ease-out both;
+}
+.animate-slide-in-up {
+  animation: slideInUp 0.25s ease-out both;
+}
+
+/* ===== Toast Notification Animation ===== */
+@keyframes toastIn {
+  from {
+    transform: translateX(100%) translateY(-8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) translateY(0);
+    opacity: 1;
+  }
+}
+@keyframes toastOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+.animate-toast-in {
+  animation: toastIn 0.3s ease-out both;
+}
+.animate-toast-out {
+  animation: toastOut 0.2s ease-in both;
+}
+
+/* ===== Number Value Transition ===== */
+.number-transition {
+  transition: color 0.3s ease;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== Gradient Border Utility ===== */
+.gradient-border {
+  position: relative;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+.gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #8b5cf6, #00d672);
+  z-index: -1;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  padding: 1px;
+}
+
+/* ===== Focus Visible Ring (Accessibility) ===== */
+.focus-ring:focus-visible {
+  outline: none;
+  border-color: #00d672;
+  box-shadow: 0 0 0 2px rgba(0, 214, 114, 0.25);
+}
+
+/* ===== Print Styles ===== */
+@media print {
+  body::before {
+    display: none;
+  }
+  nav,
+  .no-print,
+  .animate-pulse-fab,
+  footer {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+    color: #000;
+  }
+  .terminal-panel {
+    border: 1px solid #ccc;
+    break-inside: avoid;
+  }
+}
