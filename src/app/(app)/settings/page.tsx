@@ -460,6 +460,44 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        {/* ===== Swipe Filters ===== */}
+        <div className="bg-bg-card border border-border rounded-xl p-4 space-y-3">
+          <div>
+            <h2 className="text-xs text-text-muted uppercase tracking-wider font-semibold">
+              Swipe Filters
+            </h2>
+            <p className="text-[11px] text-text-muted mt-1">
+              Filter tokens shown in the swipe feed.
+            </p>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { label: "Min MCAP", key: "minHolders" as const, placeholder: "$10K", note: "SOL" },
+              { label: "Max Dev%", key: "maxDevHoldPct" as const, placeholder: "30%", note: "%" },
+              { label: "Min Holders", key: "minHolders" as const, placeholder: "10", note: "" },
+            ].map((field, i) => (
+              <div key={i}>
+                <label
+                  className="text-[9px] uppercase tracking-wider font-semibold block mb-1.5"
+                  style={{ color: "#5c6380" }}
+                >
+                  {field.label}
+                </label>
+                <div
+                  className="rounded-lg px-2.5 py-1.5 text-xs font-mono"
+                  style={{
+                    background: "#04060b",
+                    border: "1px solid #1a1f2e",
+                    color: "#eef0f6",
+                  }}
+                >
+                  {field.placeholder}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Max Risk Level */}
         <div className="bg-bg-card border border-border rounded-xl p-4">
           <label className="text-xs text-text-muted uppercase tracking-wider">
@@ -477,6 +515,49 @@ export default function SettingsPage() {
             <option value="MED">MED and below</option>
             <option value="HIGH">HIGH and below</option>
           </select>
+        </div>
+
+        {/* ===== $HATCH Tier ===== */}
+        <div className="bg-bg-card border border-border rounded-xl p-4">
+          <h2 className="text-xs text-text-muted uppercase tracking-wider font-semibold mb-3">
+            $HATCH Tier
+          </h2>
+          <div className="divide-y divide-border/30">
+            {[
+              { emoji: "\uD83E\uDD5A", name: "Egg", hatch: "0", discount: "0%", features: "Basic + 5 positions", current: true },
+              { emoji: "\uD83D\uDC23", name: "Hatchling", hatch: "10K", discount: "20%", features: "+ Unlimited, terminal" },
+              { emoji: "\uD83D\uDC25", name: "Chick", hatch: "50K", discount: "35%", features: "+ Smart money, staking" },
+              { emoji: "\uD83E\uDD85", name: "Hawk", hatch: "100K", discount: "50%", features: "+ Copy trade, API" },
+              { emoji: "\uD83E\uDD89", name: "Owl", hatch: "500K", discount: "70%", features: "+ Priority, early access" },
+            ].map((tier) => (
+              <div
+                key={tier.name}
+                className="flex items-center gap-3 py-2.5"
+                style={{ opacity: tier.current ? 1 : 0.45 }}
+              >
+                <span className="text-base w-6 text-center shrink-0">{tier.emoji}</span>
+                <div className="flex-1 min-w-0">
+                  <p
+                    className="text-xs font-bold"
+                    style={{ color: tier.current ? "#8b5cf6" : "#9ca3b8" }}
+                  >
+                    {tier.name}
+                  </p>
+                  <p className="text-[9px]" style={{ color: "#5c6380" }}>
+                    {tier.features}
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-[10px] font-mono font-semibold" style={{ color: "#8b5cf6" }}>
+                    {tier.hatch}
+                  </p>
+                  <p className="text-[9px] font-mono" style={{ color: "#00d672" }}>
+                    -{tier.discount}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         <button
