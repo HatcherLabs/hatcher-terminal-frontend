@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import Link from "next/link";
 import { WatchlistButton } from "@/components/ui/WatchlistButton";
 import { QuickTradeButton } from "@/components/trade/QuickTradeButton";
+import { SnipeButton } from "@/components/trade/SnipeButton";
 import { Sparkline } from "@/components/ui/Sparkline";
 import { SecurityDots } from "@/components/ui/SecurityDots";
 import { useToast } from "@/components/ui/Toast";
@@ -1201,10 +1202,13 @@ function TableRow({
 
       case "action":
         return (
-          <QuickTradeButton
-            token={{ mintAddress: token.mintAddress, name: token.name, ticker: token.ticker, imageUri: token.imageUri }}
-            size={16}
-          />
+          <div className="flex items-center gap-1.5">
+            <QuickTradeButton
+              token={{ mintAddress: token.mintAddress, name: token.name, ticker: token.ticker, imageUri: token.imageUri }}
+              size={16}
+            />
+            <SnipeButton mintAddress={token.mintAddress} ticker={token.ticker} />
+          </div>
         );
 
       default:
@@ -1427,6 +1431,10 @@ function CardRow({
             size={12}
           />
           <span className="text-[10px] font-bold" style={{ color: "#00d672" }}>Buy</span>
+        </div>
+        <div className="w-px h-4" style={{ background: "#1a1f2e" }} />
+        <div className="flex-1 flex items-center justify-center py-1.5">
+          <SnipeButton mintAddress={token.mintAddress} ticker={token.ticker} />
         </div>
         <div className="w-px h-4" style={{ background: "#1a1f2e" }} />
         <div className="flex-1 flex items-center justify-center gap-1 py-1.5">
