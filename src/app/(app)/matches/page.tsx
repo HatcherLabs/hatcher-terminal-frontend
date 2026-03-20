@@ -10,6 +10,8 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { useToast } from "@/components/ui/Toast";
 import { useKey } from "@/components/providers/KeyProvider";
 import { api } from "@/lib/api";
+import { exportTradeHistoryCSV, exportPortfolioCSV } from "@/lib/csv-export";
+import type { PositionData } from "@/types/position";
 
 /* ──────────────────────── Types ──────────────────────── */
 
@@ -594,23 +596,25 @@ function TradeHistorySection({
   }
 
   const handleExport = () => {
-    const header = "Token,Entry SOL,Exit SOL,P&L SOL,P&L %,Entry Date,Exit Date,Held\n";
-    const rows = positions.map((p) => {
-      const pnl = p.pnlSol ?? 0;
-      const pnlPct = p.pnlPercent ?? 0;
-      const held = p.exitTimestamp && p.entryTimestamp
-        ? formatDuration(new Date(p.exitTimestamp).getTime() - new Date(p.entryTimestamp).getTime())
-        : "--";
-      return `${p.token.ticker},${p.entrySol},${p.exitSol ?? ""},${pnl.toFixed(4)},${pnlPct.toFixed(1)}%,${p.entryTimestamp},${p.exitTimestamp ?? ""},${held}`;
-    });
-    const csv = header + rows.join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `hatcher-trades-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const mapped: PositionData[] = positions.map((p) => ({
+      id: p.id,
+      mintAddress: p.mintAddress,
+      tokenName: p.token.name,
+      tokenTicker: p.token.ticker,
+      tokenImageUri: p.token.imageUri,
+      entrySol: p.entrySol,
+      entryTokenAmount: 0,
+      entryPricePerToken: p.entryPricePerToken,
+      entryTimestamp: p.entryTimestamp,
+      exitSol: p.exitSol,
+      exitPricePerToken: p.exitPricePerToken,
+      exitTimestamp: p.exitTimestamp,
+      status: p.status as PositionData["status"],
+      currentPriceSol: null,
+      pnlPercent: p.pnlPercent,
+      pnlSol: p.pnlSol,
+    }));
+    exportTradeHistoryCSV(mapped);
   };
 
   const totalRealized = positions.reduce((s, p) => s + (p.pnlSol ?? 0), 0);
@@ -1140,6 +1144,48 @@ export default function MatchesPage() {
               />
             ) : (
               <>
+                {/* Export bar */}
+                <div className="flex items-center justify-between mb-3">
+                  <span className="font-mono text-xs font-bold" style={{ color: "#eef0f6" }}>
+                    {positions.length} open position{positions.length !== 1 ? "s" : ""}
+                  </span>
+                  <button
+                    onClick={() => {
+                      const mapped: PositionData[] = positions.map((p) => ({
+                        id: p.id,
+                        mintAddress: p.mintAddress,
+                        tokenName: p.token.name,
+                        tokenTicker: p.token.ticker,
+                        tokenImageUri: p.token.imageUri,
+                        entrySol: p.entrySol,
+                        entryTokenAmount: p.entryTokenAmount,
+                        entryPricePerToken: p.entryPricePerToken,
+                        entryTimestamp: p.entryTimestamp ?? "",
+                        exitSol: null,
+                        exitPricePerToken: null,
+                        exitTimestamp: null,
+                        status: "open" as const,
+                        currentPriceSol: p.currentPriceSol,
+                        pnlPercent: p.pnlPercent,
+                        pnlSol: p.pnlSol,
+                      }));
+                      exportPortfolioCSV(mapped);
+                    }}
+                    className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors"
+                    style={{
+                      background: "rgba(255,255,255,0.05)",
+                      color: "#9ca3b8",
+                      border: "1px solid #1a1f2e",
+                    }}
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                      <polyline points="7 10 12 15 17 10" />
+                      <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    Export CSV
+                  </button>
+                </div>
                 {/* Desktop table */}
                 <div className="hidden md:block">
                   <PositionsTable
