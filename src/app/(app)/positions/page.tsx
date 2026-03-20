@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { useToast } from "@/components/ui/Toast";
-import { useKey } from "@/components/providers/KeyProvider";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { api } from "@/lib/api";
 import { exportTradeHistoryCSV, exportPortfolioCSV } from "@/lib/csv-export";
 import type { PositionData } from "@/types/position";
@@ -891,7 +891,7 @@ function AnalyticsSection({
 export default function MatchesPage() {
   const router = useRouter();
   const toast = useToast();
-  const { hasKey } = useKey();
+  const { connected: hasKey } = useWallet();
 
   const [activeTab, setActiveTab] = useState<Tab>("positions");
   const [sortKey, setSortKey] = useState<SortKey>("pnl");

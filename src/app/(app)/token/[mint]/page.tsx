@@ -8,11 +8,8 @@ import { TokenChart } from "@/components/token/TokenChart";
 import { useLiveTokenPrice } from "@/hooks/useLiveTokenPrice";
 import { useQuickBuy } from "@/hooks/useQuickBuy";
 import { usePositions } from "@/hooks/usePositions";
-import { useKey } from "@/components/providers/KeyProvider";
-import { useAuth } from "@/components/providers/AuthProvider";
-import { WatchlistButton } from "@/components/ui/WatchlistButton";
-import { CompareButton } from "@/components/ui/CompareButton";
-import { PriceAlertButton } from "@/components/ui/PriceAlertButton";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { VersionedTransaction, Transaction } from "@solana/web3.js";
 import { useToast } from "@/components/ui/Toast";
 import { CopyButton } from "@/components/ui/CopyButton";
 import { TokenSocials } from "@/components/token/TokenSocials";
@@ -386,8 +383,7 @@ export default function TokenTerminalPage() {
 
   const { amount: quickBuyAmount } = useQuickBuy();
   const { positions, refresh: refreshPositions } = usePositions("open");
-  const { hasKey, signTransactionBase64 } = useKey();
-  const { user } = useAuth();
+  const { connected: hasKey, signTransaction } = useWallet();
   const addToast = useToast((s) => s.add);
   const { selectToken } = useQuickTrade();
 
@@ -543,7 +539,7 @@ export default function TokenTerminalPage() {
 
   const handleBuy = async () => {
     if (!token || tradeLoading) return;
-    if (!hasKey || !user) {
+    if (!hasKey) {
       addToast("Import a wallet key to trade", "error");
       return;
     }
@@ -571,13 +567,24 @@ export default function TokenTerminalPage() {
         return;
       }
 
-      const signedTx = await signTransactionBase64(swipeRes.unsignedTx);
+      if (!signTransaction) throw new Error("Wallet does not support signing");
+      const buyTxBytes = Uint8Array.from(atob(swipeRes.unsignedTx), (c) => c.charCodeAt(0));
+      let signedBuyTx: string;
+      try {
+        const vtx = VersionedTransaction.deserialize(buyTxBytes);
+        const signed = await signTransaction(vtx);
+        signedBuyTx = btoa(String.fromCharCode(...signed.serialize()));
+      } catch {
+        const tx = Transaction.from(buyTxBytes);
+        const signed = await signTransaction(tx);
+        signedBuyTx = btoa(String.fromCharCode(...signed.serialize()));
+      }
 
       const submitRes = await api.post<{
         txHash: string;
         status: string;
       }>("/api/tx/submit", {
-        signedTx,
+        signedTx: signedBuyTx,
         positionType: "buy",
         mintAddress: token.mintAddress,
       });
@@ -598,7 +605,7 @@ export default function TokenTerminalPage() {
 
   const handleSell = async () => {
     if (!token || tradeLoading) return;
-    if (!hasKey || !user) {
+    if (!hasKey) {
       addToast("Import a wallet key to trade", "error");
       return;
     }
@@ -621,13 +628,24 @@ export default function TokenTerminalPage() {
         return;
       }
 
-      const signedTx = await signTransactionBase64(closeRes.unsignedTx);
+      if (!signTransaction) throw new Error("Wallet does not support signing");
+      const sellTxBytes = Uint8Array.from(atob(closeRes.unsignedTx), (c) => c.charCodeAt(0));
+      let signedSellTx: string;
+      try {
+        const vtx = VersionedTransaction.deserialize(sellTxBytes);
+        const signed = await signTransaction(vtx);
+        signedSellTx = btoa(String.fromCharCode(...signed.serialize()));
+      } catch {
+        const tx = Transaction.from(sellTxBytes);
+        const signed = await signTransaction(tx);
+        signedSellTx = btoa(String.fromCharCode(...signed.serialize()));
+      }
 
       const submitRes = await api.post<{
         txHash: string;
         status: string;
       }>("/api/tx/submit", {
-        signedTx,
+        signedTx: signedSellTx,
         positionType: "sell",
         mintAddress: token.mintAddress,
         positionId: openPosition.id,
@@ -831,23 +849,6 @@ export default function TokenTerminalPage() {
 
         {/* Action buttons */}
         <div className="flex items-center gap-1 shrink-0">
-          <WatchlistButton
-            token={{
-              mintAddress: token.mintAddress,
-              name: token.name,
-              ticker: token.ticker,
-              imageUri: token.imageUri,
-            }}
-            size={16}
-          />
-          <CompareButton mintAddress={token.mintAddress} size={16} />
-          <PriceAlertButton
-            mintAddress={token.mintAddress}
-            tokenName={token.name}
-            tokenTicker={token.ticker}
-            size={14}
-          />
-          {/* Copy mint button */}
           <CopyButton text={token.mintAddress} label={shortenAddress(token.mintAddress)} size="sm" />
         </div>
       </div>

@@ -3,7 +3,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { SwipeStack, type SwipeSessionData } from "@/components/swipe/SwipeStack";
 import { SwipeFilters, useSwipeFilters, type SwipeFilterValues } from "@/components/swipe/SwipeFilters";
-import { SwipeTutorialOverlay } from "@/components/onboarding/SwipeTutorialOverlay";
 /* SwipeSessionStats replaced by inline floating badge */
 import { LiveFeed } from "@/components/swipe/LiveFeed";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
@@ -119,7 +118,6 @@ export default function SwipePage() {
 
   return (
     <ErrorBoundary fallbackTitle="Swipe feed error">
-      <SwipeTutorialOverlay />
       <div className="terminal:flex terminal:gap-0 terminal:-mx-6 terminal:-my-4 terminal:h-[calc(100vh-theme(spacing.24))]">
         {/* Main swipe area */}
         <div className="flex-1 flex flex-col items-center pt-2 terminal:pt-4 terminal:overflow-y-auto terminal-scrollbar">

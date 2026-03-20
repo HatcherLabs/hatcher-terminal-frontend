@@ -7,8 +7,6 @@ import { MiniChart } from "@/components/token/MiniChart";
 import { AnimatedPrice } from "@/components/ui/AnimatedPrice";
 import { useTokenPrice } from "@/hooks/useTokenPrice";
 import { useSolPriceContext } from "@/components/providers/SolPriceProvider";
-import { WatchlistButton } from "@/components/ui/WatchlistButton";
-import { CompareButton } from "@/components/ui/CompareButton";
 import { LiveAge } from "@/components/ui/LiveAge";
 import type { TokenData } from "@/types/token";
 
@@ -318,11 +316,6 @@ export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
         {/* Right side: actions + risk badge */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <CompareButton mintAddress={token.mintAddress} size={16} />
-            <WatchlistButton
-              token={{ mintAddress: token.mintAddress, name: token.name, ticker: token.ticker, imageUri: token.imageUri }}
-              size={18}
-            />
             <RiskBadge level={token.riskLevel} />
           </div>
         </div>

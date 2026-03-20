@@ -3,7 +3,6 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef, ReactNode } from "react";
 import { api } from "@/lib/api";
 import type { TokenData } from "@/types/token";
-import { useAutoSellAlertStore, type AutoSellAlertData } from "@/components/trade/AutoSellAlert";
 import { useToast } from "@/components/ui/Toast";
 
 export type FeedCategory = "new" | "closeToBond" | "migrated";
@@ -104,7 +103,6 @@ export function FeedProvider({ children, useWebSocket: useWebSocketProp }: FeedP
   }, []);
 
   const addToast = useToast.getState().add;
-  const pushAutoSellAlert = useAutoSellAlertStore.getState().push;
 
   // ─── Shared event handlers ────────────────────────────────────────────
   // These process an event (type + JSON payload) regardless of transport.
@@ -141,15 +139,11 @@ export function FeedProvider({ children, useWebSocket: useWebSocketProp }: FeedP
           break;
         }
         case "auto-sell-alert": {
-          const alert = JSON.parse(data) as AutoSellAlertData;
+          const alert = JSON.parse(data);
           const label = alert.reason === "take-profit" ? "Take-profit" : "Stop-loss";
           addToast(
             `${label} triggered for $${alert.tokenTicker} (${alert.pnlPercent >= 0 ? "+" : ""}${alert.pnlPercent.toFixed(1)}%)`,
             alert.reason === "take-profit" ? "success" : "error"
-          );
-          pushAutoSellAlert(alert);
-          window.dispatchEvent(
-            new CustomEvent("sse:auto-sell-alert", { detail: alert })
           );
           break;
         }
@@ -171,7 +165,7 @@ export function FeedProvider({ children, useWebSocket: useWebSocketProp }: FeedP
           devLog("Unhandled event type:", eventType);
       }
     },
-    [addToast, pushAutoSellAlert]
+    [addToast]
   );
 
   // ─── Teardown helpers ─────────────────────────────────────────────────

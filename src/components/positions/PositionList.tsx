@@ -6,7 +6,7 @@ import { PositionCard } from "./PositionCard";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
-import { useKey } from "@/components/providers/KeyProvider";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { api } from "@/lib/api";
 
 interface Position {
@@ -139,7 +139,7 @@ export function PositionList() {
     stopLossPct: null,
   });
   const toast = useToast();
-  const { hasKey } = useKey();
+  const { connected } = useWallet();
 
   const fetchFailCountRef = useRef(0);
 
@@ -194,7 +194,7 @@ export function PositionList() {
   const stats = useMemo(() => computeStats(positions), [positions]);
 
   const handleClose = async (positionId: string, percent: number = 100) => {
-    if (!hasKey) {
+    if (!connected) {
       toast.add("Import your private key to sell", "error");
       return;
     }

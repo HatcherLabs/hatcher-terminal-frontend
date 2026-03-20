@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { VersionedTransaction, Transaction } from "@solana/web3.js";
 import { useQuickBuy } from "@/hooks/useQuickBuy";
-import { useKey } from "@/components/providers/KeyProvider";
-import { useAuth } from "@/components/providers/AuthProvider";
 import { useToast } from "@/components/ui/Toast";
 import { api } from "@/lib/api";
 
@@ -18,14 +18,12 @@ interface SnipeButtonProps {
 
 export function SnipeButton({ mintAddress, ticker }: SnipeButtonProps) {
   const { amount } = useQuickBuy();
-  const { hasKey, signTransactionBase64 } = useKey();
-  const { user } = useAuth();
+  const { connected, signTransaction } = useWallet();
   const addToast = useToast((s) => s.add);
 
   const [status, setStatus] = useState<SnipeStatus>("idle");
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Clear timer on unmount
   useEffect(() => {
     return () => {
       if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
@@ -46,13 +44,13 @@ export function SnipeButton({ mintAddress, ticker }: SnipeButtonProps) {
 
       if (status === "building" || status === "signing" || status === "confirming") return;
 
-      if (!hasKey || !user) {
-        addToast("Import a wallet key to trade", "error");
+      if (!connected || !signTransaction) {
+        addToast("Connect wallet to trade", "error");
         return;
       }
 
       if (amount <= 0 || isNaN(amount)) {
-        addToast("Set a valid buy amount in settings", "error");
+        addToast("Set a valid buy amount", "error");
         return;
       }
 
@@ -79,14 +77,24 @@ export function SnipeButton({ mintAddress, ticker }: SnipeButtonProps) {
         }
 
         setStatus("signing");
-        const signedTx = await signTransactionBase64(swipeRes.unsignedTx);
+        const txBytes = Uint8Array.from(atob(swipeRes.unsignedTx), (c) => c.charCodeAt(0));
+        let signedTxBase64: string;
+        try {
+          const vtx = VersionedTransaction.deserialize(txBytes);
+          const signed = await signTransaction(vtx);
+          signedTxBase64 = btoa(String.fromCharCode(...signed.serialize()));
+        } catch {
+          const tx = Transaction.from(txBytes);
+          const signed = await signTransaction(tx);
+          signedTxBase64 = btoa(String.fromCharCode(...signed.serialize()));
+        }
 
         setStatus("confirming");
         const submitRes = await api.post<{
           txHash: string;
           status: string;
         }>("/api/tx/submit", {
-          signedTx,
+          signedTx: signedTxBase64,
           positionType: "buy",
           mintAddress,
         });
@@ -104,12 +112,11 @@ export function SnipeButton({ mintAddress, ticker }: SnipeButtonProps) {
         scheduleReset();
       }
     },
-    [mintAddress, ticker, amount, hasKey, user, status, addToast, signTransactionBase64, scheduleReset]
+    [mintAddress, ticker, amount, connected, signTransaction, status, addToast, scheduleReset]
   );
 
   const isProcessing = status === "building" || status === "signing" || status === "confirming";
 
-  // Button content per state
   let content: React.ReactNode;
   let bg: string;
   let borderColor: string;
