@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useCallback } from "react";
-import { useCompare } from "@/components/providers/CompareProvider";
 import { useNotifications } from "@/components/providers/NotificationProvider";
 import { useSolPriceContext } from "@/components/providers/SolPriceProvider";
 
@@ -139,7 +138,6 @@ interface SidebarProps {
 export function Sidebar({ onOpenShortcuts }: SidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
-  const { compareCount } = useCompare();
   const { unreadCount } = useNotifications();
   const { solPrice, loading: solLoading } = useSolPriceContext();
 
