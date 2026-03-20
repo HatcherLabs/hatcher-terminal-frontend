@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { TokenAvatar } from "@/components/ui/TokenAvatar";
 import { RiskBadge } from "@/components/ui/RiskBadge";
 import { TokenChart } from "@/components/token/TokenChart";
+import { TopHolders } from "@/components/token/TopHolders";
+import { RecentTrades } from "@/components/token/RecentTrades";
 import { useTokenPrice } from "@/hooks/useTokenPrice";
 import { useQuickBuy } from "@/hooks/useQuickBuy";
 import { usePositions } from "@/hooks/usePositions";
@@ -938,6 +940,12 @@ export default function TokenTerminalPage() {
               </div>
             </div>
           )}
+
+          {/* ====== HOLDER ANALYSIS + RECENT TRADES ====== */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            <TopHolders mintAddress={token.mintAddress} />
+            <RecentTrades mintAddress={token.mintAddress} />
+          </div>
 
           {/* Token Description (mobile only, desktop shows in right column) */}
           {token.description && (
