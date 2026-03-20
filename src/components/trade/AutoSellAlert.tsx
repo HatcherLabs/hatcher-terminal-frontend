@@ -1,16 +1,23 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { create } from "zustand";
 import { useToast } from "@/components/ui/Toast";
 import { api } from "@/lib/api";
 
-const AUTO_DISMISS_MS = 30_000;
+const AUTO_DISMISS_MS = 15_000;
+const SLIDE_DURATION_MS = 300;
+const MAX_VISIBLE_ALERTS = 5;
+
+// ---------------------------------------------------------------------------
+// Data & Store
+// ---------------------------------------------------------------------------
 
 export interface AutoSellAlertData {
   positionId: string;
   mintAddress: string;
   tokenTicker: string;
+  tokenImageUri?: string | null;
   reason: "take-profit" | "stop-loss";
   pnlPercent: number;
   threshold: number;
@@ -29,7 +36,6 @@ export const useAutoSellAlertStore = create<AutoSellAlertStore>((set) => ({
   alerts: [],
   push: (alert) =>
     set((s) => {
-      // Deduplicate by positionId
       if (s.alerts.some((a) => a.positionId === alert.positionId)) return s;
       return { alerts: [...s.alerts, alert] };
     }),
@@ -39,40 +45,121 @@ export const useAutoSellAlertStore = create<AutoSellAlertStore>((set) => ({
     })),
 }));
 
-export function AutoSellAlert() {
-  const alerts = useAutoSellAlertStore((s) => s.alerts);
-  const current = alerts[0] ?? null;
+// ---------------------------------------------------------------------------
+// Sound helper
+// ---------------------------------------------------------------------------
 
-  if (!current) return null;
-
-  return <AutoSellAlertModal alert={current} />;
+function playBeep() {
+  try {
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = 880;
+    gain.gain.value = 0.08;
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+    osc.stop(ctx.currentTime + 0.3);
+    setTimeout(() => ctx.close(), 500);
+  } catch {
+    // AudioContext may not be available — ignore silently
+  }
 }
 
-function AutoSellAlertModal({ alert }: { alert: AutoSellAlertData }) {
+// ---------------------------------------------------------------------------
+// Price formatter
+// ---------------------------------------------------------------------------
+
+function formatPrice(val: number): string {
+  if (val < 0.0001) return val.toExponential(2);
+  return val.toFixed(6);
+}
+
+// ---------------------------------------------------------------------------
+// Root component — renders stacked banners
+// ---------------------------------------------------------------------------
+
+export function AutoSellAlert() {
+  const alerts = useAutoSellAlertStore((s) => s.alerts);
+  const visible = alerts.slice(0, MAX_VISIBLE_ALERTS);
+
+  if (visible.length === 0) return null;
+
+  return (
+    <div className="fixed top-0 left-0 right-0 z-[120] flex flex-col items-center gap-2 pt-3 px-3 pointer-events-none">
+      {visible.map((alert, idx) => (
+        <AlertBanner key={alert.positionId} alert={alert} index={idx} />
+      ))}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Individual alert banner
+// ---------------------------------------------------------------------------
+
+function AlertBanner({
+  alert,
+  index,
+}: {
+  alert: AutoSellAlertData;
+  index: number;
+}) {
   const dismiss = useAutoSellAlertStore((s) => s.dismiss);
   const addToast = useToast((s) => s.add);
   const [selling, setSelling] = useState(false);
-  const [visible, setVisible] = useState(false);
+  const [phase, setPhase] = useState<"entering" | "visible" | "exiting">("entering");
+  const [progress, setProgress] = useState(100);
   const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const animFrameRef = useRef<number>(0);
+  const startTimeRef = useRef(Date.now());
 
-  // Animate in
+  const isTakeProfit = alert.reason === "take-profit";
+
+  // Play sound on mount
   useEffect(() => {
-    requestAnimationFrame(() => setVisible(true));
+    playBeep();
   }, []);
 
-  // Auto-dismiss after 30s
+  // Animate entrance
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setPhase("visible"));
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  // Progress bar countdown
+  useEffect(() => {
+    startTimeRef.current = Date.now();
+
+    function tick() {
+      const elapsed = Date.now() - startTimeRef.current;
+      const remaining = Math.max(0, 100 - (elapsed / AUTO_DISMISS_MS) * 100);
+      setProgress(remaining);
+      if (remaining > 0) {
+        animFrameRef.current = requestAnimationFrame(tick);
+      }
+    }
+    animFrameRef.current = requestAnimationFrame(tick);
+
+    return () => cancelAnimationFrame(animFrameRef.current);
+  }, []);
+
+  // Auto-dismiss timer
   useEffect(() => {
     timerRef.current = setTimeout(() => {
-      dismiss(alert.positionId);
+      handleDismiss();
     }, AUTO_DISMISS_MS);
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [alert.positionId, dismiss]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleDismiss = useCallback(() => {
-    setVisible(false);
-    setTimeout(() => dismiss(alert.positionId), 200);
+    setPhase("exiting");
+    setTimeout(() => dismiss(alert.positionId), SLIDE_DURATION_MS);
   }, [alert.positionId, dismiss]);
 
   const handleSell = useCallback(async () => {
@@ -80,7 +167,6 @@ function AutoSellAlertModal({ alert }: { alert: AutoSellAlertData }) {
     setSelling(true);
 
     try {
-      // Build close transaction
       const res = await api.raw(
         `/api/positions/${alert.positionId}/close?percent=100`,
         { method: "POST" }
@@ -94,7 +180,6 @@ function AutoSellAlertModal({ alert }: { alert: AutoSellAlertData }) {
 
       const { data } = await res.json();
 
-      // Submit for server-side signing
       const submitRes = await api.raw("/api/tx/submit", {
         method: "POST",
         body: JSON.stringify({
@@ -108,7 +193,7 @@ function AutoSellAlertModal({ alert }: { alert: AutoSellAlertData }) {
 
       if (submitRes.ok) {
         addToast(
-          `${alert.reason === "take-profit" ? "Take-profit" : "Stop-loss"} sell submitted for $${alert.tokenTicker}!`,
+          `${isTakeProfit ? "Take-profit" : "Stop-loss"} sell submitted for $${alert.tokenTicker}!`,
           "success"
         );
       } else {
@@ -121,144 +206,177 @@ function AutoSellAlertModal({ alert }: { alert: AutoSellAlertData }) {
       setSelling(false);
       dismiss(alert.positionId);
     }
-  }, [alert, selling, addToast, dismiss]);
+  }, [alert, selling, addToast, dismiss, isTakeProfit]);
 
-  const isTakeProfit = alert.reason === "take-profit";
-  const accentColor = isTakeProfit ? "green" : "red";
+  // Memoize the slide transform style
+  const bannerStyle = useMemo(
+    () => ({
+      transitionDuration: `${SLIDE_DURATION_MS}ms`,
+      transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)",
+      zIndex: 120 - index,
+    }),
+    [index]
+  );
+
+  const pnlFormatted = `${alert.pnlPercent >= 0 ? "+" : ""}${alert.pnlPercent.toFixed(1)}%`;
 
   return (
     <div
-      className={`fixed inset-0 z-[110] flex items-center justify-center transition-opacity duration-200 ${
-        visible ? "opacity-100" : "opacity-0"
+      style={bannerStyle}
+      className={`pointer-events-auto w-full max-w-[460px] rounded-xl border shadow-2xl overflow-hidden transition-all ${
+        phase === "entering"
+          ? "-translate-y-full opacity-0"
+          : phase === "exiting"
+            ? "-translate-y-full opacity-0"
+            : "translate-y-0 opacity-100"
+      } ${
+        isTakeProfit ? "border-green/40" : "border-red/40"
       }`}
     >
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/60"
-        onClick={handleDismiss}
-      />
-
-      {/* Modal */}
-      <div
-        className={`relative w-[340px] max-w-[90vw] bg-bg-card border rounded-xl shadow-2xl overflow-hidden transition-all duration-200 ${
-          visible ? "scale-100 translate-y-0" : "scale-95 translate-y-2"
-        } ${
-          isTakeProfit ? "border-green/30" : "border-red/30"
-        }`}
-      >
-        {/* Header */}
+      {/* Glass background */}
+      <div className="relative bg-[#10131cee] backdrop-blur-md">
+        {/* Accent glow at top */}
         <div
-          className={`px-4 py-3 flex items-center gap-2 ${
-            isTakeProfit ? "bg-green/10" : "bg-red/10"
+          className={`absolute inset-x-0 top-0 h-[1px] ${
+            isTakeProfit ? "bg-green" : "bg-red"
           }`}
-        >
-          <span className="text-lg">
-            {isTakeProfit ? "\u2B06" : "\u2B07"}
-          </span>
-          <div className="flex-1 min-w-0">
-            <p className={`text-sm font-bold ${isTakeProfit ? "text-green" : "text-red"}`}>
-              {isTakeProfit ? "Take-Profit Triggered" : "Stop-Loss Triggered"}
-            </p>
-            <p className="text-xs text-text-muted">
-              ${alert.tokenTicker}
-            </p>
-          </div>
-          <button
-            onClick={handleDismiss}
-            className="w-7 h-7 flex items-center justify-center rounded-full bg-bg-elevated text-text-muted hover:text-text-primary transition-colors"
-            aria-label="Dismiss alert"
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        </div>
+        />
 
-        {/* Body */}
-        <div className="px-4 py-3 space-y-3">
-          {/* P&L vs Threshold */}
-          <div className="bg-bg-elevated rounded-lg p-3 space-y-2">
-            <div className="flex items-center justify-between text-[11px]">
-              <span className="text-text-muted">Current P&L</span>
+        {/* Content */}
+        <div className="px-4 py-3 flex items-center gap-3">
+          {/* Icon / Avatar */}
+          <div className="flex-shrink-0 relative">
+            {alert.tokenImageUri ? (
+              <img
+                src={alert.tokenImageUri}
+                alt={alert.tokenTicker}
+                className="w-10 h-10 rounded-full object-cover"
+              />
+            ) : (
+              <div
+                className={`w-10 h-10 rounded-full flex items-center justify-center text-base font-bold ${
+                  isTakeProfit
+                    ? "bg-green/15 text-green"
+                    : "bg-red/15 text-red"
+                }`}
+              >
+                {alert.tokenTicker?.charAt(0) ?? "?"}
+              </div>
+            )}
+            {/* Reason badge */}
+            <div
+              className={`absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
+                isTakeProfit
+                  ? "bg-green text-bg-primary"
+                  : "bg-red text-white"
+              }`}
+            >
+              {isTakeProfit ? (
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="7 14 12 9 17 14" />
+                </svg>
+              ) : (
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="7 10 12 15 17 10" />
+                </svg>
+              )}
+            </div>
+          </div>
+
+          {/* Info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
               <span
-                className={`font-mono font-bold text-sm ${
+                className={`text-sm font-bold ${
+                  isTakeProfit ? "text-green" : "text-red"
+                }`}
+              >
+                {isTakeProfit ? "Take Profit Hit!" : "Stop Loss Hit!"}
+              </span>
+              <span className="text-xs text-text-muted font-medium truncate">
+                ${alert.tokenTicker}
+              </span>
+            </div>
+
+            {/* Price row */}
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="font-mono text-[11px] text-text-secondary">
+                {formatPrice(alert.entryPricePerToken)}
+              </span>
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                className="text-text-faint flex-shrink-0"
+              >
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+              <span className="font-mono text-[11px] text-text-secondary">
+                {formatPrice(alert.currentPriceSol)}
+              </span>
+              <span
+                className={`font-mono text-[11px] font-bold ml-1 ${
                   alert.pnlPercent >= 0 ? "text-green" : "text-red"
                 }`}
               >
-                {alert.pnlPercent >= 0 ? "+" : ""}
-                {alert.pnlPercent.toFixed(1)}%
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-[11px]">
-              <span className="text-text-muted">Threshold</span>
-              <span className={`font-mono font-semibold ${isTakeProfit ? "text-green" : "text-red"}`}>
-                {isTakeProfit ? "+" : "-"}
-                {Math.abs(alert.threshold).toFixed(1)}%
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-[11px]">
-              <span className="text-text-muted">Entry price</span>
-              <span className="font-mono text-text-secondary">
-                {alert.entryPricePerToken < 0.0001
-                  ? alert.entryPricePerToken.toExponential(2)
-                  : alert.entryPricePerToken.toFixed(6)}{" "}
-                SOL
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-[11px]">
-              <span className="text-text-muted">Current price</span>
-              <span className="font-mono text-text-secondary">
-                {alert.currentPriceSol < 0.0001
-                  ? alert.currentPriceSol.toExponential(2)
-                  : alert.currentPriceSol.toFixed(6)}{" "}
-                SOL
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-[11px]">
-              <span className="text-text-muted">Token amount</span>
-              <span className="font-mono text-text-secondary">
-                {alert.tokenAmount >= 1_000_000
-                  ? `${(alert.tokenAmount / 1_000_000).toFixed(1)}M`
-                  : alert.tokenAmount >= 1_000
-                    ? `${(alert.tokenAmount / 1_000).toFixed(1)}K`
-                    : alert.tokenAmount.toFixed(2)}
+                {pnlFormatted}
               </span>
             </div>
           </div>
 
           {/* Action buttons */}
-          <div className="flex gap-2">
-            <button
-              onClick={handleDismiss}
-              className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-bg-elevated border border-border text-text-secondary hover:text-text-primary transition-colors"
-            >
-              Dismiss
-            </button>
+          <div className="flex items-center gap-2 flex-shrink-0">
             <button
               onClick={handleSell}
               disabled={selling}
-              className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-[0.98] disabled:opacity-40 ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-[0.96] disabled:opacity-40 ${
                 isTakeProfit
                   ? "bg-green text-bg-primary hover:brightness-110"
                   : "bg-red text-white hover:brightness-110"
               }`}
             >
               {selling ? (
-                <span className="flex items-center justify-center gap-1.5">
+                <span className="flex items-center gap-1.5">
                   <span className="w-3 h-3 border-2 border-current/30 border-t-current rounded-full animate-spin" />
-                  Selling...
+                  Selling
                 </span>
               ) : (
                 "Sell Now"
               )}
             </button>
+            <button
+              onClick={handleDismiss}
+              className="w-7 h-7 flex items-center justify-center rounded-lg bg-bg-elevated/60 text-text-muted hover:text-text-primary transition-colors"
+              aria-label="Dismiss alert"
+            >
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
           </div>
+        </div>
 
-          {/* Auto-dismiss hint */}
-          <p className="text-[10px] text-text-faint text-center">
-            Auto-dismisses in 30 seconds
-          </p>
+        {/* Progress bar — auto-dismiss countdown */}
+        <div className="h-[2px] w-full bg-bg-elevated/40">
+          <div
+            className={`h-full transition-none ${
+              isTakeProfit ? "bg-green/60" : "bg-red/60"
+            }`}
+            style={{ width: `${progress}%` }}
+          />
         </div>
       </div>
     </div>
