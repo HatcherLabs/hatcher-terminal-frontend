@@ -1,3 +1,5 @@
+import { AnimatedPrice } from "@/components/ui/AnimatedPrice";
+
 const SOL_PRICE_USD = Number(process.env.NEXT_PUBLIC_SOL_PRICE_USD || 150);
 const BONDING_GRADUATION_SOL = 85;
 
@@ -26,12 +28,6 @@ function formatNumber(n: number | null): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return n.toFixed(n < 10 ? 1 : 0);
-}
-
-function formatUsd(n: number): string {
-  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
-  if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}K`;
-  return `$${n.toFixed(0)}`;
 }
 
 function tokenAge(date: string): string {
@@ -167,18 +163,17 @@ export function TokenStats({
 
   return (
     <div className="space-y-3">
-      {/* Market cap - prominent */}
+      {/* Market cap - prominent with animated price */}
       <div className="text-center">
         <p className="text-[10px] text-text-muted uppercase tracking-wider">
           Market Cap
         </p>
-        <p className="text-2xl font-bold font-mono text-text-primary leading-tight">
-          {mcapUsd != null
-            ? formatUsd(mcapUsd)
-            : marketCapSol != null
-              ? `${formatNumber(marketCapSol)} SOL`
-              : "\u2014"}
-        </p>
+        <AnimatedPrice
+          value={mcapUsd}
+          format="usd"
+          showArrow
+          className="text-2xl font-bold text-text-primary leading-tight"
+        />
         {mcapUsd != null && marketCapSol != null && (
           <p className="text-[10px] text-text-muted font-mono">
             {formatNumber(marketCapSol)} SOL
@@ -186,35 +181,29 @@ export function TokenStats({
         )}
       </div>
 
-      {/* Price change indicators */}
+      {/* Price change indicators with animated flash */}
       {(effectivePriceChange5m !== null || effectivePriceChange1h !== null) && (
-        <div className="flex items-center justify-center gap-3 text-xs font-mono">
+        <div className="flex items-center justify-center gap-3 text-xs">
           {effectivePriceChange5m !== null && (
-            <span
-              className={
-                effectivePriceChange5m > 0
-                  ? "text-green"
-                  : effectivePriceChange5m < 0
-                    ? "text-red"
-                    : "text-text-muted"
-              }
-            >
-              5m: {effectivePriceChange5m > 0 ? "+" : ""}
-              {effectivePriceChange5m.toFixed(1)}%
+            <span className="inline-flex items-center gap-1">
+              <span className="text-text-muted text-[10px]">5m:</span>
+              <AnimatedPrice
+                value={effectivePriceChange5m}
+                format="percent"
+                showArrow
+                className="text-xs"
+              />
             </span>
           )}
           {effectivePriceChange1h !== null && (
-            <span
-              className={
-                effectivePriceChange1h > 0
-                  ? "text-green"
-                  : effectivePriceChange1h < 0
-                    ? "text-red"
-                    : "text-text-muted"
-              }
-            >
-              1h: {effectivePriceChange1h > 0 ? "+" : ""}
-              {effectivePriceChange1h.toFixed(1)}%
+            <span className="inline-flex items-center gap-1">
+              <span className="text-text-muted text-[10px]">1h:</span>
+              <AnimatedPrice
+                value={effectivePriceChange1h}
+                format="percent"
+                showArrow
+                className="text-xs"
+              />
             </span>
           )}
         </div>

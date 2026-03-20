@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { useToast } from "@/components/ui/Toast";
 import { api } from "@/lib/api";
 
 export function BalanceDisplay() {
   const [balance, setBalance] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const toast = useToast();
+  const fetchFailCountRef = useRef(0);
 
   const fetchBalance = useCallback(async () => {
     try {
@@ -14,13 +17,24 @@ export function BalanceDisplay() {
       if (res.ok) {
         const { data } = await res.json();
         setBalance(data.sol);
+        fetchFailCountRef.current = 0;
+      } else {
+        fetchFailCountRef.current++;
+        if (fetchFailCountRef.current >= 3) {
+          toast.add("Unable to load balance", "error");
+          fetchFailCountRef.current = 0;
+        }
       }
     } catch {
-      // silently fail, will retry
+      fetchFailCountRef.current++;
+      if (fetchFailCountRef.current >= 3) {
+        toast.add("Unable to load balance", "error");
+        fetchFailCountRef.current = 0;
+      }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     fetchBalance();

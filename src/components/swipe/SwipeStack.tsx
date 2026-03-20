@@ -14,33 +14,62 @@ import { SwipeOverlay } from "./SwipeOverlay";
 import { TokenDetailModal } from "@/components/token/TokenDetailModal";
 import { useFeed } from "@/components/providers/FeedProvider";
 import { useKey } from "@/components/providers/KeyProvider";
+import { useWatchlist } from "@/components/providers/WatchlistProvider";
 import { useToast } from "@/components/ui/Toast";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useQuickBuy } from "@/hooks/useQuickBuy";
+import { useQuickTrade } from "@/components/providers/QuickTradeProvider";
 import { api } from "@/lib/api";
 import type { TokenData } from "@/types/token";
 
 /** Minimum drag distance (px) to count as a swipe at low velocity */
 const SWIPE_THRESHOLD = 100;
+/** Minimum vertical drag distance for watchlist swipe */
+const SWIPE_UP_THRESHOLD = 80;
 /** Minimum velocity (px/s) for a flick to count regardless of distance */
 const VELOCITY_THRESHOLD = 500;
 /** Distance the card should exit off-screen */
 const EXIT_X = 600;
+const EXIT_Y = -600;
+/** Max history for undo */
+const MAX_UNDO_HISTORY = 5;
+
+export interface SwipeSessionData {
+  seen: number;
+  bought: number;
+  passed: number;
+  totalMarketCapSol: number;
+}
 
 interface SwipeStackProps {
   /** When provided, uses this filtered list instead of the full feed */
   tokens?: TokenData[];
+  /** Callback to report session stats */
+  onSessionUpdate?: (stats: SwipeSessionData) => void;
 }
 
-export function SwipeStack({ tokens: tokensProp }: SwipeStackProps) {
+export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackProps) {
   const feed = useFeed();
   const router = useRouter();
   const { hasKey } = useKey();
+  const { addToWatchlist } = useWatchlist();
   const { amount: quickBuyAmount } = useQuickBuy();
+  const { selectToken } = useQuickTrade();
   const toast = useToast();
   const [swiping, setSwiping] = useState(false);
   const [buyLoading, setBuyLoading] = useState(false);
   const [detailToken, setDetailToken] = useState<TokenData | null>(null);
+
+  // Session stats
+  const [session, setSession] = useState<SwipeSessionData>({
+    seen: 0,
+    bought: 0,
+    passed: 0,
+    totalMarketCapSol: 0,
+  });
+
+  // Undo history (pass swipes only)
+  const [undoHistory, setUndoHistory] = useState<TokenData[]>([]);
 
   const handleInfoTap = useCallback((token: TokenData) => {
     router.push(`/token/${token.mintAddress}`);
@@ -72,20 +101,54 @@ export function SwipeStack({ tokens: tokensProp }: SwipeStackProps) {
     prevFirstMintRef.current = firstMint;
   }, [tokens, useLocalIndex]);
 
-  const [exitDirection, setExitDirection] = useState<"left" | "right" | null>(null);
+  const [exitDirection, setExitDirection] = useState<"left" | "right" | "up" | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
   const x = useMotionValue(0);
+  const y = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
-  const overlayOpacity = useTransform(x, [-200, -50, 0, 50, 200], [1, 0, 0, 0, 1]);
-  const overlayDirection = useTransform(x, (val): "left" | "right" | null => {
-    if (val < -50) return "left";
-    if (val > 50) return "right";
-    return null;
-  });
+  // 3D perspective tilt during drag
+  const rotateY = useTransform(x, [-200, 200], [-8, 8]);
+  // Elevation shadow increases during drag
+  const dragDistance = useTransform(
+    [x, y],
+    ([latestX, latestY]: number[]) => Math.sqrt(latestX * latestX + latestY * latestY)
+  );
+  const boxShadow = useTransform(dragDistance, [0, 200], [
+    "0 4px 20px rgba(0,0,0,0.15)",
+    "0 20px 60px rgba(0,0,0,0.35)",
+  ]);
 
-  const [currentOverlayDir, setCurrentOverlayDir] = useState<"left" | "right" | null>(null);
+  const overlayOpacity = useTransform(
+    [x, y],
+    ([latestX, latestY]: number[]) => {
+      const absX = Math.abs(latestX);
+      const absY = Math.abs(latestY);
+      // Upward swipe takes priority when y is strongly negative
+      if (latestY < -30 && absY > absX) {
+        return Math.min(1, absY / 150);
+      }
+      if (absX > 50) {
+        return Math.min(1, absX / 150);
+      }
+      return 0;
+    }
+  );
+
+  const overlayDirection = useTransform(
+    [x, y],
+    ([latestX, latestY]: number[]): "left" | "right" | "up" | null => {
+      const absX = Math.abs(latestX);
+      const absY = Math.abs(latestY);
+      if (latestY < -30 && absY > absX) return "up";
+      if (latestX < -50) return "left";
+      if (latestX > 50) return "right";
+      return null;
+    }
+  );
+
+  const [currentOverlayDir, setCurrentOverlayDir] = useState<"left" | "right" | "up" | null>(null);
   const [currentOverlayOp, setCurrentOverlayOp] = useState(0);
 
   useEffect(() => {
@@ -96,6 +159,39 @@ export function SwipeStack({ tokens: tokensProp }: SwipeStackProps) {
       unsubOp();
     };
   }, [overlayDirection, overlayOpacity]);
+
+  // Report session changes upstream
+  useEffect(() => {
+    onSessionUpdate?.(session);
+  }, [session, onSessionUpdate]);
+
+  const updateSession = useCallback((direction: "left" | "right" | "up", token: TokenData) => {
+    setSession((prev) => ({
+      seen: prev.seen + 1,
+      bought: prev.bought + (direction === "right" ? 1 : 0),
+      passed: prev.passed + (direction === "left" ? 1 : 0),
+      totalMarketCapSol: prev.totalMarketCapSol + (token.marketCapSol ?? 0),
+    }));
+  }, []);
+
+  const handleWatchlistSwipe = useCallback(
+    (token: TokenData) => {
+      addToWatchlist({
+        mintAddress: token.mintAddress,
+        name: token.name,
+        ticker: token.ticker,
+        imageUri: token.imageUri,
+      });
+      toast.add(`$${token.ticker} added to watchlist`, "success");
+      updateSession("up", token);
+      advanceToken();
+      requestAnimationFrame(() => {
+        x.set(0);
+        y.set(0);
+      });
+    },
+    [addToWatchlist, toast, updateSession, advanceToken, x, y]
+  );
 
   const handleSwipe = useCallback(
     async (direction: "left" | "right", token: TokenData) => {
@@ -110,9 +206,22 @@ export function SwipeStack({ tokens: tokensProp }: SwipeStackProps) {
         return;
       }
 
+      // Track pass swipes for undo
+      if (direction === "left") {
+        setUndoHistory((prev) => [token, ...prev].slice(0, MAX_UNDO_HISTORY));
+      }
+
       try {
         if (direction === "right") {
           setBuyLoading(true);
+          // Auto-select token for quick trade panel
+          selectToken({
+            mintAddress: token.mintAddress,
+            name: token.name,
+            ticker: token.ticker,
+            imageUri: token.imageUri,
+            priceSol: null,
+          });
         }
 
         const res = await api.raw("/api/swipe", {
@@ -134,8 +243,6 @@ export function SwipeStack({ tokens: tokensProp }: SwipeStackProps) {
         const { data } = await res.json();
         if (data.status === "buy_ready" && data.unsignedTx) {
           try {
-            // In the separated architecture, the backend handles signing.
-            // Submit the unsigned tx back for server-side signing.
             const submitRes = await api.raw("/api/tx/submit", {
               method: "POST",
               body: JSON.stringify({
@@ -151,16 +258,19 @@ export function SwipeStack({ tokens: tokensProp }: SwipeStackProps) {
               const err = await submitRes.json();
               toast.add(err.error || "Transaction failed", "error");
             }
-          } catch (signErr) {
-            console.error("Submit error:", signErr);
+          } catch {
             toast.add("Failed to submit transaction", "error");
           }
         } else if (data.status === "buy_ready" && data.error) {
           toast.add(data.error, "error");
         }
 
+        updateSession(direction, token);
         advanceToken();
-        requestAnimationFrame(() => x.set(0));
+        requestAnimationFrame(() => {
+          x.set(0);
+          y.set(0);
+        });
       } catch {
         toast.add("Swipe failed", "error");
       } finally {
@@ -169,14 +279,29 @@ export function SwipeStack({ tokens: tokensProp }: SwipeStackProps) {
         setTimeout(() => setExitDirection(null), 350);
       }
     },
-    [swiping, hasKey, advanceToken, toast, x]
+    [swiping, hasKey, advanceToken, toast, x, y, selectToken, updateSession]
   );
 
   const handleDragEnd = useCallback(
     (_: unknown, info: PanInfo) => {
       if (!currentToken) return;
 
-      const distanceMet = Math.abs(info.offset.x) > SWIPE_THRESHOLD;
+      const absX = Math.abs(info.offset.x);
+      const absY = Math.abs(info.offset.y);
+
+      // Check for upward swipe (watchlist)
+      if (info.offset.y < -SWIPE_UP_THRESHOLD && absY > absX) {
+        setExitDirection("up");
+        setSwiping(true);
+        handleWatchlistSwipe(currentToken);
+        setTimeout(() => {
+          setSwiping(false);
+          setExitDirection(null);
+        }, 350);
+        return;
+      }
+
+      const distanceMet = absX > SWIPE_THRESHOLD;
       const velocityMet = Math.abs(info.velocity.x) > VELOCITY_THRESHOLD;
 
       if (distanceMet || velocityMet) {
@@ -190,8 +315,27 @@ export function SwipeStack({ tokens: tokensProp }: SwipeStackProps) {
         handleSwipe(finalDirection, currentToken);
       }
     },
-    [currentToken, handleSwipe]
+    [currentToken, handleSwipe, handleWatchlistSwipe]
   );
+
+  // Undo last pass swipe
+  const handleUndo = useCallback(() => {
+    if (undoHistory.length === 0 || swiping) return;
+    const [lastToken, ...rest] = undoHistory;
+    setUndoHistory(rest);
+    // Decrement session stats
+    setSession((prev) => ({
+      seen: Math.max(0, prev.seen - 1),
+      bought: prev.bought,
+      passed: Math.max(0, prev.passed - 1),
+      totalMarketCapSol: Math.max(0, prev.totalMarketCapSol - (lastToken.marketCapSol ?? 0)),
+    }));
+    // Move index back
+    if (useLocalIndex) {
+      setLocalIndex((prev) => Math.max(0, prev - 1));
+    }
+    toast.add(`Restored $${lastToken.ticker}`, "success");
+  }, [undoHistory, swiping, useLocalIndex, toast]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -199,10 +343,24 @@ export function SwipeStack({ tokens: tokensProp }: SwipeStackProps) {
       if (!currentToken || swiping) return;
       if (e.key === "ArrowLeft") handleSwipe("left", currentToken);
       if (e.key === "ArrowRight") handleSwipe("right", currentToken);
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setExitDirection("up");
+        setSwiping(true);
+        handleWatchlistSwipe(currentToken);
+        setTimeout(() => {
+          setSwiping(false);
+          setExitDirection(null);
+        }, 350);
+      }
+      if (e.key === "z" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        handleUndo();
+      }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [currentToken, swiping, handleSwipe]);
+  }, [currentToken, swiping, handleSwipe, handleWatchlistSwipe, handleUndo]);
 
   // Loading state
   if (!feed.connected && tokens.length === 0) {
@@ -241,7 +399,9 @@ export function SwipeStack({ tokens: tokensProp }: SwipeStackProps) {
         <div
           ref={containerRef}
           className="relative w-full max-w-[360px] aspect-[3/4] mx-auto px-4 sm:px-0"
+          style={{ perspective: "1000px" }}
         >
+          {/* Card stack effect: 2nd and 3rd cards behind */}
           {upcomingTokens.map((token, i) => (
             <div
               key={token.mintAddress}
@@ -260,17 +420,18 @@ export function SwipeStack({ tokens: tokensProp }: SwipeStackProps) {
             <motion.div
               key={currentToken.mintAddress}
               className="absolute inset-0 flex items-center justify-center cursor-grab active:cursor-grabbing"
-              drag={swiping ? false : "x"}
-              dragConstraints={{ left: 0, right: 0 }}
+              drag={swiping ? false : true}
+              dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
               dragElastic={0.8}
               onDragEnd={handleDragEnd}
-              style={{ x, rotate }}
-              initial={{ scale: 0.95, opacity: 0, x: 0 }}
-              animate={{ scale: 1, opacity: 1, x: 0 }}
+              style={{ x, y, rotate, rotateY, boxShadow }}
+              initial={{ scale: 0.95, opacity: 0, x: 0, y: 0 }}
+              animate={{ scale: 1, opacity: 1, x: 0, y: 0 }}
               exit={{
-                x: exitDirection === "right" ? EXIT_X : -EXIT_X,
+                x: exitDirection === "up" ? 0 : exitDirection === "right" ? EXIT_X : -EXIT_X,
+                y: exitDirection === "up" ? EXIT_Y : 0,
                 opacity: 0,
-                rotate: exitDirection === "right" ? 20 : -20,
+                rotate: exitDirection === "up" ? 0 : exitDirection === "right" ? 20 : -20,
                 transition: { duration: 0.3, ease: "easeIn" },
               }}
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
@@ -292,7 +453,8 @@ export function SwipeStack({ tokens: tokensProp }: SwipeStackProps) {
           </AnimatePresence>
         </div>
 
-        <div className="flex items-center gap-6 mt-4">
+        {/* Action buttons with undo */}
+        <div className="flex items-center gap-4 mt-4">
           <button
             onClick={() => currentToken && handleSwipe("left", currentToken)}
             disabled={swiping}
@@ -301,7 +463,43 @@ export function SwipeStack({ tokens: tokensProp }: SwipeStackProps) {
           >
             &#10005;
           </button>
+
+          {/* Undo button */}
+          <button
+            onClick={handleUndo}
+            disabled={undoHistory.length === 0 || swiping}
+            className="w-10 h-10 rounded-full bg-bg-elevated border border-border text-text-muted flex items-center justify-center hover:text-text-secondary hover:border-border-hover transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
+            aria-label="Undo last pass"
+            title="Undo last pass (Ctrl+Z)"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="1 4 1 10 7 10" />
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+            </svg>
+          </button>
+
+          {/* Watchlist button */}
+          <button
+            onClick={() => {
+              if (!currentToken || swiping) return;
+              setExitDirection("up");
+              setSwiping(true);
+              handleWatchlistSwipe(currentToken);
+              setTimeout(() => {
+                setSwiping(false);
+                setExitDirection(null);
+              }, 350);
+            }}
+            disabled={swiping}
+            className="w-10 h-10 rounded-full border-2 border-amber text-amber text-lg flex items-center justify-center hover:bg-amber-dim transition-colors disabled:opacity-30"
+            aria-label="Add to watchlist"
+            title="Add to watchlist (swipe up)"
+          >
+            &#9733;
+          </button>
+
           <span className="text-xs font-mono text-text-muted">{quickBuyAmount} SOL</span>
+
           <button
             onClick={() => currentToken && handleSwipe("right", currentToken)}
             disabled={swiping}

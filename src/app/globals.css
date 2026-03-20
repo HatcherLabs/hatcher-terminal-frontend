@@ -166,3 +166,167 @@ form {
 .animate-list-item {
   animation: listFadeIn 0.3s ease-out both;
 }
+
+/* ===== Price Ticker Animation ===== */
+@keyframes tickerScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.ticker-scroll {
+  animation: tickerScroll 30s linear infinite;
+}
+
+/* ===== Price Flash Animations ===== */
+@keyframes priceFlashUp {
+  0% { background-color: rgba(0, 255, 136, 0.12); }
+  100% { background-color: transparent; }
+}
+
+@keyframes priceFlashDown {
+  0% { background-color: rgba(255, 59, 92, 0.12); }
+  100% { background-color: transparent; }
+}
+
+.price-flash-up {
+  animation: priceFlashUp 0.6s ease-out forwards;
+}
+
+.price-flash-down {
+  animation: priceFlashDown 0.6s ease-out forwards;
+}
+
+/* ===== Desktop Terminal Styles ===== */
+
+/* Terminal scrollbar - vertical */
+.terminal-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.terminal-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.terminal-scrollbar::-webkit-scrollbar-thumb {
+  background: #1a1a2e;
+  border-radius: 3px;
+}
+.terminal-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #2a2a44;
+}
+
+/* Terminal scrollbar - horizontal */
+.terminal-scrollbar-x::-webkit-scrollbar {
+  height: 4px;
+}
+.terminal-scrollbar-x::-webkit-scrollbar-track {
+  background: transparent;
+}
+.terminal-scrollbar-x::-webkit-scrollbar-thumb {
+  background: #1a1a2e;
+  border-radius: 2px;
+}
+
+/* Hide scrollbar utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Terminal panel borders */
+@media (min-width: 1024px) {
+  .terminal-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+
+  .terminal-panel-header {
+    display: flex;
+    align-items: center;
+    height: 32px;
+    padding: 0 12px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-jetbrains-mono), monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #555568;
+  }
+
+  /* Monospace for all price/number elements on desktop */
+  .font-mono-desktop {
+    font-family: var(--font-jetbrains-mono), monospace;
+  }
+}
+
+/* Page content fade-in */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s ease-out both;
+}
+
+/* Modal scale-in animation */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.15s ease-out both;
+}
+
+/* ===== Quick Trade FAB Pulse ===== */
+@keyframes pulseFab {
+  0%, 100% {
+    box-shadow: 0 4px 14px rgba(124, 77, 255, 0.25);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(124, 77, 255, 0.45), 0 0 30px rgba(124, 77, 255, 0.15);
+  }
+}
+
+.animate-pulse-fab {
+  animation: pulseFab 2s ease-in-out infinite;
+}
+
+/* New token row highlight */
+@keyframes pulseNew {
+  0%, 100% { background-color: transparent; }
+  50% { background-color: rgba(0, 255, 136, 0.04); }
+}
+
+.animate-pulse-new {
+  animation: pulseNew 1s ease-in-out 2;
+}
+
+/* Firefox scrollbar support */
+@supports (scrollbar-color: auto) {
+  .terminal-scrollbar {
+    scrollbar-color: #1a1a2e transparent;
+    scrollbar-width: thin;
+  }
+  .terminal-scrollbar-x {
+    scrollbar-color: #1a1a2e transparent;
+    scrollbar-width: thin;
+  }
+}

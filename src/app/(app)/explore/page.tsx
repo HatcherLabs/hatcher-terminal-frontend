@@ -2,7 +2,11 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ExploreTokenDetail } from "@/components/token/ExploreTokenDetail";
+import { WatchlistButton } from "@/components/ui/WatchlistButton";
+import { CompareButton } from "@/components/ui/CompareButton";
+import { AnimatedPrice } from "@/components/ui/AnimatedPrice";
+import { QuickTradeButton } from "@/components/trade/QuickTradeButton";
+import { useToast } from "@/components/ui/Toast";
 import { api } from "@/lib/api";
 
 type ExploreCategory = "new" | "graduating" | "migrated";
@@ -74,6 +78,8 @@ export default function ExplorePage() {
   const [newIds, setNewIds] = useState<Set<string>>(new Set());
   const prevIdsRef = useRef<Set<string>>(new Set());
   const refreshTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const fetchFailCountRef = useRef(0);
+  const toast = useToast();
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -123,15 +129,26 @@ export default function ExplorePage() {
           }
 
           setHasMore(json.hasMore);
+          fetchFailCountRef.current = 0;
+        } else {
+          fetchFailCountRef.current++;
+          if (fetchFailCountRef.current >= 3) {
+            toast.add("Unable to load tokens", "error");
+            fetchFailCountRef.current = 0;
+          }
         }
       } catch {
-        // Silently fail on refresh, don't disrupt existing data
+        fetchFailCountRef.current++;
+        if (fetchFailCountRef.current >= 3) {
+          toast.add("Unable to load tokens", "error");
+          fetchFailCountRef.current = 0;
+        }
       } finally {
         setLoading(false);
         setLoadingMore(false);
       }
     },
-    [activeTab]
+    [activeTab, toast]
   );
 
   // Initial fetch and auto-refresh
@@ -165,20 +182,18 @@ export default function ExplorePage() {
         const json = await res.json();
         if (json.success) setSearchResults(json.data);
       } catch {
-        // silently fail
+        toast.add("Search failed, try again", "error");
       }
       setSearching(false);
     }, 300);
     return () => {
       if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
 
   // Navigation
   const router = useRouter();
-
-  // Detail modal state (kept as fallback)
-  const [selectedToken, setSelectedToken] = useState<ExploreToken | null>(null);
 
   const handleSelectToken = useCallback((token: ExploreToken) => {
     router.push(`/token/${token.mintAddress}`);
@@ -323,12 +338,6 @@ export default function ExplorePage() {
         </div>
       )}
 
-      {/* Detail modal */}
-      <ExploreTokenDetail
-        token={selectedToken}
-        isOpen={selectedToken !== null}
-        onClose={() => setSelectedToken(null)}
-      />
     </div>
   );
 }
@@ -389,13 +398,12 @@ function TokenRow({
             {relativeTime(token.detectedAt)}
           </span>
           <span className="text-text-faint">|</span>
-          <span className="text-green font-mono">
-            {mcapUsd != null
-              ? `$${formatNumber(mcapUsd)}`
-              : token.marketCapSol != null
-                ? `${formatNumber(token.marketCapSol)} SOL`
-                : "\u2014"}
-          </span>
+          <AnimatedPrice
+            value={mcapUsd}
+            format="usd"
+            showArrow
+            className="text-[11px] text-green"
+          />
           <span className="text-text-faint">|</span>
           <span className="text-text-secondary font-mono">
             {token.holders != null ? `${formatNumber(token.holders)} H` : "\u2014"}
@@ -418,26 +426,50 @@ function TokenRow({
         )}
       </div>
 
-      {/* Right side: Buy/Sell counts */}
-      <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
-        <div className="flex items-center gap-1 text-[11px] font-mono">
-          <span className="text-green">
-            {token.buyCount != null ? formatNumber(token.buyCount) : "\u2014"}
-          </span>
-          <span className="text-text-faint">/</span>
-          <span className="text-red">
-            {token.sellCount != null ? formatNumber(token.sellCount) : "\u2014"}
-          </span>
+      {/* Right side: Buy/Sell counts + watchlist */}
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex flex-col items-end gap-0.5">
+          <div className="flex items-center gap-1 text-[11px] font-mono">
+            <span className="text-green">
+              {token.buyCount != null ? formatNumber(token.buyCount) : "\u2014"}
+            </span>
+            <span className="text-text-faint">/</span>
+            <span className="text-red">
+              {token.sellCount != null ? formatNumber(token.sellCount) : "\u2014"}
+            </span>
+          </div>
+          {token.devHoldPct != null && (
+            <span
+              className={`text-[10px] font-mono ${
+                token.devHoldPct > 15 ? "text-red" : "text-text-muted"
+              }`}
+            >
+              Dev {token.devHoldPct.toFixed(1)}%
+            </span>
+          )}
         </div>
-        {token.devHoldPct != null && (
-          <span
-            className={`text-[10px] font-mono ${
-              token.devHoldPct > 15 ? "text-red" : "text-text-muted"
-            }`}
-          >
-            Dev {token.devHoldPct.toFixed(1)}%
-          </span>
-        )}
+        <CompareButton
+          mintAddress={token.mintAddress}
+          size={18}
+        />
+        <QuickTradeButton
+          token={{
+            mintAddress: token.mintAddress,
+            name: token.name,
+            ticker: token.ticker,
+            imageUri: token.imageUri,
+          }}
+          size={18}
+        />
+        <WatchlistButton
+          token={{
+            mintAddress: token.mintAddress,
+            name: token.name,
+            ticker: token.ticker,
+            imageUri: token.imageUri,
+          }}
+          size={18}
+        />
       </div>
     </button>
   );

@@ -7,6 +7,8 @@ import { TokenStats } from "./TokenStats";
 import { SecuritySignals } from "./SecuritySignals";
 import { TokenLinks } from "./TokenLinks";
 import { useTokenPrice } from "@/hooks/useTokenPrice";
+import { WatchlistButton } from "@/components/ui/WatchlistButton";
+import { CompareButton } from "@/components/ui/CompareButton";
 import type { TokenData } from "@/types/token";
 
 interface SwipeCardProps {
@@ -26,7 +28,24 @@ export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
   const liveData = useTokenPrice(token.mintAddress);
 
   return (
-    <div className="bg-bg-card border border-border rounded-card p-5 w-full space-y-3 no-select card-depth">
+    <div className="relative bg-bg-card border border-border rounded-card p-5 w-full space-y-3 no-select card-depth">
+      {/* Compare + Watchlist — top right */}
+      <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
+        <CompareButton
+          mintAddress={token.mintAddress}
+          size={20}
+        />
+        <WatchlistButton
+          token={{
+            mintAddress: token.mintAddress,
+            name: token.name,
+            ticker: token.ticker,
+            imageUri: token.imageUri,
+          }}
+          size={22}
+        />
+      </div>
+
       {/* Header — horizontal layout for compactness */}
       <div className="flex items-center gap-3">
         <TokenAvatar

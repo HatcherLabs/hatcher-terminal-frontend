@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { api } from "@/lib/api";
+import { useToast } from "@/components/ui/Toast";
 
 export interface LiveTokenData {
   priceSol: number | null;
@@ -27,6 +28,7 @@ export function useTokenPrice(
   const [data, setData] = useState<LiveTokenData | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const failCountRef = useRef(0);
 
   const fetchPrice = useCallback(async (mint: string) => {
     // Abort any in-flight request
@@ -38,10 +40,25 @@ export function useTokenPrice(
       const res = await api.raw(`/api/tokens/${mint}/live`, {
         signal: controller.signal,
       });
-      if (!res.ok) return;
+      if (!res.ok) {
+        failCountRef.current++;
+        if (failCountRef.current >= 3) {
+          useToast.getState().add("Price data temporarily unavailable", "error");
+          failCountRef.current = 0;
+        }
+        return;
+      }
       const json = await res.json();
-      if (!json.success) return;
+      if (!json.success) {
+        failCountRef.current++;
+        if (failCountRef.current >= 3) {
+          useToast.getState().add("Price data temporarily unavailable", "error");
+          failCountRef.current = 0;
+        }
+        return;
+      }
 
+      failCountRef.current = 0;
       setData({
         priceSol: json.data.priceSol,
         priceUsd: json.data.priceUsd,
@@ -60,7 +77,11 @@ export function useTokenPrice(
       });
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
-      // Silently ignore fetch errors — stale data is fine
+      failCountRef.current++;
+      if (failCountRef.current >= 3) {
+        useToast.getState().add("Price data temporarily unavailable", "error");
+        failCountRef.current = 0;
+      }
     }
   }, []);
 

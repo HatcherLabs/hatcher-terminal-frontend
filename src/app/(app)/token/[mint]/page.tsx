@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { TokenAvatar } from "@/components/ui/TokenAvatar";
 import { RiskBadge } from "@/components/ui/RiskBadge";
@@ -8,6 +8,14 @@ import { TokenChart } from "@/components/token/TokenChart";
 import { TokenLinks } from "@/components/token/TokenLinks";
 import { useTokenPrice } from "@/hooks/useTokenPrice";
 import { useQuickBuy } from "@/hooks/useQuickBuy";
+import { usePositions } from "@/hooks/usePositions";
+import { useKey } from "@/components/providers/KeyProvider";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { WatchlistButton } from "@/components/ui/WatchlistButton";
+import { CompareButton } from "@/components/ui/CompareButton";
+import { PriceAlertButton } from "@/components/ui/PriceAlertButton";
+import { useToast } from "@/components/ui/Toast";
+import { useQuickTrade } from "@/components/providers/QuickTradeProvider";
 import { api } from "@/lib/api";
 import type { TokenData } from "@/types/token";
 
@@ -138,9 +146,34 @@ export default function TokenTerminalPage() {
   const [activeTradeTab, setActiveTradeTab] = useState<"buy" | "sell">("buy");
   const [customAmount, setCustomAmount] = useState("");
   const [tradeLoading, setTradeLoading] = useState(false);
+  const [sellPercent, setSellPercent] = useState(100);
+  const [quoteEstimate, setQuoteEstimate] = useState<string | null>(null);
+  const [quoteFetching, setQuoteFetching] = useState(false);
+  const quoteDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const liveData = useTokenPrice(mint, !!mint);
   const { amount: quickBuyAmount, setAmount: setQuickBuyAmount } = useQuickBuy();
+  const { positions, refresh: refreshPositions } = usePositions("open");
+  const { hasKey, signTransactionBase64 } = useKey();
+  const { user } = useAuth();
+  const addToast = useToast((s) => s.add);
+  const { selectToken } = useQuickTrade();
+
+  // Auto-select token for quick trade when token data loads
+  useEffect(() => {
+    if (token) {
+      selectToken({
+        mintAddress: token.mintAddress,
+        name: token.name,
+        ticker: token.ticker,
+        imageUri: token.imageUri,
+        priceSol: liveData?.priceSol ?? null,
+      });
+    }
+  }, [token?.mintAddress, selectToken]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Find open position for this token
+  const openPosition = positions.find((p) => p.mintAddress === mint && p.status === "open") ?? null;
 
   // Fetch token data
   useEffect(() => {
@@ -179,32 +212,170 @@ export default function TokenTerminalPage() {
     setQuickBuyAmount(amount);
   };
 
-  const handleTrade = async () => {
-    if (!token || tradeLoading) return;
+  // Fetch quote preview when amount or tab changes
+  const fetchQuote = useCallback(
+    async (side: "buy" | "sell", amount: number) => {
+      if (!mint || amount <= 0 || isNaN(amount)) {
+        setQuoteEstimate(null);
+        return;
+      }
+      setQuoteFetching(true);
+      try {
+        const res = await api.raw(
+          `/api/tokens/${mint}/quote?side=${side}&amount=${amount}`
+        );
+        if (res.ok) {
+          const json = await res.json();
+          if (side === "buy" && json.estimatedTokens != null) {
+            setQuoteEstimate(
+              `~${formatNumber(json.estimatedTokens)} tokens`
+            );
+          } else if (side === "sell" && json.estimatedSolOut != null) {
+            setQuoteEstimate(`~${json.estimatedSolOut.toFixed(4)} SOL`);
+          } else {
+            setQuoteEstimate(null);
+          }
+        } else {
+          setQuoteEstimate(null);
+        }
+      } catch {
+        setQuoteEstimate(null);
+      } finally {
+        setQuoteFetching(false);
+      }
+    },
+    [mint]
+  );
+
+  // Debounced quote fetch
+  useEffect(() => {
     const amount = customAmount ? parseFloat(customAmount) : quickBuyAmount;
-    if (isNaN(amount) || amount <= 0) return;
+    if (quoteDebounceRef.current) clearTimeout(quoteDebounceRef.current);
+    quoteDebounceRef.current = setTimeout(() => {
+      fetchQuote(activeTradeTab, amount);
+    }, 500);
+    return () => {
+      if (quoteDebounceRef.current) clearTimeout(quoteDebounceRef.current);
+    };
+  }, [customAmount, quickBuyAmount, activeTradeTab, fetchQuote]);
+
+  const handleBuy = async () => {
+    if (!token || tradeLoading) return;
+    if (!hasKey || !user) {
+      addToast("Import a wallet key to trade", "error");
+      return;
+    }
+    const amount = customAmount ? parseFloat(customAmount) : quickBuyAmount;
+    if (isNaN(amount) || amount <= 0) {
+      addToast("Enter a valid SOL amount", "error");
+      return;
+    }
 
     setTradeLoading(true);
     try {
-      const direction = activeTradeTab === "buy" ? "right" : "left";
-      const res = await api.raw("/api/swipe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mintAddress: token.mintAddress,
-          direction,
-        }),
+      // Step 1: Get unsigned transaction from the swipe endpoint
+      const swipeRes = await api.post<{
+        unsignedTx: string;
+        estimatedTokens: number;
+        estimatedPrice: number;
+        buyAmountSol: number;
+      }>("/api/swipe", {
+        mintAddress: token.mintAddress,
+        direction: "right",
+        amount,
       });
 
-      if (!res.ok) {
-        // Error handling is silent for now
+      if (!swipeRes.unsignedTx) {
+        addToast("Failed to create buy transaction", "error");
         return;
       }
-      // Transaction would be signed and submitted here via the key provider
-    } catch {
-      // Silently fail
+
+      // Step 2: Sign the transaction
+      const signedTx = await signTransactionBase64(swipeRes.unsignedTx);
+
+      // Step 3: Submit signed transaction
+      const submitRes = await api.post<{
+        txHash: string;
+        status: string;
+      }>("/api/tx/submit", {
+        signedTx,
+        positionType: "buy",
+        mintAddress: token.mintAddress,
+      });
+
+      addToast(
+        `Buy confirmed! TX: ${submitRes.txHash.slice(0, 8)}...`,
+        "success"
+      );
+      refreshPositions();
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Buy transaction failed";
+      addToast(message, "error");
     } finally {
       setTradeLoading(false);
+    }
+  };
+
+  const handleSell = async () => {
+    if (!token || tradeLoading) return;
+    if (!hasKey || !user) {
+      addToast("Import a wallet key to trade", "error");
+      return;
+    }
+    if (!openPosition) {
+      addToast("No open position to sell", "error");
+      return;
+    }
+
+    setTradeLoading(true);
+    try {
+      // Step 1: Get unsigned close transaction
+      const closeRes = await api.post<{
+        unsignedTx: string;
+        estimatedSolOut: number;
+        positionId: string;
+        sellPercent: number;
+      }>(`/api/positions/${openPosition.id}/close?percent=${sellPercent}`);
+
+      if (!closeRes.unsignedTx) {
+        addToast("Failed to create sell transaction", "error");
+        return;
+      }
+
+      // Step 2: Sign the transaction
+      const signedTx = await signTransactionBase64(closeRes.unsignedTx);
+
+      // Step 3: Submit signed transaction
+      const submitRes = await api.post<{
+        txHash: string;
+        status: string;
+      }>("/api/tx/submit", {
+        signedTx,
+        positionType: "sell",
+        mintAddress: token.mintAddress,
+        positionId: openPosition.id,
+      });
+
+      addToast(
+        `Sold ${sellPercent}%! TX: ${submitRes.txHash.slice(0, 8)}...`,
+        "success"
+      );
+      refreshPositions();
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Sell transaction failed";
+      addToast(message, "error");
+    } finally {
+      setTradeLoading(false);
+    }
+  };
+
+  const handleTrade = async () => {
+    if (activeTradeTab === "buy") {
+      await handleBuy();
+    } else {
+      await handleSell();
     }
   };
 
@@ -320,6 +491,34 @@ export default function TokenTerminalPage() {
               </span>
             </div>
           )}
+
+          {/* Compare */}
+          <CompareButton
+            mintAddress={token.mintAddress}
+            size={22}
+            className="shrink-0"
+          />
+
+          {/* Watchlist */}
+          <WatchlistButton
+            token={{
+              mintAddress: token.mintAddress,
+              name: token.name,
+              ticker: token.ticker,
+              imageUri: token.imageUri,
+            }}
+            size={22}
+            className="shrink-0"
+          />
+
+          {/* Price Alert */}
+          <PriceAlertButton
+            mintAddress={token.mintAddress}
+            tokenName={token.name}
+            tokenTicker={token.ticker}
+            size={18}
+            className="shrink-0"
+          />
         </div>
 
         {/* -- MARKET CAP HEADLINE -- */}
@@ -385,7 +584,7 @@ export default function TokenTerminalPage() {
 
         {/* -- CHART (larger) -- */}
         <div>
-          <TokenChart mintAddress={token.mintAddress} height={360} />
+          <TokenChart mintAddress={token.mintAddress} />
         </div>
 
         {/* -- KEY METRICS GRID -- */}
@@ -648,54 +847,128 @@ export default function TokenTerminalPage() {
           </div>
 
           <div className="p-4 space-y-4">
-            {/* Quick amount buttons */}
-            <div>
-              <p className="text-[10px] text-text-muted uppercase tracking-wider mb-2">
-                Amount (SOL)
-              </p>
-              <div className="grid grid-cols-5 gap-1.5">
-                {[0.1, 0.25, 0.5, 1, 2].map((amt) => (
-                  <button
-                    key={amt}
-                    onClick={() => handleQuickAmount(amt)}
-                    className={`py-2 rounded-lg text-xs font-mono font-medium transition-colors border ${
-                      tradeAmount === amt
-                        ? activeTradeTab === "buy"
-                          ? "bg-green/10 border-green/30 text-green"
-                          : "bg-red/10 border-red/30 text-red"
-                        : "bg-bg-elevated border-border text-text-secondary hover:text-text-primary hover:border-border-hover"
-                    }`}
-                  >
-                    {amt}
-                  </button>
-                ))}
+            {/* No wallet key warning */}
+            {!hasKey && (
+              <div className="bg-amber/10 border border-amber/20 rounded-lg px-3 py-2 text-[11px] text-amber">
+                Import a wallet key in Settings to enable trading.
               </div>
-            </div>
+            )}
 
-            {/* Custom amount input */}
-            <div>
-              <label
-                htmlFor="custom-amount"
-                className="text-[10px] text-text-muted uppercase tracking-wider mb-1.5 block"
-              >
-                Custom Amount
-              </label>
-              <div className="relative">
-                <input
-                  id="custom-amount"
-                  type="number"
-                  value={customAmount}
-                  onChange={(e) => setCustomAmount(e.target.value)}
-                  placeholder={String(quickBuyAmount)}
-                  className="w-full bg-bg-elevated border border-border rounded-lg px-3 py-2.5 text-sm font-mono text-text-primary placeholder:text-text-faint focus:border-green/50 focus:outline-none transition-all"
-                  step="0.01"
-                  min="0"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-text-muted font-mono">
-                  SOL
-                </span>
-              </div>
-            </div>
+            {activeTradeTab === "buy" ? (
+              <>
+                {/* Quick amount buttons (buy) */}
+                <div>
+                  <p className="text-[10px] text-text-muted uppercase tracking-wider mb-2">
+                    Amount (SOL)
+                  </p>
+                  <div className="grid grid-cols-5 gap-1.5">
+                    {[0.1, 0.25, 0.5, 1, 2].map((amt) => (
+                      <button
+                        key={amt}
+                        onClick={() => handleQuickAmount(amt)}
+                        className={`py-2 rounded-lg text-xs font-mono font-medium transition-colors border ${
+                          tradeAmount === amt
+                            ? "bg-green/10 border-green/30 text-green"
+                            : "bg-bg-elevated border-border text-text-secondary hover:text-text-primary hover:border-border-hover"
+                        }`}
+                      >
+                        {amt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Custom amount input */}
+                <div>
+                  <label
+                    htmlFor="custom-amount"
+                    className="text-[10px] text-text-muted uppercase tracking-wider mb-1.5 block"
+                  >
+                    Custom Amount
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="custom-amount"
+                      type="number"
+                      value={customAmount}
+                      onChange={(e) => setCustomAmount(e.target.value)}
+                      placeholder={String(quickBuyAmount)}
+                      className="w-full bg-bg-elevated border border-border rounded-lg px-3 py-2.5 text-sm font-mono text-text-primary placeholder:text-text-faint focus:border-green/50 focus:outline-none transition-all"
+                      step="0.01"
+                      min="0"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-text-muted font-mono">
+                      SOL
+                    </span>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Sell percentage buttons */}
+                <div>
+                  <p className="text-[10px] text-text-muted uppercase tracking-wider mb-2">
+                    Sell Percentage
+                  </p>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {[25, 50, 75, 100].map((pct) => (
+                      <button
+                        key={pct}
+                        onClick={() => setSellPercent(pct)}
+                        className={`py-2 rounded-lg text-xs font-mono font-medium transition-colors border ${
+                          sellPercent === pct
+                            ? "bg-red/10 border-red/30 text-red"
+                            : "bg-bg-elevated border-border text-text-secondary hover:text-text-primary hover:border-border-hover"
+                        }`}
+                      >
+                        {pct}%
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Open position info */}
+                {openPosition ? (
+                  <div className="bg-bg-elevated rounded-lg p-3 space-y-1.5">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-text-muted">Position size</span>
+                      <span className="font-mono text-text-primary">
+                        {openPosition.entrySol.toFixed(4)} SOL
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-text-muted">Tokens held</span>
+                      <span className="font-mono text-text-primary">
+                        {formatNumber(openPosition.entryTokenAmount)}
+                      </span>
+                    </div>
+                    {openPosition.pnlPercent != null && (
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-text-muted">P&L</span>
+                        <span
+                          className={`font-mono font-semibold ${
+                            openPosition.pnlPercent >= 0
+                              ? "text-green"
+                              : "text-red"
+                          }`}
+                        >
+                          {openPosition.pnlPercent >= 0 ? "+" : ""}
+                          {openPosition.pnlPercent.toFixed(1)}%
+                          {openPosition.pnlSol != null &&
+                            ` (${openPosition.pnlSol >= 0 ? "+" : ""}${openPosition.pnlSol.toFixed(4)} SOL)`}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="bg-bg-elevated rounded-lg p-3 text-center">
+                    <p className="text-[11px] text-text-muted">
+                      No open position for this token.
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
 
             {/* Slippage info */}
             <div className="flex items-center justify-between text-[11px]">
@@ -705,12 +978,34 @@ export default function TokenTerminalPage() {
 
             {/* Trade summary */}
             <div className="bg-bg-elevated rounded-lg p-3 space-y-1.5">
-              <div className="flex items-center justify-between text-[11px]">
-                <span className="text-text-muted">You pay</span>
-                <span className="font-mono text-text-primary">
-                  {isNaN(tradeAmount) ? "0" : tradeAmount} SOL
-                </span>
-              </div>
+              {activeTradeTab === "buy" ? (
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-text-muted">You pay</span>
+                  <span className="font-mono text-text-primary">
+                    {isNaN(tradeAmount) ? "0" : tradeAmount} SOL
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-text-muted">Selling</span>
+                  <span className="font-mono text-text-primary">
+                    {sellPercent}% of position
+                  </span>
+                </div>
+              )}
+              {/* Quote estimate */}
+              {quoteEstimate && (
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-text-muted">Est. output</span>
+                  <span className="font-mono text-text-secondary">
+                    {quoteFetching ? (
+                      <span className="inline-block w-3 h-3 border border-current/30 border-t-current rounded-full animate-spin" />
+                    ) : (
+                      quoteEstimate
+                    )}
+                  </span>
+                </div>
+              )}
               {marketCapUsd != null && (
                 <div className="flex items-center justify-between text-[11px]">
                   <span className="text-text-muted">Market cap</span>
@@ -735,7 +1030,13 @@ export default function TokenTerminalPage() {
             {/* Trade button */}
             <button
               onClick={handleTrade}
-              disabled={tradeLoading || isNaN(tradeAmount) || tradeAmount <= 0}
+              disabled={
+                tradeLoading ||
+                !hasKey ||
+                (activeTradeTab === "buy"
+                  ? isNaN(tradeAmount) || tradeAmount <= 0
+                  : !openPosition)
+              }
               className={`w-full py-3.5 rounded-xl font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed ${
                 activeTradeTab === "buy"
                   ? "bg-green text-bg-primary hover:brightness-110"
@@ -747,10 +1048,14 @@ export default function TokenTerminalPage() {
                   <span className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />
                   Processing...
                 </span>
+              ) : !hasKey ? (
+                "Import Key to Trade"
               ) : activeTradeTab === "buy" ? (
                 `Buy ${isNaN(tradeAmount) ? "" : tradeAmount + " SOL"}`
+              ) : !openPosition ? (
+                "No Position to Sell"
               ) : (
-                `Sell ${isNaN(tradeAmount) ? "" : tradeAmount + " SOL"}`
+                `Sell ${sellPercent}%`
               )}
             </button>
           </div>
@@ -796,23 +1101,20 @@ export default function TokenTerminalPage() {
               <span className="text-xs font-mono text-text-muted">
                 {isNaN(tradeAmount) ? "0" : tradeAmount} SOL
               </span>
+              {tradeLoading && (
+                <span className="w-3 h-3 border border-text-muted/30 border-t-text-muted rounded-full animate-spin" />
+              )}
             </div>
             <button
-              onClick={() => {
-                setActiveTradeTab("sell");
-                handleTrade();
-              }}
-              disabled={tradeLoading}
+              onClick={handleSell}
+              disabled={tradeLoading || !hasKey || !openPosition}
               className="px-4 py-2.5 rounded-lg bg-red/10 border border-red/30 text-red font-bold text-xs transition-colors hover:bg-red/20 disabled:opacity-40"
             >
               Sell
             </button>
             <button
-              onClick={() => {
-                setActiveTradeTab("buy");
-                handleTrade();
-              }}
-              disabled={tradeLoading}
+              onClick={handleBuy}
+              disabled={tradeLoading || !hasKey || isNaN(tradeAmount) || tradeAmount <= 0}
               className="px-4 py-2.5 rounded-lg bg-green/10 border border-green/30 text-green font-bold text-xs transition-colors hover:bg-green/20 disabled:opacity-40"
             >
               Buy

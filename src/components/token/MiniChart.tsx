@@ -28,7 +28,8 @@ const CACHE = new Map<string, { data: ChartResponse; ts: number }>();
 const CACHE_TTL = 60_000;
 
 async function fetchChartData(mint: string): Promise<ChartResponse> {
-  const cached = CACHE.get(mint);
+  const key = `mini:${mint}`;
+  const cached = CACHE.get(key);
   if (cached && Date.now() - cached.ts < CACHE_TTL) {
     return cached.data;
   }
@@ -36,18 +37,20 @@ async function fetchChartData(mint: string): Promise<ChartResponse> {
   const res = await api.raw(`/api/tokens/${mint}/chart?limit=30`);
   if (!res.ok) throw new Error("Failed to fetch chart data");
   const json: ChartResponse = await res.json();
-  CACHE.set(mint, { data: json, ts: Date.now() });
+  CACHE.set(key, { data: json, ts: Date.now() });
   return json;
 }
 
 function MiniAreaChart({ candles }: { candles: CandleData[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const chartRef = useRef<ReturnType<typeof import("lightweight-charts").createChart> | null>(null);
+  const chartRef = useRef<ReturnType<
+    typeof import("lightweight-charts").createChart
+  > | null>(null);
 
   const initChart = useCallback(async () => {
     if (!containerRef.current) return;
 
-    const { createChart, AreaSeries, ColorType } = await import(
+    const { createChart, AreaSeries, LineSeries, ColorType } = await import(
       "lightweight-charts"
     );
 
@@ -57,18 +60,20 @@ function MiniAreaChart({ candles }: { candles: CandleData[] }) {
     }
 
     const closes = candles.map((c) => c.close);
-    const isUp = closes[closes.length - 1] >= closes[0];
-    const lineColor = isUp ? "#00ff88" : "#ff4466";
+    const openPrice = candles[0].open;
+    const currentPrice = closes[closes.length - 1];
+    const isUp = currentPrice >= openPrice;
+    const lineColor = isUp ? "#00ff88" : "#ff3b5c";
     const topColor = isUp
-      ? "rgba(0, 255, 136, 0.25)"
-      : "rgba(255, 68, 102, 0.25)";
+      ? "rgba(0, 255, 136, 0.20)"
+      : "rgba(255, 59, 92, 0.20)";
     const bottomColor = isUp
-      ? "rgba(0, 255, 136, 0.02)"
-      : "rgba(255, 68, 102, 0.02)";
+      ? "rgba(0, 255, 136, 0.01)"
+      : "rgba(255, 59, 92, 0.01)";
 
     const chart = createChart(containerRef.current, {
       width: containerRef.current.clientWidth,
-      height: 60,
+      height: 48,
       layout: {
         background: { type: ColorType.Solid, color: "transparent" },
         textColor: "transparent",
@@ -94,6 +99,31 @@ function MiniAreaChart({ candles }: { candles: CandleData[] }) {
 
     chartRef.current = chart;
 
+    // Baseline: thin horizontal line at open price
+    const baselineSeries = chart.addSeries(LineSeries, {
+      color: "rgba(136, 136, 170, 0.25)",
+      lineWidth: 1,
+      lineStyle: 2, // Dashed
+      crosshairMarkerVisible: false,
+      priceLineVisible: false,
+      lastValueVisible: false,
+      pointMarkersVisible: false,
+    });
+
+    const baselineData = [
+      {
+        time: candles[0].timestamp as import("lightweight-charts").UTCTimestamp,
+        value: openPrice,
+      },
+      {
+        time: candles[candles.length - 1]
+          .timestamp as import("lightweight-charts").UTCTimestamp,
+        value: openPrice,
+      },
+    ];
+    baselineSeries.setData(baselineData);
+
+    // Main area series with smooth interpolation
     const areaSeries = chart.addSeries(AreaSeries, {
       lineColor,
       topColor,
@@ -112,6 +142,7 @@ function MiniAreaChart({ candles }: { candles: CandleData[] }) {
     areaSeries.setData(chartData);
     chart.timeScale().fitContent();
 
+    // Resize observer
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const { width } = entry.contentRect;
@@ -123,8 +154,11 @@ function MiniAreaChart({ candles }: { candles: CandleData[] }) {
 
     resizeObserver.observe(containerRef.current);
 
-    (containerRef.current as HTMLDivElement & { _resizeObserver?: ResizeObserver })._resizeObserver =
-      resizeObserver;
+    (
+      containerRef.current as HTMLDivElement & {
+        _resizeObserver?: ResizeObserver;
+      }
+    )._resizeObserver = resizeObserver;
   }, [candles]);
 
   useEffect(() => {
@@ -133,7 +167,9 @@ function MiniAreaChart({ candles }: { candles: CandleData[] }) {
 
     return () => {
       if (container) {
-        const obs = (container as HTMLDivElement & { _resizeObserver?: ResizeObserver })._resizeObserver;
+        const obs = (
+          container as HTMLDivElement & { _resizeObserver?: ResizeObserver }
+        )._resizeObserver;
         if (obs) {
           obs.disconnect();
         }
@@ -145,7 +181,7 @@ function MiniAreaChart({ candles }: { candles: CandleData[] }) {
     };
   }, [initChart]);
 
-  return <div ref={containerRef} className="w-full h-[60px]" />;
+  return <div ref={containerRef} className="w-full h-[48px]" />;
 }
 
 export function MiniChart({ mintAddress }: MiniChartProps) {
@@ -173,7 +209,7 @@ export function MiniChart({ mintAddress }: MiniChartProps) {
 
   if (error || (chartData !== null && chartData.candles.length < 2)) {
     return (
-      <div className="w-full h-[60px] flex items-center justify-center">
+      <div className="w-full h-[48px] flex items-center justify-center">
         <span className="text-[10px] text-text-faint font-mono">
           No chart
         </span>
@@ -183,7 +219,7 @@ export function MiniChart({ mintAddress }: MiniChartProps) {
 
   if (chartData === null) {
     return (
-      <div className="w-full h-[60px] rounded-lg bg-bg-elevated animate-pulse" />
+      <div className="w-full h-[48px] rounded-lg bg-bg-elevated animate-pulse" />
     );
   }
 

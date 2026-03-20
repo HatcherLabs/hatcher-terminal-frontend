@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { PositionCard } from "./PositionCard";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
 import { useKey } from "@/components/providers/KeyProvider";
 import { api } from "@/lib/api";
@@ -129,11 +131,23 @@ function PortfolioSummary({ stats }: { stats: PortfolioStats }) {
   );
 }
 
+interface AutoSellSettings {
+  autoSellProfitPct: number | null;
+  stopLossPct: number | null;
+}
+
 export function PositionList() {
+  const router = useRouter();
   const [positions, setPositions] = useState<Position[]>([]);
   const [loading, setLoading] = useState(true);
+  const [autoSell, setAutoSell] = useState<AutoSellSettings>({
+    autoSellProfitPct: null,
+    stopLossPct: null,
+  });
   const toast = useToast();
   const { hasKey } = useKey();
+
+  const fetchFailCountRef = useRef(0);
 
   const fetchPositions = useCallback(async () => {
     try {
@@ -141,12 +155,40 @@ export function PositionList() {
       if (res.ok) {
         const { data } = await res.json();
         setPositions(data);
+        fetchFailCountRef.current = 0;
+      } else {
+        fetchFailCountRef.current++;
+        if (fetchFailCountRef.current >= 3) {
+          toast.add("Unable to load positions", "error");
+          fetchFailCountRef.current = 0;
+        }
       }
     } catch {
-      // retry on next poll
+      fetchFailCountRef.current++;
+      if (fetchFailCountRef.current >= 3) {
+        toast.add("Unable to load positions", "error");
+        fetchFailCountRef.current = 0;
+      }
     } finally {
       setLoading(false);
     }
+  }, [toast]);
+
+  // Fetch auto-sell settings
+  useEffect(() => {
+    api.raw("/api/settings")
+      .then((r) => r.json())
+      .then(({ data }) => {
+        if (data) {
+          setAutoSell({
+            autoSellProfitPct: data.autoSellProfitPct ?? null,
+            stopLossPct: data.stopLossPct ?? null,
+          });
+        }
+      })
+      .catch(() => {
+        // Settings fetch failed, triggers won't show
+      });
   }, []);
 
   useEffect(() => {
@@ -205,8 +247,7 @@ export function PositionList() {
         const err = await submitRes.json();
         toast.add(err.error || `${label} failed`, "error");
       }
-    } catch (err) {
-      console.error("Sell error:", err);
+    } catch {
       toast.add(`Failed to ${label} position`, "error");
     }
   };
@@ -224,15 +265,21 @@ export function PositionList() {
 
   if (positions.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 mt-16 text-center">
-        <p className="text-4xl">&#x1F48E;</p>
-        <p className="text-text-secondary text-sm font-medium">
-          No positions yet.
-        </p>
-        <p className="text-text-muted text-xs">
-          Start swiping to ape in!
-        </p>
-      </div>
+      <EmptyState
+        icon={
+          <svg viewBox="0 0 24 24" width={48} height={48} fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0022 16z" />
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+            <line x1="12" y1="22.08" x2="12" y2="12" />
+          </svg>
+        }
+        title="No open positions"
+        description="Start trading by swiping right on tokens you believe in."
+        action={{
+          label: "Go to Discover",
+          onClick: () => router.push("/swipe"),
+        }}
+      />
     );
   }
 
@@ -240,7 +287,13 @@ export function PositionList() {
     <div className="space-y-3">
       <PortfolioSummary stats={stats} />
       {positions.map((pos) => (
-        <PositionCard key={pos.id} position={pos} onClose={handleClose} />
+        <PositionCard
+          key={pos.id}
+          position={pos}
+          onClose={handleClose}
+          takeProfitPct={autoSell.autoSellProfitPct}
+          stopLossPct={autoSell.stopLossPct}
+        />
       ))}
     </div>
   );

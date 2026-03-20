@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useWatchlist } from "@/components/providers/WatchlistProvider";
 
 const navItems = [
   {
@@ -23,6 +24,16 @@ const navItems = [
         <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
       </svg>
     ),
+  },
+  {
+    href: "/watchlist",
+    label: "Watchlist",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+      </svg>
+    ),
+    hasBadge: true,
   },
   {
     href: "/matches",
@@ -69,23 +80,32 @@ const navItems = [
 
 export function BottomNav() {
   const pathname = usePathname();
+  const { watchlistCount } = useWatchlist();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-bg-card/80 backdrop-blur-xl border-t border-border/50 md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-bg-card/80 backdrop-blur-xl border-t border-border/50 terminal:hidden">
       <div className="max-w-app mx-auto flex items-center justify-around h-14 px-1">
         {navItems.map((item) => {
           const active = pathname === item.href;
+          const showBadge = (item as { hasBadge?: boolean }).hasBadge && watchlistCount > 0;
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg transition-all duration-200 ${
+              className={`relative flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg transition-all duration-200 ${
                 active
                   ? "text-green nav-active-dot"
                   : "text-text-muted hover:text-text-secondary"
               }`}
             >
-              {item.icon}
+              <span className="relative">
+                {item.icon}
+                {showBadge && (
+                  <span className="absolute -top-1 -right-1.5 min-w-[14px] h-[14px] flex items-center justify-center rounded-full bg-green text-bg-primary text-[8px] font-bold px-0.5 leading-none">
+                    {watchlistCount > 99 ? "99+" : watchlistCount}
+                  </span>
+                )}
+              </span>
               <span className="text-[10px] font-medium tracking-wide">{item.label}</span>
             </Link>
           );

@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { TokenAvatar } from "@/components/ui/TokenAvatar";
 import { RiskBadge } from "@/components/ui/RiskBadge";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { api } from "@/lib/api";
 
 interface GraveyardToken {
@@ -223,15 +224,18 @@ export default function GraveyardPage() {
         <h1 className="text-lg font-bold text-text-primary mb-4">
           Graveyard
         </h1>
-        <div className="flex flex-col items-center justify-center gap-3 mt-16 text-center">
-          <p className="text-4xl">&#x1F480;</p>
-          <p className="text-text-secondary text-sm font-medium">
-            No passed tokens yet.
-          </p>
-          <p className="text-text-muted text-xs">
-            Start swiping!
-          </p>
-        </div>
+        <EmptyState
+          icon={
+            <svg viewBox="0 0 24 24" width={48} height={48} fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M8 15h8" />
+              <line x1="9" y1="9" x2="9.01" y2="9" />
+              <line x1="15" y1="9" x2="15.01" y2="9" />
+            </svg>
+          }
+          title="No passed tokens"
+          description="Tokens you pass on will appear here so you can track what you missed."
+        />
       </div>
     );
   }

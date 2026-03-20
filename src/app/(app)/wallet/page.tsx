@@ -7,6 +7,7 @@ import { BalanceDisplay } from "@/components/wallet/BalanceDisplay";
 import { DepositQR } from "@/components/wallet/DepositQR";
 import { ImportKeyModal } from "@/components/wallet/ImportKeyModal";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { api } from "@/lib/api";
 
 interface WalletAnalytics {
@@ -489,9 +490,18 @@ export default function WalletPage() {
                 })}
               </div>
             ) : (
-              <p className="text-xs text-text-muted text-center py-4">
-                No closed trades yet
-              </p>
+              <EmptyState
+                icon={
+                  <svg viewBox="0 0 24 24" width={48} height={48} fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="20" x2="12" y2="10" />
+                    <line x1="18" y1="20" x2="18" y2="4" />
+                    <line x1="6" y1="20" x2="6" y2="16" />
+                  </svg>
+                }
+                title="No trades yet"
+                description="Your trade history will appear here once you start trading."
+                className="py-8"
+              />
             )}
           </div>
 

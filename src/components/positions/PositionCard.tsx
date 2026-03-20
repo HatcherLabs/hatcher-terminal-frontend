@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { TokenAvatar } from "@/components/ui/TokenAvatar";
+import { PositionTriggers } from "./PositionTriggers";
 
 interface PositionCardProps {
   position: {
@@ -22,6 +23,8 @@ interface PositionCardProps {
     };
   };
   onClose: (id: string, percent: number) => void;
+  takeProfitPct?: number | null;
+  stopLossPct?: number | null;
 }
 
 function formatTimeHeld(entryTimestamp: string | undefined): string {
@@ -40,7 +43,7 @@ function formatTimeHeld(entryTimestamp: string | undefined): string {
 
 const SELL_PERCENTS = [25, 50, 75, 100] as const;
 
-export function PositionCard({ position, onClose }: PositionCardProps) {
+export function PositionCard({ position, onClose, takeProfitPct, stopLossPct }: PositionCardProps) {
   const [sellingPercent, setSellingPercent] = useState<number | null>(null);
   const isPending = position.status === "pending";
 
@@ -138,6 +141,16 @@ export function PositionCard({ position, onClose }: PositionCardProps) {
           </p>
         </div>
       </div>
+
+      {/* Auto-sell trigger indicators */}
+      {position.status === "open" &&
+        (takeProfitPct || stopLossPct) && (
+          <PositionTriggers
+            pnlPercent={pnl}
+            takeProfitPct={takeProfitPct ?? null}
+            stopLossPct={stopLossPct ?? null}
+          />
+        )}
 
       {position.status === "open" && (
         <div className="flex gap-2 pt-1">
