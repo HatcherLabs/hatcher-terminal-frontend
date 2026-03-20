@@ -10,7 +10,9 @@ import Link from "next/link";
 const inputStyle: React.CSSProperties = {
   width: "100%",
   backgroundColor: "#1f2435",
-  border: "1px solid #1a1f2e",
+  borderWidth: 1,
+  borderStyle: "solid",
+  borderColor: "#1a1f2e",
   borderRadius: 8,
   padding: "10px 12px",
   fontSize: 14,
