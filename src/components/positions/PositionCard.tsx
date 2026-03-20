@@ -98,8 +98,8 @@ export function PositionCard({ position, onClose, takeProfitPct, stopLossPct }: 
   // Compute gradient intensity based on P&L magnitude (capped at 50%)
   const gradientIntensity = Math.min(Math.abs(pnl) / 50, 1);
   const gradientColor = isPositive
-    ? `rgba(0, 255, 136, ${0.15 + gradientIntensity * 0.45})`
-    : `rgba(255, 59, 92, ${0.15 + gradientIntensity * 0.45})`;
+    ? `rgba(0, 214, 114, ${0.15 + gradientIntensity * 0.45})`
+    : `rgba(242, 54, 69, ${0.15 + gradientIntensity * 0.45})`;
 
   const handleSell = async (percent: number) => {
     setSellingPercent(percent);
@@ -123,7 +123,7 @@ export function PositionCard({ position, onClose, takeProfitPct, stopLossPct }: 
         className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl"
         style={{
           background: `linear-gradient(to bottom, ${gradientColor}, ${
-            isPositive ? "rgba(0, 255, 136, 0.05)" : "rgba(255, 59, 92, 0.05)"
+            isPositive ? "rgba(0, 214, 114, 0.05)" : "rgba(242, 54, 69, 0.05)"
           })`,
         }}
       />

@@ -203,14 +203,14 @@ form {
 
 /* Gradient text */
 .text-gradient-green {
-  background: linear-gradient(135deg, #00ff88, #00cc6a);
+  background: linear-gradient(135deg, #00d672, #00b060);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .text-gradient-accent {
-  background: linear-gradient(135deg, #7c4dff, #651fff);
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -337,7 +337,7 @@ form {
     font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #555568;
+    color: #5c6380;
   }
 
   /* Monospace for all price/number elements on desktop */

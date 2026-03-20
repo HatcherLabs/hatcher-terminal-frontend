@@ -5,16 +5,16 @@ import { api } from "@/lib/api";
 
 // ---- Chart Theme Constants ----
 const CHART_THEME = {
-  background: "#0d0d14",
-  gridColor: "rgba(26, 26, 46, 0.5)",
-  upColor: "#00ff88",
-  downColor: "#ff3b5c",
-  crosshairColor: "#555568",
-  textColor: "#8888a0",
-  labelBg: "#14141f",
-  borderColor: "#1a1a2a",
-  volumeUpColor: "rgba(0, 255, 136, 0.2)",
-  volumeDownColor: "rgba(255, 59, 92, 0.2)",
+  background: "#0a0d14",
+  gridColor: "rgba(26, 31, 46, 0.5)",
+  upColor: "#00d672",
+  downColor: "#f23645",
+  crosshairColor: "#5c6380",
+  textColor: "#9ca3b8",
+  labelBg: "#10131c",
+  borderColor: "#1a1f2e",
+  volumeUpColor: "rgba(0, 214, 114, 0.2)",
+  volumeDownColor: "rgba(242, 54, 69, 0.2)",
 } as const;
 
 // ---- Timeframe Config ----
@@ -97,7 +97,7 @@ interface IndicatorConfig {
 }
 
 const INDICATORS: Record<IndicatorKey, IndicatorConfig> = {
-  sma7: { label: "SMA 7", color: "#7c4dff" },
+  sma7: { label: "SMA 7", color: "#8b5cf6" },
   sma25: { label: "SMA 25", color: "#ff9800" },
   ema9: { label: "EMA 9", color: "#00bcd4" },
   vol: { label: "VOL", color: "" },
@@ -240,10 +240,10 @@ function ChartHeaderOverlay({ candles }: { candles: CandleData[] }) {
 
   const changeColor =
     stats.change > 0
-      ? "text-[#00ff88]"
+      ? "text-[#00d672]"
       : stats.change < 0
-        ? "text-[#ff3b5c]"
-        : "text-[#8888aa]";
+        ? "text-[#f23645]"
+        : "text-[#9ca3b8]";
 
   return (
     <div className="absolute top-2 left-2 z-10 flex flex-col gap-0.5 pointer-events-none select-none">
@@ -256,7 +256,7 @@ function ChartHeaderOverlay({ candles }: { candles: CandleData[] }) {
           {stats.change.toFixed(2)}%
         </span>
       </div>
-      <div className="flex items-center gap-3 text-[10px] font-mono text-[#8888aa]">
+      <div className="flex items-center gap-3 text-[10px] font-mono text-[#9ca3b8]">
         <span>
           H: {formatPriceSOL(stats.high)}
         </span>
@@ -284,8 +284,8 @@ function TimeframeButtons({
           onClick={() => onChange(tf)}
           className={`px-2 py-1 rounded text-[10px] font-mono font-bold transition-colors ${
             active === tf
-              ? "bg-[#00ff88]/15 text-[#00ff88] border border-[#00ff88]/30"
-              : "text-[#8888aa] hover:text-text-secondary border border-transparent hover:border-border"
+              ? "bg-[#00d672]/15 text-[#00d672] border border-[#00d672]/30"
+              : "text-[#9ca3b8] hover:text-text-secondary border border-transparent hover:border-border"
           }`}
         >
           {TIMEFRAMES[tf].label}
@@ -579,7 +579,7 @@ function DexScreenerEmbed({
           {onSwitchNative && (
             <button
               onClick={onSwitchNative}
-              className="text-[10px] font-mono text-[#00ff88] hover:text-[#00ff88]/80 transition-colors"
+              className="text-[10px] font-mono text-[#00d672] hover:text-[#00d672]/80 transition-colors"
             >
               Native Chart
             </button>
@@ -594,7 +594,7 @@ function DexScreenerEmbed({
           className="absolute inset-x-0 bottom-0 flex flex-col items-center justify-center gap-2 bg-bg-elevated"
           style={{ height }}
         >
-          <div className="w-8 h-8 border-2 border-[#8888aa]/30 border-t-[#8888aa] rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-[#9ca3b8]/30 border-t-[#9ca3b8] rounded-full animate-spin" />
           <p className="text-[11px] text-text-muted font-mono">
             Loading chart data...
           </p>
@@ -746,7 +746,7 @@ export function TokenChart({ mintAddress, height }: TokenChartProps) {
             {TIMEFRAMES[timeframe].label} candles
           </p>
           {loading && (
-            <span className="w-3 h-3 border border-[#8888aa]/30 border-t-[#8888aa] rounded-full animate-spin" />
+            <span className="w-3 h-3 border border-[#9ca3b8]/30 border-t-[#9ca3b8] rounded-full animate-spin" />
           )}
         </div>
       </div>

@@ -63,19 +63,19 @@ function MiniAreaChart({ candles }: { candles: CandleData[] }) {
     const openPrice = candles[0].open;
     const currentPrice = closes[closes.length - 1];
     const isUp = currentPrice >= openPrice;
-    const lineColor = isUp ? "#00ff88" : "#ff3b5c";
+    const lineColor = isUp ? "#00d672" : "#f23645";
     const topColor = isUp
-      ? "rgba(0, 255, 136, 0.20)"
-      : "rgba(255, 59, 92, 0.20)";
+      ? "rgba(0, 214, 114, 0.20)"
+      : "rgba(242, 54, 69, 0.20)";
     const bottomColor = isUp
-      ? "rgba(0, 255, 136, 0.01)"
-      : "rgba(255, 59, 92, 0.01)";
+      ? "rgba(0, 214, 114, 0.01)"
+      : "rgba(242, 54, 69, 0.01)";
 
     const chart = createChart(containerRef.current, {
       width: containerRef.current.clientWidth,
       height: 48,
       layout: {
-        background: { type: ColorType.Solid, color: "#0d0d14" },
+        background: { type: ColorType.Solid, color: "#0a0d14" },
         textColor: "transparent",
         fontSize: 0,
       },
@@ -101,7 +101,7 @@ function MiniAreaChart({ candles }: { candles: CandleData[] }) {
 
     // Baseline: thin horizontal line at open price
     const baselineSeries = chart.addSeries(LineSeries, {
-      color: "rgba(136, 136, 170, 0.25)",
+      color: "rgba(156, 163, 184, 0.25)",
       lineWidth: 1,
       lineStyle: 2, // Dashed
       crosshairMarkerVisible: false,

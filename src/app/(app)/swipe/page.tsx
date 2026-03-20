@@ -86,9 +86,14 @@ export default function SwipePage() {
     <ErrorBoundary fallbackTitle="Swipe feed error">
       <SwipeTutorialOverlay />
       <div className="flex flex-col items-center pt-2">
-        <h1 className="text-lg font-bold tracking-tight mb-3" style={{ color: "#ffffff" }}>
-          DISCOVER <span style={{ color: "#00d672" }}>TOKENS</span>
-        </h1>
+        <div className="text-center mb-1">
+          <h1 className="text-lg font-bold tracking-tight" style={{ color: "#eef0f6" }}>
+            DISCOVER <span style={{ color: "#00d672" }}>TOKENS</span>
+          </h1>
+          <p className="text-[10px] font-semibold mt-0.5" style={{ color: "#363d54" }}>
+            Tokens with momentum in the last hour
+          </p>
+        </div>
 
         {/* Tab bar */}
         <nav
@@ -159,6 +164,9 @@ export default function SwipePage() {
             tokens={filteredTokens}
             onSessionUpdate={handleSessionUpdate}
           />
+          <p className="text-[9px] font-mono text-center mt-2 mb-4" style={{ color: "#363d54" }}>
+            ← → ↑ keys · swipe · or tap Terminal
+          </p>
         </div>
       </div>
     </ErrorBoundary>

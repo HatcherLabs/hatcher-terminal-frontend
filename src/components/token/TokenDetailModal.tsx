@@ -277,7 +277,7 @@ export function TokenDetailModal({
                       className="h-full rounded-full transition-all duration-700 ease-out"
                       style={{
                         width: `${Math.min(bondingPct, 100)}%`,
-                        background: bondingPct >= 90 ? "#00ff88" : bondingPct >= 50 ? "#ffaa00" : "#3b82f6",
+                        background: bondingPct >= 90 ? "#00d672" : bondingPct >= 50 ? "#f0a000" : "#3b82f6",
                       }}
                     />
                   </div>

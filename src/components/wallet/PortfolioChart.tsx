@@ -30,35 +30,35 @@ export function PortfolioChart({ data }: PortfolioChartProps) {
       width: el.clientWidth,
       height: el.clientHeight,
       layout: {
-        background: { type: ColorType.Solid, color: "#0d0d14" },
-        textColor: "#555568",
+        background: { type: ColorType.Solid, color: "#0a0d14" },
+        textColor: "#5c6380",
         fontFamily: "var(--font-jetbrains-mono), monospace",
         fontSize: 11,
       },
       grid: {
-        vertLines: { color: "rgba(26, 26, 46, 0.4)" },
-        horzLines: { color: "rgba(26, 26, 46, 0.4)" },
+        vertLines: { color: "rgba(26, 31, 46, 0.4)" },
+        horzLines: { color: "rgba(26, 31, 46, 0.4)" },
       },
       crosshair: {
         vertLine: {
-          color: "#555568",
+          color: "#5c6380",
           width: 1,
           style: 3,
-          labelBackgroundColor: "#14141f",
+          labelBackgroundColor: "#10131c",
         },
         horzLine: {
-          color: "#555568",
+          color: "#5c6380",
           width: 1,
           style: 3,
-          labelBackgroundColor: "#14141f",
+          labelBackgroundColor: "#10131c",
         },
       },
       rightPriceScale: {
-        borderColor: "#1a1a2a",
+        borderColor: "#1a1f2e",
         scaleMargins: { top: 0.1, bottom: 0.1 },
       },
       timeScale: {
-        borderColor: "#1a1a2a",
+        borderColor: "#1a1f2e",
         timeVisible: false,
       },
       handleScroll: false,
@@ -68,12 +68,12 @@ export function PortfolioChart({ data }: PortfolioChartProps) {
     chartRef.current = chart;
 
     const areaSeries = chart.addSeries(AreaSeries, {
-      lineColor: "#00ff88",
+      lineColor: "#00d672",
       lineWidth: 2,
-      topColor: "rgba(0, 255, 136, 0.28)",
-      bottomColor: "rgba(0, 255, 136, 0.02)",
-      crosshairMarkerBackgroundColor: "#00ff88",
-      crosshairMarkerBorderColor: "#00ff88",
+      topColor: "rgba(0, 214, 114, 0.28)",
+      bottomColor: "rgba(0, 214, 114, 0.02)",
+      crosshairMarkerBackgroundColor: "#00d672",
+      crosshairMarkerBorderColor: "#00d672",
       crosshairMarkerRadius: 4,
       priceFormat: {
         type: "price",
@@ -119,14 +119,14 @@ export function PortfolioChart({ data }: PortfolioChartProps) {
     return (
       <div
         className="flex flex-col items-center justify-center h-[200px] gap-1.5"
-        style={{ background: "#0d0d14", borderRadius: 12 }}
+        style={{ background: "#0a0d14", borderRadius: 12 }}
       >
         <svg
           width="24"
           height="24"
           viewBox="0 0 24 24"
           fill="none"
-          style={{ color: "#333340" }}
+          style={{ color: "#363d54" }}
         >
           <path
             d="M3 17L9 11L13 15L21 7"
@@ -143,7 +143,7 @@ export function PortfolioChart({ data }: PortfolioChartProps) {
             strokeLinejoin="round"
           />
         </svg>
-        <span className="text-xs font-mono" style={{ color: "#555568" }}>
+        <span className="text-xs font-mono" style={{ color: "#5c6380" }}>
           No portfolio data available
         </span>
       </div>

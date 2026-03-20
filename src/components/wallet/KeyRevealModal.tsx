@@ -42,8 +42,8 @@ export function KeyRevealModal({ privateKey, publicKey, onConfirm }: KeyRevealMo
         <motion.div
           className="max-w-sm w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto"
           style={{
-            backgroundColor: "#1a1a2e",
-            border: "1px solid #2a2a3e",
+            backgroundColor: "#1a1f2e",
+            border: "1px solid #1a1f2e",
             borderRadius: "16px",
           }}
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -54,23 +54,23 @@ export function KeyRevealModal({ privateKey, publicKey, onConfirm }: KeyRevealMo
           {/* Security warning banner */}
           <div
             style={{
-              backgroundColor: "rgba(255, 59, 92, 0.10)",
-              border: "1px solid rgba(255, 59, 92, 0.20)",
+              backgroundColor: "rgba(242, 54, 69, 0.10)",
+              border: "1px solid rgba(242, 54, 69, 0.20)",
               borderRadius: "8px",
               padding: "12px",
             }}
           >
             <div className="flex items-center gap-2 justify-center mb-1">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff3b5c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f23645" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
                 <line x1="12" y1="9" x2="12" y2="13" />
                 <line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
-              <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "#ff3b5c" }}>
+              <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "#f23645" }}>
                 Never share your private key
               </p>
             </div>
-            <p className="text-center" style={{ color: "rgba(255, 59, 92, 0.85)", fontSize: "11px" }}>
+            <p className="text-center" style={{ color: "rgba(242, 54, 69, 0.85)", fontSize: "11px" }}>
               Anyone with your private key can steal your funds.
             </p>
           </div>
@@ -78,41 +78,41 @@ export function KeyRevealModal({ privateKey, publicKey, onConfirm }: KeyRevealMo
           {/* Critical save warning */}
           <div
             style={{
-              backgroundColor: "rgba(255, 59, 92, 0.10)",
-              border: "1px solid rgba(255, 59, 92, 0.30)",
+              backgroundColor: "rgba(242, 54, 69, 0.10)",
+              border: "1px solid rgba(242, 54, 69, 0.30)",
               borderRadius: "8px",
               padding: "12px",
             }}
           >
-            <p className="text-xs font-bold text-center uppercase tracking-wide" style={{ color: "#ff3b5c" }}>
+            <p className="text-xs font-bold text-center uppercase tracking-wide" style={{ color: "#f23645" }}>
               Save your private key now. It will NOT be shown again.
             </p>
-            <p className="text-center mt-1" style={{ color: "rgba(255, 59, 92, 0.80)", fontSize: "11px" }}>
+            <p className="text-center mt-1" style={{ color: "rgba(242, 54, 69, 0.80)", fontSize: "11px" }}>
               If you lose this key and clear your browser data, your funds are gone forever.
             </p>
           </div>
 
           <div className="text-center">
             <div className="text-3xl mb-2">&#x1f510;</div>
-            <h2 className="text-lg font-bold" style={{ color: "#e0e0e0" }}>YOUR WALLET</h2>
-            <p className="text-xs mt-1" style={{ color: "#8888a0" }}>Your wallet has been created successfully</p>
+            <h2 className="text-lg font-bold" style={{ color: "#eef0f6" }}>YOUR WALLET</h2>
+            <p className="text-xs mt-1" style={{ color: "#9ca3b8" }}>Your wallet has been created successfully</p>
           </div>
 
           {/* Public key (wallet address) */}
           <div
             style={{
-              backgroundColor: "#12121e",
-              border: "1px solid #2a2a3e",
+              backgroundColor: "#10131c",
+              border: "1px solid #1a1f2e",
               borderRadius: "8px",
               padding: "16px",
             }}
           >
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: "#666680" }}>
+              <span className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: "#5c6380" }}>
                 Wallet Address (Public Key)
               </span>
             </div>
-            <p className="font-mono text-xs break-all leading-relaxed" style={{ color: "#e0e0e0" }}>
+            <p className="font-mono text-xs break-all leading-relaxed" style={{ color: "#eef0f6" }}>
               {publicKey}
             </p>
             <button
@@ -120,14 +120,14 @@ export function KeyRevealModal({ privateKey, publicKey, onConfirm }: KeyRevealMo
               className="mt-2 w-full py-1.5 text-xs font-medium transition-all duration-200"
               style={{
                 borderRadius: "6px",
-                border: copiedPub ? "1px solid rgba(0, 230, 118, 0.30)" : "1px solid #2a2a3e",
-                backgroundColor: copiedPub ? "rgba(0, 230, 118, 0.10)" : "#1e1e32",
-                color: copiedPub ? "#00e676" : "#8888a0",
+                border: copiedPub ? "1px solid rgba(0, 214, 114, 0.30)" : "1px solid #1a1f2e",
+                backgroundColor: copiedPub ? "rgba(0, 214, 114, 0.10)" : "#1f2435",
+                color: copiedPub ? "#00d672" : "#9ca3b8",
               }}
             >
               {copiedPub ? "COPIED!" : "COPY ADDRESS"}
             </button>
-            <p className="mt-1.5" style={{ fontSize: "10px", color: "#555570" }}>
+            <p className="mt-1.5" style={{ fontSize: "10px", color: "#5c6380" }}>
               Send SOL to this address to fund your wallet.
             </p>
           </div>
@@ -136,8 +136,8 @@ export function KeyRevealModal({ privateKey, publicKey, onConfirm }: KeyRevealMo
           <div
             className="relative overflow-hidden"
             style={{
-              backgroundColor: "#12121e",
-              border: "1px solid rgba(255, 59, 92, 0.20)",
+              backgroundColor: "#10131c",
+              border: "1px solid rgba(242, 54, 69, 0.20)",
               borderRadius: "8px",
               padding: "16px",
             }}
@@ -145,23 +145,23 @@ export function KeyRevealModal({ privateKey, publicKey, onConfirm }: KeyRevealMo
             <div
               className="absolute inset-0 pointer-events-none"
               style={{
-                background: "linear-gradient(to bottom right, rgba(255, 59, 92, 0.05), transparent)",
+                background: "linear-gradient(to bottom right, rgba(242, 54, 69, 0.05), transparent)",
               }}
             />
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <div
                   className="w-2 h-2 rounded-full animate-pulse"
-                  style={{ backgroundColor: "#ff3b5c" }}
+                  style={{ backgroundColor: "#f23645" }}
                 />
-                <span className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: "rgba(255, 59, 92, 0.70)" }}>
+                <span className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: "rgba(242, 54, 69, 0.70)" }}>
                   Private Key — Keep Secret
                 </span>
               </div>
               <button
                 onClick={() => setKeyVisible(!keyVisible)}
                 className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide transition-colors"
-                style={{ color: "#8888a0" }}
+                style={{ color: "#9ca3b8" }}
                 type="button"
               >
                 {keyVisible ? (
@@ -188,7 +188,7 @@ export function KeyRevealModal({ privateKey, publicKey, onConfirm }: KeyRevealMo
             <p
               className="font-mono text-xs break-all leading-relaxed relative"
               style={{
-                color: keyVisible ? "#e0e0e0" : "#555570",
+                color: keyVisible ? "#eef0f6" : "#5c6380",
                 userSelect: keyVisible ? "text" : "none",
                 WebkitUserSelect: keyVisible ? "text" : "none",
               }}
@@ -200,9 +200,9 @@ export function KeyRevealModal({ privateKey, publicKey, onConfirm }: KeyRevealMo
               className="mt-3 w-full py-2 text-xs font-medium transition-all duration-200"
               style={{
                 borderRadius: "6px",
-                border: copied ? "1px solid rgba(0, 230, 118, 0.30)" : "1px solid #2a2a3e",
-                backgroundColor: copied ? "rgba(0, 230, 118, 0.10)" : "#1e1e32",
-                color: copied ? "#00e676" : "#8888a0",
+                border: copied ? "1px solid rgba(0, 214, 114, 0.30)" : "1px solid #1a1f2e",
+                backgroundColor: copied ? "rgba(0, 214, 114, 0.10)" : "#1f2435",
+                color: copied ? "#00d672" : "#9ca3b8",
               }}
             >
               {copied ? "COPIED!" : "COPY PRIVATE KEY"}
@@ -210,7 +210,7 @@ export function KeyRevealModal({ privateKey, publicKey, onConfirm }: KeyRevealMo
           </div>
 
           <div className="space-y-2 text-xs">
-            <ul className="space-y-1" style={{ color: "#8888a0" }}>
+            <ul className="space-y-1" style={{ color: "#9ca3b8" }}>
               <li>&#x2022; Your private key is encrypted on this device only</li>
               <li>&#x2022; It is NEVER sent to our servers</li>
               <li>&#x2022; Anyone with this key controls your funds</li>
@@ -225,9 +225,9 @@ export function KeyRevealModal({ privateKey, publicKey, onConfirm }: KeyRevealMo
               checked={confirmed}
               onChange={(e) => setConfirmed(e.target.checked)}
               className="mt-0.5 w-4 h-4 rounded cursor-pointer"
-              style={{ borderColor: "#2a2a3e", backgroundColor: "#12121e", accentColor: "#00e676" }}
+              style={{ borderColor: "#1a1f2e", backgroundColor: "#10131c", accentColor: "#00d672" }}
             />
-            <span className="text-xs transition-colors" style={{ color: "#8888a0" }}>
+            <span className="text-xs transition-colors" style={{ color: "#9ca3b8" }}>
               I have saved my private key in a safe place. I understand it cannot be recovered if lost.
             </span>
           </label>
@@ -238,8 +238,8 @@ export function KeyRevealModal({ privateKey, publicKey, onConfirm }: KeyRevealMo
             className="w-full py-3 font-semibold text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed"
             style={{
               borderRadius: "8px",
-              backgroundColor: "#00e676",
-              color: "#0a0a14",
+              backgroundColor: "#00d672",
+              color: "#04060b",
             }}
           >
             Start Trading

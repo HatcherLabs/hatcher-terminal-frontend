@@ -627,8 +627,8 @@ export default function TokenTerminalPage() {
               key={m.label}
               className="px-3 py-3 text-center rounded-xl transition-colors"
               style={{
-                background: "rgba(13,13,26,0.7)",
-                border: "1px solid rgba(26,26,46,0.8)",
+                background: "rgba(10,13,20,0.7)",
+                border: "1px solid rgba(26,31,46,0.8)",
                 backdropFilter: "blur(8px)",
               }}
             >
@@ -643,8 +643,8 @@ export default function TokenTerminalPage() {
           <div
             className="px-3 py-3 text-center rounded-xl"
             style={{
-              background: "rgba(13,13,26,0.7)",
-              border: "1px solid rgba(26,26,46,0.8)",
+              background: "rgba(10,13,20,0.7)",
+              border: "1px solid rgba(26,31,46,0.8)",
               backdropFilter: "blur(8px)",
             }}
           >
@@ -653,11 +653,11 @@ export default function TokenTerminalPage() {
             </p>
             {buyCount != null || sellCount != null ? (
               <p className="text-sm font-mono font-semibold">
-                <span style={{ color: "#00ff88" }}>
+                <span style={{ color: "#00d672" }}>
                   {formatNumber(buyCount) || "0"}
                 </span>
                 <span className="text-text-muted mx-0.5">/</span>
-                <span style={{ color: "#ff3b5c" }}>
+                <span style={{ color: "#f23645" }}>
                   {formatNumber(sellCount) || "0"}
                 </span>
               </p>
@@ -670,8 +670,8 @@ export default function TokenTerminalPage() {
           <div
             className="px-3 py-3 text-center rounded-xl"
             style={{
-              background: "rgba(13,13,26,0.7)",
-              border: "1px solid rgba(26,26,46,0.8)",
+              background: "rgba(10,13,20,0.7)",
+              border: "1px solid rgba(26,31,46,0.8)",
               backdropFilter: "blur(8px)",
             }}
           >
@@ -681,7 +681,7 @@ export default function TokenTerminalPage() {
             <p
               className="text-sm font-mono font-semibold"
               style={{
-                color: token.devHoldPct !== null && token.devHoldPct > 15 ? "#ff3b5c" : undefined,
+                color: token.devHoldPct !== null && token.devHoldPct > 15 ? "#f23645" : undefined,
               }}
             >
               {token.devHoldPct !== null
@@ -692,8 +692,8 @@ export default function TokenTerminalPage() {
           <div
             className="px-3 py-3 text-center rounded-xl"
             style={{
-              background: "rgba(13,13,26,0.7)",
-              border: "1px solid rgba(26,26,46,0.8)",
+              background: "rgba(10,13,20,0.7)",
+              border: "1px solid rgba(26,31,46,0.8)",
               backdropFilter: "blur(8px)",
             }}
           >
@@ -710,8 +710,8 @@ export default function TokenTerminalPage() {
         <div
           className="rounded-xl p-4"
           style={{
-            background: "rgba(13,13,26,0.7)",
-            border: "1px solid rgba(26,26,46,0.8)",
+            background: "rgba(10,13,20,0.7)",
+            border: "1px solid rgba(26,31,46,0.8)",
             backdropFilter: "blur(8px)",
             boxShadow: "0 2px 12px rgba(0,0,0,0.2)",
           }}
@@ -733,7 +733,7 @@ export default function TokenTerminalPage() {
                 width: `${bondingPct}%`,
                 background:
                   bondingPct >= 90
-                    ? "#00ff88"
+                    ? "#00d672"
                     : bondingPct >= 50
                       ? "#ffaa00"
                       : "#3b82f6",
@@ -791,8 +791,8 @@ export default function TokenTerminalPage() {
           <div
             className="rounded-xl p-4"
             style={{
-              background: "rgba(13,13,26,0.7)",
-              border: "1px solid rgba(26,26,46,0.8)",
+              background: "rgba(10,13,20,0.7)",
+              border: "1px solid rgba(26,31,46,0.8)",
               backdropFilter: "blur(8px)",
               boxShadow: "0 2px 12px rgba(0,0,0,0.2)",
             }}
@@ -829,8 +829,8 @@ export default function TokenTerminalPage() {
         <div
           className="rounded-xl p-4 space-y-3"
           style={{
-            background: "rgba(13,13,26,0.7)",
-            border: "1px solid rgba(26,26,46,0.8)",
+            background: "rgba(10,13,20,0.7)",
+            border: "1px solid rgba(26,31,46,0.8)",
             backdropFilter: "blur(8px)",
             boxShadow: "0 2px 12px rgba(0,0,0,0.2)",
           }}
@@ -895,21 +895,21 @@ export default function TokenTerminalPage() {
         <div
           className="rounded-xl overflow-hidden"
           style={{
-            background: "rgba(13,13,26,0.9)",
-            border: "1px solid rgba(26,26,46,0.9)",
+            background: "rgba(10,13,20,0.9)",
+            border: "1px solid rgba(26,31,46,0.9)",
             backdropFilter: "blur(12px)",
             boxShadow: "0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.02)",
           }}
         >
           {/* Buy / Sell tabs */}
-          <div className="flex" style={{ borderBottom: "1px solid rgba(26,26,46,0.8)" }}>
+          <div className="flex" style={{ borderBottom: "1px solid rgba(26,31,46,0.8)" }}>
             <button
               onClick={() => setActiveTradeTab("buy")}
               className="flex-1 py-3 text-sm font-bold transition-all duration-200"
               style={{
-                color: activeTradeTab === "buy" ? "#00ff88" : undefined,
-                borderBottom: activeTradeTab === "buy" ? "2px solid #00ff88" : "2px solid transparent",
-                background: activeTradeTab === "buy" ? "rgba(0,255,136,0.05)" : "transparent",
+                color: activeTradeTab === "buy" ? "#00d672" : undefined,
+                borderBottom: activeTradeTab === "buy" ? "2px solid #00d672" : "2px solid transparent",
+                background: activeTradeTab === "buy" ? "rgba(0,214,114,0.05)" : "transparent",
               }}
             >
               Buy
@@ -918,9 +918,9 @@ export default function TokenTerminalPage() {
               onClick={() => setActiveTradeTab("sell")}
               className="flex-1 py-3 text-sm font-bold transition-all duration-200"
               style={{
-                color: activeTradeTab === "sell" ? "#ff3b5c" : undefined,
-                borderBottom: activeTradeTab === "sell" ? "2px solid #ff3b5c" : "2px solid transparent",
-                background: activeTradeTab === "sell" ? "rgba(255,59,92,0.05)" : "transparent",
+                color: activeTradeTab === "sell" ? "#f23645" : undefined,
+                borderBottom: activeTradeTab === "sell" ? "2px solid #f23645" : "2px solid transparent",
+                background: activeTradeTab === "sell" ? "rgba(242,54,69,0.05)" : "transparent",
               }}
             >
               Sell
@@ -1121,12 +1121,12 @@ export default function TokenTerminalPage() {
               className="w-full py-3.5 rounded-xl font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110"
               style={{
                 background: activeTradeTab === "buy"
-                  ? "linear-gradient(135deg, #00ff88 0%, #00cc6a 100%)"
-                  : "linear-gradient(135deg, #ff3b5c 0%, #cc2e49 100%)",
-                color: activeTradeTab === "buy" ? "#06060b" : "#ffffff",
+                  ? "linear-gradient(135deg, #00d672 0%, #00cc6a 100%)"
+                  : "linear-gradient(135deg, #f23645 0%, #cc2e49 100%)",
+                color: activeTradeTab === "buy" ? "#04060b" : "#ffffff",
                 boxShadow: activeTradeTab === "buy"
-                  ? "0 0 20px rgba(0,255,136,0.2), 0 4px 12px rgba(0,0,0,0.3)"
-                  : "0 0 20px rgba(255,59,92,0.2), 0 4px 12px rgba(0,0,0,0.3)",
+                  ? "0 0 20px rgba(0,214,114,0.2), 0 4px 12px rgba(0,0,0,0.3)"
+                  : "0 0 20px rgba(242,54,69,0.2), 0 4px 12px rgba(0,0,0,0.3)",
               }}
             >
               {tradeLoading ? (
@@ -1196,9 +1196,9 @@ export default function TokenTerminalPage() {
               disabled={tradeLoading || !hasKey || !openPosition}
               className="px-4 py-2.5 rounded-lg font-bold text-xs transition-all disabled:opacity-40 active:scale-95"
               style={{
-                background: "linear-gradient(135deg, rgba(255,59,92,0.15) 0%, rgba(255,59,92,0.08) 100%)",
-                border: "1px solid rgba(255,59,92,0.3)",
-                color: "#ff3b5c",
+                background: "linear-gradient(135deg, rgba(242,54,69,0.15) 0%, rgba(242,54,69,0.08) 100%)",
+                border: "1px solid rgba(242,54,69,0.3)",
+                color: "#f23645",
               }}
             >
               Sell
@@ -1208,9 +1208,9 @@ export default function TokenTerminalPage() {
               disabled={tradeLoading || !hasKey || isNaN(tradeAmount) || tradeAmount <= 0}
               className="px-4 py-2.5 rounded-lg font-bold text-xs transition-all disabled:opacity-40 active:scale-95"
               style={{
-                background: "linear-gradient(135deg, rgba(0,255,136,0.15) 0%, rgba(0,255,136,0.08) 100%)",
-                border: "1px solid rgba(0,255,136,0.3)",
-                color: "#00ff88",
+                background: "linear-gradient(135deg, rgba(0,214,114,0.15) 0%, rgba(0,214,114,0.08) 100%)",
+                border: "1px solid rgba(0,214,114,0.3)",
+                color: "#00d672",
               }}
             >
               Buy

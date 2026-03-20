@@ -97,27 +97,27 @@ function AreaChartRenderer({
       width: el.clientWidth,
       height: el.clientHeight,
       layout: {
-        background: { type: ColorType.Solid, color: "#0d0d14" },
-        textColor: "#555568",
+        background: { type: ColorType.Solid, color: "#0a0d14" },
+        textColor: "#5c6380",
         fontFamily: "var(--font-jetbrains-mono), monospace",
         fontSize: 10,
       },
       grid: {
         vertLines: { visible: false },
-        horzLines: { color: "rgba(26, 26, 46, 0.5)" },
+        horzLines: { color: "rgba(26, 31, 46, 0.5)" },
       },
       crosshair: {
         vertLine: {
-          color: "#555568",
+          color: "#5c6380",
           width: 1,
           style: 3,
-          labelBackgroundColor: "#14141f",
+          labelBackgroundColor: "#10131c",
         },
         horzLine: {
-          color: "#555568",
+          color: "#5c6380",
           width: 1,
           style: 3,
-          labelBackgroundColor: "#14141f",
+          labelBackgroundColor: "#10131c",
         },
       },
       rightPriceScale: {
@@ -133,13 +133,13 @@ function AreaChartRenderer({
 
     chartRef.current = chart;
 
-    const lineColor = isPositive ? "#00ff88" : "#ff3b5c";
+    const lineColor = isPositive ? "#00d672" : "#f23645";
     const topColor = isPositive
-      ? "rgba(0, 255, 136, 0.25)"
-      : "rgba(255, 59, 92, 0.25)";
+      ? "rgba(0, 214, 114, 0.25)"
+      : "rgba(242, 54, 69, 0.25)";
     const bottomColor = isPositive
-      ? "rgba(0, 255, 136, 0.0)"
-      : "rgba(255, 59, 92, 0.0)";
+      ? "rgba(0, 214, 114, 0.0)"
+      : "rgba(242, 54, 69, 0.0)";
 
     const areaSeries = chart.addSeries(AreaSeries, {
       lineColor,

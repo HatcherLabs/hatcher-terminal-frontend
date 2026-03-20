@@ -39,31 +39,31 @@ function dateKey(year: number, month: number, day: number): string {
 
 function getCellStyle(pnl: number | undefined): React.CSSProperties {
   if (pnl === undefined || pnl === 0) {
-    return { backgroundColor: "#14141f" };
+    return { backgroundColor: "#10131c" };
   }
 
   if (pnl > 0) {
-    if (pnl >= 1) return { backgroundColor: "#00ff88" };
-    if (pnl >= 0.5) return { backgroundColor: "rgba(0, 255, 136, 0.7)" };
-    if (pnl >= 0.1) return { backgroundColor: "rgba(0, 255, 136, 0.45)" };
-    if (pnl >= 0.01) return { backgroundColor: "rgba(0, 255, 136, 0.25)" };
-    return { backgroundColor: "rgba(0, 255, 136, 0.12)" };
+    if (pnl >= 1) return { backgroundColor: "#00d672" };
+    if (pnl >= 0.5) return { backgroundColor: "rgba(0, 214, 114, 0.7)" };
+    if (pnl >= 0.1) return { backgroundColor: "rgba(0, 214, 114, 0.45)" };
+    if (pnl >= 0.01) return { backgroundColor: "rgba(0, 214, 114, 0.25)" };
+    return { backgroundColor: "rgba(0, 214, 114, 0.12)" };
   }
 
   const absPnl = Math.abs(pnl);
-  if (absPnl >= 1) return { backgroundColor: "#ff3b5c" };
-  if (absPnl >= 0.5) return { backgroundColor: "rgba(255, 59, 92, 0.7)" };
-  if (absPnl >= 0.1) return { backgroundColor: "rgba(255, 59, 92, 0.45)" };
-  if (absPnl >= 0.01) return { backgroundColor: "rgba(255, 59, 92, 0.25)" };
-  return { backgroundColor: "rgba(255, 59, 92, 0.12)" };
+  if (absPnl >= 1) return { backgroundColor: "#f23645" };
+  if (absPnl >= 0.5) return { backgroundColor: "rgba(242, 54, 69, 0.7)" };
+  if (absPnl >= 0.1) return { backgroundColor: "rgba(242, 54, 69, 0.45)" };
+  if (absPnl >= 0.01) return { backgroundColor: "rgba(242, 54, 69, 0.25)" };
+  return { backgroundColor: "rgba(242, 54, 69, 0.12)" };
 }
 
 function getCellTextColor(pnl: number | undefined): string {
   // On bright cells (high profit/loss), use dark text for readability
-  if (pnl === undefined || pnl === 0) return "#555568";
+  if (pnl === undefined || pnl === 0) return "#5c6380";
   const abs = Math.abs(pnl);
-  if (abs >= 0.5) return "#0d0d14";
-  return "#8888a0";
+  if (abs >= 0.5) return "#0a0d14";
+  return "#9ca3b8";
 }
 
 export function PnLCalendar({ dailyPnl }: PnLCalendarProps) {
@@ -117,7 +117,7 @@ export function PnLCalendar({ dailyPnl }: PnLCalendarProps) {
         <button
           onClick={goToPrevMonth}
           className="p-1.5 rounded-lg transition-colors"
-          style={{ color: "#555568" }}
+          style={{ color: "#5c6380" }}
           aria-label="Previous month"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -125,12 +125,12 @@ export function PnLCalendar({ dailyPnl }: PnLCalendarProps) {
           </svg>
         </button>
         <div className="text-center">
-          <p className="text-sm font-medium" style={{ color: "#e8e8f0" }}>
+          <p className="text-sm font-medium" style={{ color: "#eef0f6" }}>
             {formatMonth(year, month)}
           </p>
           <p
             className="text-xs font-mono"
-            style={{ color: monthTotal >= 0 ? "#00ff88" : "#ff3b5c" }}
+            style={{ color: monthTotal >= 0 ? "#00d672" : "#f23645" }}
           >
             {monthTotal >= 0 ? "+" : ""}{monthTotal.toFixed(4)} SOL
           </p>
@@ -138,7 +138,7 @@ export function PnLCalendar({ dailyPnl }: PnLCalendarProps) {
         <button
           onClick={goToNextMonth}
           className="p-1.5 rounded-lg transition-colors"
-          style={{ color: "#555568" }}
+          style={{ color: "#5c6380" }}
           aria-label="Next month"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -153,7 +153,7 @@ export function PnLCalendar({ dailyPnl }: PnLCalendarProps) {
           <div
             key={i}
             className="text-center py-0.5"
-            style={{ fontSize: 10, color: "#555568" }}
+            style={{ fontSize: 10, color: "#5c6380" }}
           >
             {label}
           </div>
@@ -212,7 +212,7 @@ export function PnLCalendar({ dailyPnl }: PnLCalendarProps) {
       {!hasAnyData && (
         <p
           className="text-center py-2"
-          style={{ fontSize: 11, color: "#555568" }}
+          style={{ fontSize: 11, color: "#5c6380" }}
         >
           No P&L data for this month
         </p>
@@ -220,38 +220,38 @@ export function PnLCalendar({ dailyPnl }: PnLCalendarProps) {
 
       {/* Legend */}
       <div className="flex items-center justify-center gap-2 pt-1">
-        <span style={{ fontSize: 10, color: "#555568" }}>Loss</span>
+        <span style={{ fontSize: 10, color: "#5c6380" }}>Loss</span>
         <div className="flex gap-0.5">
           <div
             className="w-3 h-3"
-            style={{ backgroundColor: "#ff3b5c", borderRadius: 3 }}
+            style={{ backgroundColor: "#f23645", borderRadius: 3 }}
           />
           <div
             className="w-3 h-3"
-            style={{ backgroundColor: "rgba(255, 59, 92, 0.45)", borderRadius: 3 }}
+            style={{ backgroundColor: "rgba(242, 54, 69, 0.45)", borderRadius: 3 }}
           />
           <div
             className="w-3 h-3"
-            style={{ backgroundColor: "rgba(255, 59, 92, 0.12)", borderRadius: 3 }}
+            style={{ backgroundColor: "rgba(242, 54, 69, 0.12)", borderRadius: 3 }}
           />
           <div
             className="w-3 h-3"
-            style={{ backgroundColor: "#14141f", borderRadius: 3 }}
+            style={{ backgroundColor: "#10131c", borderRadius: 3 }}
           />
           <div
             className="w-3 h-3"
-            style={{ backgroundColor: "rgba(0, 255, 136, 0.12)", borderRadius: 3 }}
+            style={{ backgroundColor: "rgba(0, 214, 114, 0.12)", borderRadius: 3 }}
           />
           <div
             className="w-3 h-3"
-            style={{ backgroundColor: "rgba(0, 255, 136, 0.45)", borderRadius: 3 }}
+            style={{ backgroundColor: "rgba(0, 214, 114, 0.45)", borderRadius: 3 }}
           />
           <div
             className="w-3 h-3"
-            style={{ backgroundColor: "#00ff88", borderRadius: 3 }}
+            style={{ backgroundColor: "#00d672", borderRadius: 3 }}
           />
         </div>
-        <span style={{ fontSize: 10, color: "#555568" }}>Profit</span>
+        <span style={{ fontSize: 10, color: "#5c6380" }}>Profit</span>
       </div>
     </div>
   );
