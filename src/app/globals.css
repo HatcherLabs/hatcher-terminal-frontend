@@ -411,3 +411,66 @@ form {
     scrollbar-width: thin;
   }
 }
+
+/* ===== Token Row Flash Animations ===== */
+@keyframes flashGreen {
+  0% { background-color: rgba(0, 214, 114, 0.15); }
+  100% { background-color: transparent; }
+}
+@keyframes flashRed {
+  0% { background-color: rgba(242, 54, 69, 0.15); }
+  100% { background-color: transparent; }
+}
+.flash-green { animation: flashGreen 0.8s ease-out; }
+.flash-red { animation: flashRed 0.8s ease-out; }
+
+/* ===== Graduating Token Glow ===== */
+@keyframes graduatingGlow {
+  0%, 100% { box-shadow: 0 0 8px rgba(240, 160, 0, 0.2); }
+  50% { box-shadow: 0 0 16px rgba(240, 160, 0, 0.35); }
+}
+.graduating-glow { animation: graduatingGlow 2s ease-in-out infinite; }
+
+/* ===== Smooth Number Transitions ===== */
+.price-transition {
+  transition: color 0.3s ease;
+}
+
+/* ===== Tab Underline Animation ===== */
+.tab-underline {
+  position: relative;
+}
+.tab-underline::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--green);
+  transform: scaleX(0);
+  transition: transform 0.2s ease;
+}
+.tab-underline.active::after {
+  transform: scaleX(1);
+}
+
+/* ===== Skeleton Shimmer ===== */
+@keyframes skeleton-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ===== Focus Ring Utility ===== */
+.focus-ring:focus {
+  outline: none;
+  border-color: #00d672;
+  box-shadow: 0 0 0 2px rgba(0, 214, 114, 0.15);
+}
+
+/* ===== Glassmorphism Panel ===== */
+.glass-panel {
+  background: rgba(10, 13, 20, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(26, 31, 46, 0.6);
+}
