@@ -28,6 +28,8 @@ const C = {
   textMuted: "#6b6b80",
   textFaint: "#44445a",
   yellow: "#facc15",
+  blue: "#3b82f6",
+  amber: "#f0a000",
 } as const;
 
 // ---- helpers ----
@@ -443,6 +445,377 @@ function MetricBar({ value, max, color }: { value: number; max: number; color: s
   );
 }
 
+// ---- Radar / Spider Chart ----
+
+const RADAR_AXES = [
+  { label: "MCap", key: "mcap" },
+  { label: "Volume", key: "vol1h" },
+  { label: "Holders", key: "holders" },
+  { label: "Safety", key: "risk" },
+  { label: "Momentum", key: "momentum" },
+] as const;
+
+function getRadarValues(
+  t: TokenData,
+  live: LiveTokenData
+): Record<string, number> {
+  const mcapRaw = live.marketCapUsd ?? 0;
+  const mcap = mcapRaw > 0 ? Math.min(Math.log10(mcapRaw + 1) / 7, 1) : 0;
+
+  const volRaw = live.volume1h ?? 0;
+  const vol = volRaw > 0 ? Math.min(Math.log10(volRaw + 1) / 6, 1) : 0;
+
+  const holdersRaw = t.holders ?? 0;
+  const holders =
+    holdersRaw > 0 ? Math.min(Math.log10(holdersRaw + 1) / 4, 1) : 0;
+
+  const riskNum = riskToNum(t.riskLevel);
+  const safety = riskNum <= 4 ? 1 - (riskNum - 1) / 3 : 0;
+
+  const chg5 = t.priceChange5m ?? 0;
+  const chg1h = t.priceChange1h ?? 0;
+  const momentum = Math.min(Math.max((chg5 + chg1h + 100) / 200, 0), 1);
+
+  return { mcap, vol1h: vol, holders, risk: safety, momentum };
+}
+
+const TOKEN_COLORS = [C.accent, C.blue, C.amber];
+
+function RadarChart({
+  tokens,
+  liveDataMap,
+}: {
+  tokens: TokenData[];
+  liveDataMap: Record<string, LiveTokenData>;
+}) {
+  const size = 220;
+  const cx = size / 2;
+  const cy = size / 2;
+  const r = 80;
+  const levels = 4;
+  const axisCount = RADAR_AXES.length;
+  const angleStep = (2 * Math.PI) / axisCount;
+  const startAngle = -Math.PI / 2;
+
+  function polarToXY(angle: number, radius: number) {
+    return {
+      x: cx + radius * Math.cos(angle),
+      y: cy + radius * Math.sin(angle),
+    };
+  }
+
+  const gridRings = Array.from({ length: levels }, (_, i) => {
+    const ringR = (r * (i + 1)) / levels;
+    const points = Array.from({ length: axisCount }, (_, j) => {
+      const { x, y } = polarToXY(startAngle + j * angleStep, ringR);
+      return `${x},${y}`;
+    }).join(" ");
+    return points;
+  });
+
+  const emptyLive: LiveTokenData = {
+    marketCapSol: null,
+    marketCapUsd: null,
+    volume1h: null,
+    buyCount: null,
+    sellCount: null,
+    bondingProgress: null,
+  };
+
+  return (
+    <div
+      className="rounded-xl p-4"
+      style={{ background: C.bgCard, border: `1px solid ${C.border}` }}
+    >
+      <h3
+        className="text-[10px] font-bold uppercase tracking-wider mb-3"
+        style={{ color: C.textMuted }}
+      >
+        Radar Comparison
+      </h3>
+      <div className="flex justify-center">
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+          {/* Grid rings */}
+          {gridRings.map((pts, i) => (
+            <polygon
+              key={i}
+              points={pts}
+              fill="none"
+              stroke={C.border}
+              strokeWidth={i === levels - 1 ? 1 : 0.5}
+            />
+          ))}
+          {/* Axis lines */}
+          {RADAR_AXES.map((_, i) => {
+            const { x, y } = polarToXY(startAngle + i * angleStep, r);
+            return (
+              <line
+                key={i}
+                x1={cx}
+                y1={cy}
+                x2={x}
+                y2={y}
+                stroke={C.border}
+                strokeWidth={0.5}
+              />
+            );
+          })}
+          {/* Token polygons */}
+          {tokens.map((t, tIdx) => {
+            const vals = getRadarValues(
+              t,
+              liveDataMap[t.mintAddress] ?? emptyLive
+            );
+            const color = TOKEN_COLORS[tIdx % TOKEN_COLORS.length];
+            const points = RADAR_AXES.map((axis, i) => {
+              const v = vals[axis.key] ?? 0;
+              const { x, y } = polarToXY(
+                startAngle + i * angleStep,
+                r * v
+              );
+              return `${x},${y}`;
+            }).join(" ");
+            return (
+              <g key={t.mintAddress}>
+                <polygon
+                  points={points}
+                  fill={`${color}20`}
+                  stroke={color}
+                  strokeWidth={1.5}
+                />
+                {RADAR_AXES.map((axis, i) => {
+                  const v = vals[axis.key] ?? 0;
+                  const { x, y } = polarToXY(
+                    startAngle + i * angleStep,
+                    r * v
+                  );
+                  return (
+                    <circle
+                      key={axis.key}
+                      cx={x}
+                      cy={y}
+                      r={2.5}
+                      fill={color}
+                    />
+                  );
+                })}
+              </g>
+            );
+          })}
+          {/* Axis labels */}
+          {RADAR_AXES.map((axis, i) => {
+            const { x, y } = polarToXY(
+              startAngle + i * angleStep,
+              r + 18
+            );
+            return (
+              <text
+                key={axis.key}
+                x={x}
+                y={y}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fill={C.textMuted}
+                fontSize={9}
+                fontFamily="monospace"
+                fontWeight={600}
+              >
+                {axis.label}
+              </text>
+            );
+          })}
+        </svg>
+      </div>
+      {/* Legend */}
+      <div className="flex items-center justify-center gap-4 mt-2">
+        {tokens.map((t, i) => (
+          <div key={t.mintAddress} className="flex items-center gap-1.5">
+            <div
+              className="w-2.5 h-2.5 rounded-full"
+              style={{
+                background: TOKEN_COLORS[i % TOKEN_COLORS.length],
+              }}
+            />
+            <span
+              className="text-[10px] font-mono"
+              style={{ color: C.textSecondary }}
+            >
+              ${t.ticker}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ---- Winner Badge ----
+
+function WinnerBadge() {
+  return (
+    <span
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide"
+      style={{
+        background: `${C.green}18`,
+        color: C.green,
+        border: `1px solid ${C.green}40`,
+      }}
+    >
+      <svg viewBox="0 0 16 16" width={10} height={10} fill={C.green}>
+        <path d="M8 1l2.09 4.26L15 5.97l-3.5 3.42.83 4.84L8 12.17l-4.33 2.06.83-4.84L1 5.97l4.91-.71z" />
+      </svg>
+      Winner
+    </span>
+  );
+}
+
+// ---- Price Correlation Indicator ----
+
+function PriceCorrelation({ tokens }: { tokens: TokenData[] }) {
+  if (tokens.length < 2) return null;
+
+  const t1 = tokens[0];
+  const t2 = tokens[1];
+
+  const changes1 = [t1.priceChange5m, t1.priceChange1h, t1.priceChange6h, t1.priceChange24h].filter(
+    (v): v is number => v != null
+  );
+  const changes2 = [t2.priceChange5m, t2.priceChange1h, t2.priceChange6h, t2.priceChange24h].filter(
+    (v): v is number => v != null
+  );
+
+  const n = Math.min(changes1.length, changes2.length);
+  if (n < 2) {
+    return (
+      <div
+        className="rounded-xl p-4"
+        style={{ background: C.bgCard, border: `1px solid ${C.border}` }}
+      >
+        <h3
+          className="text-[10px] font-bold uppercase tracking-wider mb-2"
+          style={{ color: C.textMuted }}
+        >
+          Price Correlation
+        </h3>
+        <p className="text-xs font-mono" style={{ color: C.textFaint }}>
+          Insufficient data
+        </p>
+      </div>
+    );
+  }
+
+  const a = changes1.slice(0, n);
+  const b = changes2.slice(0, n);
+  const meanA = a.reduce((s, v) => s + v, 0) / n;
+  const meanB = b.reduce((s, v) => s + v, 0) / n;
+  let num = 0;
+  let denA = 0;
+  let denB = 0;
+  for (let i = 0; i < n; i++) {
+    const da = a[i] - meanA;
+    const db = b[i] - meanB;
+    num += da * db;
+    denA += da * da;
+    denB += db * db;
+  }
+  const den = Math.sqrt(denA * denB);
+  const corr = den > 0 ? num / den : 0;
+
+  let label: string;
+  let color: string;
+  let icon: string;
+  if (corr > 0.5) {
+    label = "Moving together";
+    color = C.green;
+    icon = "↑↑";
+  } else if (corr < -0.5) {
+    label = "Moving inversely";
+    color = C.red;
+    icon = "↑↓";
+  } else {
+    label = "Uncorrelated";
+    color = C.amber;
+    icon = "↔";
+  }
+
+  const barWidth = 140;
+  const barCenter = barWidth / 2;
+  const dotX = barCenter + (corr * barWidth) / 2;
+
+  return (
+    <div
+      className="rounded-xl p-4"
+      style={{ background: C.bgCard, border: `1px solid ${C.border}` }}
+    >
+      <h3
+        className="text-[10px] font-bold uppercase tracking-wider mb-3"
+        style={{ color: C.textMuted }}
+      >
+        Price Correlation
+      </h3>
+      <div className="flex items-center gap-3">
+        <span className="text-lg" style={{ color }}>
+          {icon}
+        </span>
+        <div className="flex-1">
+          <div className="flex items-center justify-between mb-1">
+            <span
+              className="text-xs font-medium"
+              style={{ color }}
+            >
+              {label}
+            </span>
+            <span
+              className="text-[10px] font-mono"
+              style={{ color: C.textSecondary }}
+            >
+              r = {corr.toFixed(2)}
+            </span>
+          </div>
+          {/* Correlation bar */}
+          <div className="relative" style={{ width: barWidth, height: 8 }}>
+            <div
+              className="absolute inset-0 rounded-full"
+              style={{
+                background: `linear-gradient(to right, ${C.red}, ${C.amber}, ${C.green})`,
+                opacity: 0.25,
+              }}
+            />
+            {/* center mark */}
+            <div
+              className="absolute top-0 bottom-0 w-px"
+              style={{ left: barCenter, background: C.textFaint }}
+            />
+            {/* dot */}
+            <div
+              className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full"
+              style={{
+                left: dotX - 5,
+                background: color,
+                boxShadow: `0 0 6px ${color}80`,
+              }}
+            />
+          </div>
+          <div
+            className="flex justify-between mt-1 text-[8px] font-mono"
+            style={{ color: C.textFaint, width: barWidth }}
+          >
+            <span>-1</span>
+            <span>0</span>
+            <span>+1</span>
+          </div>
+        </div>
+      </div>
+      <p
+        className="text-[10px] mt-2"
+        style={{ color: C.textFaint }}
+      >
+        Based on 5m, 1h, 6h, 24h price changes for ${tokens[0].ticker} vs ${tokens[1].ticker}
+      </p>
+    </div>
+  );
+}
+
 // ---- Main Compare Page ----
 
 export default function ComparePage() {
@@ -542,6 +915,31 @@ export default function ComparePage() {
   }
 
   const canAdd = compareTokens.length < 3;
+
+  // Tally wins per token to determine overall winner
+  const winTally: Record<string, number> = {};
+  if (tokens.length >= 2) {
+    for (const t of tokens) winTally[t.mintAddress] = 0;
+    for (const metric of METRICS) {
+      const { winner } = getWinnerLoser(metric);
+      if (winner && winTally[winner] !== undefined) {
+        winTally[winner]++;
+      }
+    }
+  }
+  const maxWins = Math.max(0, ...Object.values(winTally));
+  const overallWinnerMint =
+    tokens.length >= 2 && maxWins > 0
+      ? Object.entries(winTally).find(
+          ([, count]) => count === maxWins
+        )?.[0] ?? null
+      : null;
+  // Only award badge if there is a unique winner
+  const overallWinner =
+    overallWinnerMint &&
+    Object.values(winTally).filter((c) => c === maxWins).length === 1
+      ? overallWinnerMint
+      : null;
 
   // ---- EMPTY STATE ----
   if (!loading && tokens.length < 2 && compareTokens.length < 2) {
@@ -709,6 +1107,7 @@ export default function ComparePage() {
                 </div>
               </div>
               <RiskBadge level={t.riskLevel} />
+              {overallWinner === t.mintAddress && <WinnerBadge />}
             </div>
           ))}
         </div>
@@ -816,10 +1215,10 @@ export default function ComparePage() {
                 let cellBg = "transparent";
                 if (isWinner) {
                   cellColor = C.green;
-                  cellBg = `${C.green}0a`;
+                  cellBg = `${C.green}14`;
                 } else if (isLoser) {
                   cellColor = C.red;
-                  cellBg = `${C.red}0a`;
+                  cellBg = `${C.red}14`;
                 }
 
                 // Special rendering for Risk row
@@ -878,7 +1277,17 @@ export default function ComparePage() {
                       borderRight: colIdx < colCount - 1 ? `1px solid ${C.border}` : undefined,
                     }}
                   >
-                    <span className="text-xs font-mono font-medium" style={{ color: displayColor }}>
+                    <span className="text-xs font-mono font-medium inline-flex items-center gap-0.5" style={{ color: displayColor }}>
+                      {isWinner && (
+                        <svg viewBox="0 0 10 10" width={8} height={8} fill={C.green} className="shrink-0">
+                          <path d="M5 2L8 6H2z" />
+                        </svg>
+                      )}
+                      {isLoser && (
+                        <svg viewBox="0 0 10 10" width={8} height={8} fill={C.red} className="shrink-0">
+                          <path d="M5 8L2 4h6z" />
+                        </svg>
+                      )}
                       {metric.format(val)}
                     </span>
                     {showBar && (
@@ -891,6 +1300,14 @@ export default function ComparePage() {
           );
         })}
       </div>
+
+      {/* Radar chart + Price correlation */}
+      {tokens.length >= 2 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+          <RadarChart tokens={tokens} liveDataMap={liveDataMap} />
+          <PriceCorrelation tokens={tokens} />
+        </div>
+      )}
 
       {/* Add token slot (if under 3) */}
       {canAdd && (
