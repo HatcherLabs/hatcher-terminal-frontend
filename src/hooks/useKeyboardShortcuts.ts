@@ -14,7 +14,7 @@ interface KeyboardShortcutsOptions {
   isShortcutsModalOpen: boolean;
 }
 
-/** Navigation routes indexed 1-5 (matches sidebar order) */
+/** Navigation routes indexed 1-8 (matches sidebar order) */
 const NAV_ROUTES = [
   "/swipe",      // 1 - Swipe / Discover
   "/explore",    // 2 - Explore
@@ -23,6 +23,7 @@ const NAV_ROUTES = [
   "/compare",    // 5 - Compare
   "/wallet",     // 6 - Wallet
   "/settings",   // 7 - Settings
+  "/copy-trade", // 8 - Copy Trade
 ];
 
 /**
@@ -50,7 +51,7 @@ function isEditableTarget(e: KeyboardEvent): boolean {
  *   Ctrl+K / Cmd+K Toggle command palette (fires even in inputs)
  *   /              Open command palette
  *   ?              Open shortcuts help modal
- *   1-7            Navigate to pages (Swipe, Explore, Portfolio, Passed, Compare, Wallet, Settings)
+ *   1-8            Navigate to pages (Swipe, Explore, Portfolio, Passed, Compare, Wallet, Settings, Copy Trade)
  *   b / B          Quick buy (when a token is selected)
  *   s / S          Quick sell (when a token is selected)
  *   w / W          Toggle watchlist for current token
@@ -174,7 +175,8 @@ export function useKeyboardShortcuts({
         case "4":
         case "5":
         case "6":
-        case "7": {
+        case "7":
+        case "8": {
           const index = parseInt(e.key) - 1;
           const route = NAV_ROUTES[index];
           if (route && pathname !== route) {
