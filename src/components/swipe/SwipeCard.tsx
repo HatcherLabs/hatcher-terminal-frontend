@@ -3,11 +3,10 @@
 import { TokenAvatar } from "@/components/ui/TokenAvatar";
 import { RiskBadge } from "@/components/ui/RiskBadge";
 import { HeatBadge } from "@/components/ui/HeatBadge";
-import { SecurityDots } from "@/components/ui/SecurityDots";
 import { MiniChart } from "@/components/token/MiniChart";
-import { TokenStats } from "./TokenStats";
-import { SecuritySignals } from "./SecuritySignals";
+import { AnimatedPrice } from "@/components/ui/AnimatedPrice";
 import { useTokenPrice } from "@/hooks/useTokenPrice";
+import { useSolPriceContext } from "@/components/providers/SolPriceProvider";
 import { WatchlistButton } from "@/components/ui/WatchlistButton";
 import { CompareButton } from "@/components/ui/CompareButton";
 import type { TokenData } from "@/types/token";
@@ -17,6 +16,8 @@ interface SwipeCardProps {
   onInfoTap?: (token: TokenData) => void;
 }
 
+/* ---- Helpers ---- */
+
 function timeAgo(date: string): string {
   const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
   if (seconds < 60) return `${seconds}s`;
@@ -25,137 +26,459 @@ function timeAgo(date: string): string {
   return `${Math.floor(seconds / 86400)}d`;
 }
 
+function fmt(n: number | null | undefined): string {
+  if (n === null || n === undefined) return "\u2014";
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return n.toFixed(n < 10 ? 1 : 0);
+}
+
+function pctColor(val: number | null | undefined): string {
+  if (val === null || val === undefined) return "#5c6380";
+  if (val > 0) return "#00d672";
+  if (val < 0) return "#f23645";
+  return "#5c6380";
+}
+
+function devColor(pct: number | null | undefined): string {
+  if (pct === null || pct === undefined) return "#5c6380";
+  if (pct > 20) return "#f23645";
+  if (pct > 10) return "#f0a000";
+  return "#00d672";
+}
+
+function bondingPct(progress: number | null | undefined): string {
+  if (progress === null || progress === undefined) return "\u2014";
+  return `${Math.min(progress, 100).toFixed(0)}%`;
+}
+
+/* ---- Metric Cell ---- */
+
+function MetricCell({
+  label,
+  value,
+  valueColor,
+}: {
+  label: string;
+  value: string;
+  valueColor?: string;
+}) {
+  return (
+    <div
+      style={{
+        padding: "5px 0",
+        textAlign: "center",
+        minWidth: 0,
+      }}
+    >
+      <div
+        style={{
+          fontSize: 9,
+          fontWeight: 600,
+          color: "#5c6380",
+          textTransform: "uppercase",
+          letterSpacing: "0.05em",
+          lineHeight: 1,
+          marginBottom: 3,
+        }}
+      >
+        {label}
+      </div>
+      <div
+        className="font-mono"
+        style={{
+          fontSize: 13,
+          fontWeight: 700,
+          color: valueColor ?? "#eef0f6",
+          lineHeight: 1,
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+        }}
+      >
+        {value}
+      </div>
+    </div>
+  );
+}
+
+/* ---- Security Dot ---- */
+
+function SecDot({ ok, label }: { ok: boolean; label: string }) {
+  const color = ok ? "#00d672" : "#f23645";
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 3,
+        fontSize: 9,
+        fontWeight: 700,
+        color,
+        fontFamily: "monospace",
+      }}
+      title={`${label}: ${ok ? "Yes" : "No"}`}
+    >
+      <span
+        style={{
+          width: 5,
+          height: 5,
+          borderRadius: "50%",
+          background: color,
+          display: "inline-block",
+          flexShrink: 0,
+        }}
+      />
+      {label}
+    </span>
+  );
+}
+
+/* ---- Social Icon Link ---- */
+
+function SocialIcon({
+  href,
+  children,
+  label,
+}: {
+  href: string;
+  children: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
+      aria-label={label}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: 22,
+        height: 22,
+        borderRadius: 4,
+        background: "#1a1f2e",
+        color: "#5c6380",
+        transition: "color 0.15s, background 0.15s",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.color = "#eef0f6";
+        e.currentTarget.style.background = "#252b3d";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.color = "#5c6380";
+        e.currentTarget.style.background = "#1a1f2e";
+      }}
+    >
+      {children}
+    </a>
+  );
+}
+
+/* ---- Twitter SVG ---- */
+function TwitterIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  );
+}
+
+/* ---- Telegram SVG ---- */
+function TelegramIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
+    </svg>
+  );
+}
+
+/* ---- Website SVG ---- */
+function WebIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="2" y1="12" x2="22" y2="12" />
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+    </svg>
+  );
+}
+
+/* ================================================================
+   SwipeCard — Bloomberg-terminal-style data card
+   ================================================================ */
+
 export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
   const liveData = useTokenPrice(token.mintAddress);
+  const { solPrice } = useSolPriceContext();
   const heat = ((token as unknown as Record<string, unknown>).heatScore as number | undefined) ?? 50;
   const riskFactors = token.riskFactors ?? {};
 
+  // Effective values (live overrides static)
+  const staticMcapUsd = token.marketCapSol != null ? token.marketCapSol * solPrice : null;
+  const mcapUsd = liveData?.marketCapUsd ?? staticMcapUsd;
+  const vol1h = liveData?.volume1h ?? token.volume1h;
+  const buys = liveData?.buyCount1h ?? token.buyCount ?? 0;
+  const sells = liveData?.sellCount1h ?? token.sellCount ?? 0;
+  const change5m = liveData?.priceChange5m ?? token.priceChange5m;
+  const change1h = liveData?.priceChange1h ?? token.priceChange1h;
+
+  const hasSocials = !!(token.twitter || token.telegram || token.website);
+
   return (
     <div
-      className="relative rounded-[14px] w-full no-select overflow-hidden"
+      className="relative w-full no-select overflow-hidden"
       style={{
         background: "#0a0d14",
         border: "1px solid #1a1f2e",
-        boxShadow: "0 8px 32px #04060bcc",
+        borderRadius: 12,
+        maxWidth: 420,
+        boxShadow: "0 4px 24px rgba(4,6,11,0.8), 0 1px 3px rgba(0,0,0,0.4)",
       }}
     >
-      {/* Compare + Watchlist — top right */}
-      <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
-        <CompareButton mintAddress={token.mintAddress} size={20} />
-        <WatchlistButton
-          token={{ mintAddress: token.mintAddress, name: token.name, ticker: token.ticker, imageUri: token.imageUri }}
-          size={22}
-        />
-      </div>
-
-      {/* Header — avatar + name + risk + heat */}
-      <div className="px-4 pt-3 pb-2 flex items-center gap-2.5">
+      {/* ---- Row 1: Header ---- */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          padding: "10px 12px 8px",
+          gap: 8,
+        }}
+      >
+        {/* Avatar + Name + Ticker */}
         <TokenAvatar
           mintAddress={token.mintAddress}
           imageUri={token.imageUri}
-          size={44}
+          size={32}
           ticker={token.ticker}
         />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5">
-            <span className="text-lg font-extrabold truncate" style={{ color: "#eef0f6" }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            <span
+              className="font-mono"
+              style={{
+                fontSize: 15,
+                fontWeight: 800,
+                color: "#eef0f6",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
               ${token.ticker}
             </span>
-            <SecurityDots
-              lpBurned={!!riskFactors.lpBurned}
-              mintRevoked={!!riskFactors.mintRevoked}
-              devHoldPct={token.devHoldPct ?? undefined}
-            />
-          </div>
-          <div className="flex items-center gap-1 mt-0.5">
-            <span className="text-[10px] font-mono" style={{ color: "#363d54" }}>
-              {token.mintAddress.slice(0, 6)}...{token.mintAddress.slice(-4)}
-            </span>
             <span
-              className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded"
-              style={{ background: "#5c638015", color: "#5c6380", border: "1px solid #5c638025" }}
+              className="font-mono"
+              style={{
+                fontSize: 10,
+                color: "#363d54",
+                flexShrink: 0,
+              }}
             >
-              {timeAgo(token.detectedAt)}
+              {token.mintAddress.slice(0, 4)}..{token.mintAddress.slice(-3)}
             </span>
+            {liveData && (
+              <span
+                style={{
+                  width: 5,
+                  height: 5,
+                  borderRadius: "50%",
+                  background: "#00d672",
+                  display: "inline-block",
+                  flexShrink: 0,
+                  boxShadow: "0 0 4px #00d672",
+                }}
+                title="Live data"
+              />
+            )}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
+            <span
+              className="font-mono"
+              style={{
+                fontSize: 9,
+                color: "#5c6380",
+                background: "#5c638015",
+                padding: "1px 5px",
+                borderRadius: 3,
+                border: "1px solid #5c638025",
+                fontWeight: 600,
+              }}
+            >
+              {timeAgo(token.detectedAt)} ago
+            </span>
+            <HeatBadge heat={heat} size="sm" />
           </div>
         </div>
-        <div className="flex flex-col items-end gap-1">
-          <RiskBadge level={token.riskLevel} />
-          <HeatBadge heat={heat} size="md" />
+
+        {/* Right side: actions + risk badge */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <CompareButton mintAddress={token.mintAddress} size={16} />
+            <WatchlistButton
+              token={{ mintAddress: token.mintAddress, name: token.name, ticker: token.ticker, imageUri: token.imageUri }}
+              size={18}
+            />
+            <RiskBadge level={token.riskLevel} />
+          </div>
         </div>
       </div>
 
-      {/* Mini price chart */}
-      <div className="px-4 py-1">
+      {/* ---- Row 2: Market Cap + Price Changes (prominent) ---- */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          justifyContent: "space-between",
+          padding: "0 12px 4px",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+          <AnimatedPrice
+            value={mcapUsd}
+            format="usd"
+            showArrow
+            className="text-lg font-bold"
+          />
+          {token.marketCapSol != null && (
+            <span className="font-mono" style={{ fontSize: 10, color: "#5c6380" }}>
+              {fmt(token.marketCapSol)}&nbsp;SOL
+            </span>
+          )}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {change5m != null && (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 2 }}>
+              <span style={{ fontSize: 9, color: "#5c6380", fontWeight: 600 }}>5m</span>
+              <span className="font-mono" style={{ fontSize: 12, fontWeight: 700, color: pctColor(change5m) }}>
+                {change5m > 0 ? "+" : ""}{change5m.toFixed(1)}%
+              </span>
+            </span>
+          )}
+          {change1h != null && (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 2 }}>
+              <span style={{ fontSize: 9, color: "#5c6380", fontWeight: 600 }}>1h</span>
+              <span className="font-mono" style={{ fontSize: 12, fontWeight: 700, color: pctColor(change1h) }}>
+                {change1h > 0 ? "+" : ""}{change1h.toFixed(1)}%
+              </span>
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* ---- Row 3: Mini Chart ---- */}
+      <div style={{ padding: "0 8px", height: 48 }}>
         <MiniChart mintAddress={token.mintAddress} />
       </div>
 
-      {/* Stats grid — matching ui-demo.jsx 3-column layout */}
-      <div className="relative">
-        {liveData && (
-          <div className="absolute top-1 right-3 flex items-center gap-1 z-10">
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#00d672" }} />
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: "#00d672" }} />
-            </span>
-            <span className="text-[8px] font-bold uppercase tracking-wider" style={{ color: "#00d672" }}>
-              Live
-            </span>
-          </div>
-        )}
-        <TokenStats
-          marketCapSol={token.marketCapSol}
-          holders={token.holders}
-          volume1h={token.volume1h}
-          buyCount={token.buyCount}
-          sellCount={token.sellCount}
-          devHoldPct={token.devHoldPct}
-          priceChange5m={token.priceChange5m ?? null}
-          priceChange1h={token.priceChange1h ?? null}
-          bondingProgress={token.bondingProgress ?? null}
-          isGraduated={token.isGraduated}
-          createdAt={token.createdAt}
-          liveMarketCapUsd={liveData?.marketCapUsd}
-          livePriceChange5m={liveData?.priceChange5m}
-          livePriceChange1h={liveData?.priceChange1h}
-          liveVolume1h={liveData?.volume1h}
-          liveBuyCount={liveData?.buyCount1h}
-          liveSellCount={liveData?.sellCount1h}
-        />
+      {/* ---- Row 4: 2x4 Metrics Grid ---- */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(4, 1fr)",
+          gap: "1px",
+          margin: "6px 12px 0",
+          background: "#1a1f2e",
+          borderRadius: 6,
+          overflow: "hidden",
+        }}
+      >
+        <div style={{ background: "#0e1219" }}>
+          <MetricCell label="MCap" value={mcapUsd != null ? `$${fmt(mcapUsd)}` : "\u2014"} />
+        </div>
+        <div style={{ background: "#0e1219" }}>
+          <MetricCell label="Vol 1h" value={vol1h ? `$${fmt(vol1h)}` : "\u2014"} />
+        </div>
+        <div style={{ background: "#0e1219" }}>
+          <MetricCell label="Holders" value={token.holders != null ? fmt(token.holders) : "\u2014"} />
+        </div>
+        <div style={{ background: "#0e1219" }}>
+          <MetricCell
+            label="Dev%"
+            value={token.devHoldPct != null ? `${token.devHoldPct.toFixed(1)}%` : "\u2014"}
+            valueColor={devColor(token.devHoldPct)}
+          />
+        </div>
+        <div style={{ background: "#0e1219" }}>
+          <MetricCell
+            label="Buys/Sells"
+            value={`${buys}/${sells}`}
+            valueColor={buys > sells ? "#00d672" : buys < sells ? "#f23645" : "#eef0f6"}
+          />
+        </div>
+        <div style={{ background: "#0e1219" }}>
+          <MetricCell
+            label="Bonding"
+            value={token.isGraduated ? "GRAD" : bondingPct(token.bondingProgress)}
+            valueColor={token.isGraduated ? "#f0a000" : undefined}
+          />
+        </div>
+        <div style={{ background: "#0e1219" }}>
+          <MetricCell
+            label="Top10%"
+            value={token.topHoldersPct != null ? `${token.topHoldersPct.toFixed(0)}%` : "\u2014"}
+            valueColor={
+              token.topHoldersPct != null
+                ? token.topHoldersPct > 70
+                  ? "#f23645"
+                  : token.topHoldersPct > 50
+                    ? "#f0a000"
+                    : "#00d672"
+                : undefined
+            }
+          />
+        </div>
+        <div style={{ background: "#0e1219" }}>
+          <MetricCell label="Age" value={timeAgo(token.createdAt)} />
+        </div>
       </div>
 
-      {/* Security signals */}
-      <SecuritySignals
-        riskLevel={token.riskLevel}
-        riskFactors={token.riskFactors}
-        devHoldPct={token.devHoldPct}
-      />
-
-      {/* Bottom bar — security badges + Terminal button */}
+      {/* ---- Row 5: Security Dots + Social Links + Terminal Button ---- */}
       <div
-        className="px-4 py-2 flex items-center justify-between"
-        style={{ borderTop: "1px solid #1a1f2e" }}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "8px 12px 10px",
+          marginTop: 6,
+          borderTop: "1px solid #1a1f2e",
+        }}
       >
-        <div className="flex items-center gap-1">
-          {[
-            { ok: !!riskFactors.lpBurned, label: "LP" },
-            { ok: !!riskFactors.mintRevoked, label: "Mint" },
-            { ok: !(riskFactors.isDevBundled as boolean | undefined), label: "Clean" },
-          ].map((x) => (
-            <span
-              key={x.label}
-              className="text-[9px] font-bold font-mono px-1.5 py-0.5 rounded"
-              style={{
-                background: `${x.ok ? "#00d672" : "#f23645"}15`,
-                color: x.ok ? "#00d672" : "#f23645",
-                border: `1px solid ${x.ok ? "#00d672" : "#f23645"}25`,
-              }}
-            >
-              {x.ok ? "✓" : "✗"} {x.label}
-            </span>
-          ))}
+        {/* Security indicators */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <SecDot ok={!!riskFactors.lpBurned} label="LP" />
+          <SecDot ok={!!riskFactors.mintRevoked} label="MINT" />
+          <SecDot ok={!(riskFactors.freezeAuthority as boolean | undefined)} label="FREEZE" />
         </div>
 
+        {/* Social links */}
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          {token.twitter && (
+            <SocialIcon href={token.twitter} label="Twitter">
+              <TwitterIcon />
+            </SocialIcon>
+          )}
+          {token.telegram && (
+            <SocialIcon href={token.telegram} label="Telegram">
+              <TelegramIcon />
+            </SocialIcon>
+          )}
+          {token.website && (
+            <SocialIcon href={token.website} label="Website">
+              <WebIcon />
+            </SocialIcon>
+          )}
+          {!hasSocials && (
+            <span style={{ fontSize: 9, color: "#5c6380", fontStyle: "italic" }}>
+              no socials
+            </span>
+          )}
+        </div>
+
+        {/* Terminal button */}
         {onInfoTap && (
           <button
             onClick={(e) => {
@@ -163,15 +486,30 @@ export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
               onInfoTap(token);
             }}
             onPointerDown={(e) => e.stopPropagation()}
-            className="text-[10px] font-semibold px-2.5 py-1 rounded-[5px] transition-colors"
             style={{
-              background: "#1f2435",
-              border: "1px solid #1a1f2e",
+              fontSize: 10,
+              fontWeight: 700,
+              padding: "4px 10px",
+              borderRadius: 4,
+              background: "#1a1f2e",
+              border: "1px solid #252b3d",
               color: "#9ca3b8",
+              cursor: "pointer",
+              transition: "background 0.15s, color 0.15s",
+              fontFamily: "monospace",
+              letterSpacing: "0.03em",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "#252b3d";
+              e.currentTarget.style.color = "#eef0f6";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "#1a1f2e";
+              e.currentTarget.style.color = "#9ca3b8";
             }}
             aria-label={`View details for ${token.name}`}
           >
-            Terminal →
+            TERMINAL &rarr;
           </button>
         )}
       </div>
