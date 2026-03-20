@@ -1,12 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { TokenAvatar } from "@/components/ui/TokenAvatar";
 import { RiskBadge } from "@/components/ui/RiskBadge";
 import { TokenChart } from "@/components/token/TokenChart";
-import { TopHolders } from "@/components/token/TopHolders";
-import { RecentTrades } from "@/components/token/RecentTrades";
 import { useTokenPrice } from "@/hooks/useTokenPrice";
 import { useQuickBuy } from "@/hooks/useQuickBuy";
 import { usePositions } from "@/hooks/usePositions";
@@ -182,6 +180,159 @@ function MetricCell({
   );
 }
 
+// ---- Mock Data Types & Generators ----
+
+interface MockTrade {
+  id: string;
+  type: "buy" | "sell";
+  amountSol: number;
+  priceUsd: number;
+  maker: string;
+  timestamp: string;
+}
+
+interface MockHolder {
+  address: string;
+  percentHeld: number;
+  valueSol: number;
+  isDev: boolean;
+}
+
+function generateMockTrades(count: number): MockTrade[] {
+  const wallets = [
+    "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU",
+    "Hk4KFczSfEo6VoBBRNpSWNj1s29nDqb6LQ1A1B3wNj5u",
+    "3Vg9enuJQy2f5Gm9KKkPge8ewkHNZtCm7rd3AEFhzPfR",
+    "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+    "DYw8jCTdBNaT58d28nnD1AvRz7GkMhC3jHxwr4jCXRNE",
+    "FiYwRkVHPU2VkbqSrZNbLTZxAbMBz5g7dsUiyxFVBfhN",
+    "5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1",
+    "BSDqFMHTEDTYgkfUpMj1G4CeMFbQ5rfcYnYPE2va7yVB",
+  ];
+  const now = Date.now();
+  return Array.from({ length: count }, (_, i) => ({
+    id: `trade-${i}-${now}`,
+    type: (Math.random() > 0.45 ? "buy" : "sell") as "buy" | "sell",
+    amountSol: parseFloat((Math.random() * 5 + 0.05).toFixed(4)),
+    priceUsd: parseFloat((Math.random() * 0.001 + 0.00001).toFixed(8)),
+    maker: wallets[i % wallets.length],
+    timestamp: new Date(now - i * (30_000 + Math.random() * 120_000)).toISOString(),
+  }));
+}
+
+function generateMockHolders(): MockHolder[] {
+  const wallets = [
+    "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU",
+    "Hk4KFczSfEo6VoBBRNpSWNj1s29nDqb6LQ1A1B3wNj5u",
+    "3Vg9enuJQy2f5Gm9KKkPge8ewkHNZtCm7rd3AEFhzPfR",
+    "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+    "DYw8jCTdBNaT58d28nnD1AvRz7GkMhC3jHxwr4jCXRNE",
+    "FiYwRkVHPU2VkbqSrZNbLTZxAbMBz5g7dsUiyxFVBfhN",
+    "5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1",
+    "BSDqFMHTEDTYgkfUpMj1G4CeMFbQ5rfcYnYPE2va7yVB",
+    "4MangoMjqJ2firMokCjjGPaFSKB5C5aYrxBa19kfnD8",
+    "CndyV3LdqHUfDLmE5naZjVN8rBZz4tqhdefbAnjHG3JR",
+  ];
+  const pcts = [18.5, 12.3, 8.7, 7.1, 5.4, 4.2, 3.8, 2.9, 2.1, 1.6];
+  return pcts.map((pct, i) => ({
+    address: wallets[i],
+    percentHeld: pct,
+    valueSol: parseFloat((pct * 0.85).toFixed(2)),
+    isDev: i === 0,
+  }));
+}
+
+function formatMockPrice(n: number): string {
+  if (n === 0) return "0";
+  if (n >= 1) return `$${n.toFixed(4)}`;
+  if (n >= 0.01) return `$${n.toFixed(4)}`;
+  if (n >= 0.0001) return `$${n.toFixed(6)}`;
+  const str = n.toFixed(12).replace(/0+$/, "");
+  const match = str.match(/0\.(0*)/);
+  if (match && match[1].length > 3) {
+    const zeros = match[1].length;
+    const sig = (n * Math.pow(10, zeros + 1)).toFixed(2);
+    return `$0.0{${zeros}}${sig}`;
+  }
+  return `$${n.toFixed(8).replace(/0+$/, "")}`;
+}
+
+function relativeTime(timestamp: string): string {
+  const now = Date.now();
+  const then = new Date(timestamp).getTime();
+  const diffSec = Math.max(0, Math.floor((now - then) / 1000));
+  if (diffSec < 5) return "just now";
+  if (diffSec < 60) return `${diffSec}s ago`;
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  return `${Math.floor(diffHr / 24)}d ago`;
+}
+
+// Distribution bar colors for top 10 holders pie-chart analog
+const HOLDER_COLORS = [
+  "#8b5cf6", "#3b82f6", "#00d672", "#f0a000", "#f23645",
+  "#06b6d4", "#ec4899", "#84cc16", "#f59e0b", "#6366f1",
+];
+
+// ---- Risk Analysis Helpers ----
+
+function computeRiskScore(token: TokenData): number {
+  let score = 0;
+  const factors = token.riskFactors ?? {};
+  const dev = token.devHoldPct ?? (factors.devHoldPct as number | undefined) ?? 0;
+  if (dev > 20) score += 35;
+  else if (dev > 10) score += 20;
+  else if (dev > 5) score += 10;
+
+  const topH = token.topHoldersPct ?? (factors.topHoldersPct as number | undefined) ?? 0;
+  if (topH > 70) score += 25;
+  else if (topH > 50) score += 15;
+
+  const holders = token.holders ?? 0;
+  if (holders < 10) score += 15;
+  else if (holders < 30) score += 8;
+
+  const isBundled = (factors.isDevBundled as boolean | undefined) ?? false;
+  if (isBundled) score += 20;
+
+  const hasSocials = !!(token.twitter || token.telegram || token.website);
+  if (!hasSocials) score += 5;
+
+  const ageSec = (Date.now() - new Date(token.createdAt).getTime()) / 1000;
+  if (ageSec < 3600) score += 10;
+
+  return Math.min(score, 100);
+}
+
+function getRiskFlags(token: TokenData): string[] {
+  const flags: string[] = [];
+  const factors = token.riskFactors ?? {};
+  const dev = token.devHoldPct ?? (factors.devHoldPct as number | undefined) ?? 0;
+  if (dev > 20) flags.push("Single Wallet >20%");
+  const topH = token.topHoldersPct ?? (factors.topHoldersPct as number | undefined) ?? 0;
+  if (topH > 70) flags.push("Top Holders >70%");
+  const isBundled = (factors.isDevBundled as boolean | undefined) ?? false;
+  if (isBundled) flags.push("Dev Bundled");
+  const hasSocials = !!(token.twitter || token.telegram || token.website);
+  if (!hasSocials) flags.push("No Socials");
+  const holders = token.holders ?? 0;
+  if (holders < 10) flags.push("Few Holders (<10)");
+  const ageSec = (Date.now() - new Date(token.createdAt).getTime()) / 1000;
+  if (ageSec < 3600) flags.push("New Token <1h");
+  // Placeholder flags (these would come from real API data)
+  const hasLiqLock = (factors.hasLiquidityLock as boolean | undefined) ?? false;
+  if (!hasLiqLock && !token.isGraduated) flags.push("No Liquidity Lock");
+  return flags;
+}
+
+function riskBarColor(score: number): string {
+  if (score <= 30) return "#00d672";
+  if (score <= 60) return "#f0a000";
+  return "#f23645";
+}
+
 // ---- Main Page Component ----
 
 export default function TokenTerminalPage() {
@@ -201,6 +352,13 @@ export default function TokenTerminalPage() {
   const [quoteEstimate, setQuoteEstimate] = useState<string | null>(null);
   const [quoteFetching, setQuoteFetching] = useState(false);
   const quoteDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Mock data state for trades/holders tabs
+  const [mockTrades, setMockTrades] = useState<MockTrade[]>([]);
+  const [tradesLoading, setTradesLoading] = useState(false);
+  const [tradesPage, setTradesPage] = useState(1);
+  const [mockHolders, setMockHolders] = useState<MockHolder[]>([]);
+  const [holdersLoading, setHoldersLoading] = useState(false);
 
   const liveData = useTokenPrice(mint, !!mint);
   const { amount: quickBuyAmount, setAmount: setQuickBuyAmount } =
@@ -313,6 +471,39 @@ export default function TokenTerminalPage() {
       if (quoteDebounceRef.current) clearTimeout(quoteDebounceRef.current);
     };
   }, [customAmount, quickBuyAmount, activeTradeTab, fetchQuote]);
+
+  // Load mock trades when trades tab is activated
+  // TODO: Replace with real API call to /api/tokens/:mint/trades
+  useEffect(() => {
+    if (activeLeftTab !== "trades" || mockTrades.length > 0) return;
+    setTradesLoading(true);
+    const timer = setTimeout(() => {
+      setMockTrades(generateMockTrades(15));
+      setTradesLoading(false);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [activeLeftTab, mockTrades.length]);
+
+  // Load mock holders when holders tab is activated
+  // TODO: Replace with real API call to /api/tokens/:mint/holders
+  useEffect(() => {
+    if (activeLeftTab !== "holders" || mockHolders.length > 0) return;
+    setHoldersLoading(true);
+    const timer = setTimeout(() => {
+      setMockHolders(generateMockHolders());
+      setHoldersLoading(false);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [activeLeftTab, mockHolders.length]);
+
+  const handleLoadMoreTrades = useCallback(() => {
+    setTradesLoading(true);
+    setTimeout(() => {
+      setMockTrades((prev) => [...prev, ...generateMockTrades(10)]);
+      setTradesPage((p) => p + 1);
+      setTradesLoading(false);
+    }, 500);
+  }, []);
 
   const handleBuy = async () => {
     if (!token || tradeLoading) return;
@@ -455,6 +646,10 @@ export default function TokenTerminalPage() {
     totalTrades > 0 ? ((buyCount ?? 0) / totalTrades) * 100 : 50;
 
   const tradeAmount = customAmount ? parseFloat(customAmount) : quickBuyAmount;
+
+  // Risk analysis (memoized)
+  const riskScore = useMemo(() => (token ? computeRiskScore(token) : 0), [token]);
+  const riskFlags = useMemo(() => (token ? getRiskFlags(token) : []), [token]);
 
   // Loading state
   if (loading) {
@@ -740,7 +935,7 @@ export default function TokenTerminalPage() {
 
           {/* ====== TAB CONTENT ====== */}
 
-          {/* Overview Tab */}
+          {/* ====== OVERVIEW TAB ====== */}
           {activeLeftTab === "overview" && (
             <div className="space-y-3">
               {/* Metrics grid - compact, data-dense */}
@@ -862,40 +1057,55 @@ export default function TokenTerminalPage() {
                 />
               </div>
 
+              {/* Token Description */}
+              {token.description && (
+                <div
+                  className="rounded px-3 py-2.5"
+                  style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
+                >
+                  <p className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color: "#5c6380" }}>
+                    Token Description
+                  </p>
+                  <p className="text-xs leading-relaxed" style={{ color: "#9ca3b8" }}>
+                    {token.description}
+                  </p>
+                </div>
+              )}
+
               {/* Bonding Curve Progress Bar */}
-              {!token.isGraduated && (
+              {!token.isGraduated && bondingProgress != null && (
                 <div
                   className="rounded px-3 py-2.5"
                   style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
                 >
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="text-[10px] uppercase tracking-wider" style={{ color: "#5c6380" }}>
-                      Bonding Progress
+                      Bonding Curve Progress
                     </span>
                     <span className="text-[11px] font-mono font-semibold" style={{ color: "#eef0f6" }}>
                       {bondingPct.toFixed(1)}%
                     </span>
                   </div>
-                  <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: "#10131c" }}>
+                  <div className="w-full h-2.5 rounded-full overflow-hidden" style={{ background: "#10131c" }}>
                     <div
                       className="h-full rounded-full transition-all duration-700 ease-out"
                       style={{
                         width: `${bondingPct}%`,
                         background:
                           bondingPct >= 90
-                            ? "#00d672"
+                            ? "linear-gradient(90deg, #00d672, #00b060)"
                             : bondingPct >= 50
-                              ? "#f0a000"
-                              : "#3b82f6",
+                              ? "linear-gradient(90deg, #f0a000, #e09000)"
+                              : "linear-gradient(90deg, #3b82f6, #2563eb)",
                       }}
                     />
                   </div>
                   <div className="flex items-center justify-between mt-1">
                     <span className="text-[9px] font-mono" style={{ color: "#5c6380" }}>
-                      {bondingSol.toFixed(1)} SOL
+                      {bondingSol.toFixed(1)} SOL raised
                     </span>
                     <span className="text-[9px] font-mono" style={{ color: "#5c6380" }}>
-                      {BONDING_GRADUATION_SOL} SOL
+                      {BONDING_GRADUATION_SOL} SOL target
                     </span>
                   </div>
                 </div>
@@ -933,7 +1143,98 @@ export default function TokenTerminalPage() {
                 </div>
               )}
 
-              {/* Security Signals */}
+              {/* Security Analysis */}
+              <div
+                className="rounded px-3 py-2.5"
+                style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
+              >
+                <p className="text-[10px] uppercase tracking-wider mb-2.5" style={{ color: "#5c6380" }}>
+                  Security Analysis
+                </p>
+
+                {/* Social verification indicators */}
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {[
+                    { label: "Twitter", verified: !!token.twitter },
+                    { label: "Telegram", verified: !!token.telegram },
+                    { label: "Website", verified: !!token.website },
+                  ].map((social) => (
+                    <div
+                      key={social.label}
+                      className="flex items-center gap-1.5 px-2 py-1 rounded"
+                      style={{ background: "#10131c", border: "1px solid #1a1f2e" }}
+                    >
+                      <span
+                        className="inline-block w-1.5 h-1.5 rounded-full"
+                        style={{ background: social.verified ? "#00d672" : "#f23645" }}
+                      />
+                      <span className="text-[10px] font-mono" style={{ color: social.verified ? "#00d672" : "#f23645" }}>
+                        {social.label}
+                      </span>
+                      <span className="text-[9px]" style={{ color: social.verified ? "#00d672" : "#f23645" }}>
+                        {social.verified ? "\u2713 Verified" : "\u2717 Unverified"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Risk Score Bar */}
+                <div className="mb-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px]" style={{ color: "#5c6380" }}>Risk Score</span>
+                    <span className="text-[11px] font-mono font-semibold" style={{ color: riskBarColor(riskScore) }}>
+                      {riskScore}/100
+                    </span>
+                  </div>
+                  <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: "#10131c" }}>
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{
+                        width: `${riskScore}%`,
+                        background: riskBarColor(riskScore),
+                      }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between mt-0.5">
+                    <span className="text-[8px] font-mono" style={{ color: "#00d672" }}>Low</span>
+                    <span className="text-[8px] font-mono" style={{ color: "#f0a000" }}>Medium</span>
+                    <span className="text-[8px] font-mono" style={{ color: "#f23645" }}>High</span>
+                  </div>
+                </div>
+
+                {/* Risk Flag Pills */}
+                {riskFlags.length > 0 && (
+                  <div>
+                    <p className="text-[9px] uppercase tracking-wider mb-1.5" style={{ color: "#5c6380" }}>
+                      Risk Flags
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {riskFlags.map((flag) => (
+                        <span
+                          key={flag}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-mono"
+                          style={{
+                            background: "rgba(242,54,69,0.08)",
+                            border: "1px solid rgba(242,54,69,0.2)",
+                            color: "#f23645",
+                          }}
+                        >
+                          <span style={{ fontSize: "8px" }}>{"\u26A0"}</span>
+                          {flag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {riskFlags.length === 0 && (
+                  <div className="flex items-center gap-1.5 px-2 py-1 rounded" style={{ background: "rgba(0,214,114,0.06)", border: "1px solid rgba(0,214,114,0.15)" }}>
+                    <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: "#00d672" }} />
+                    <span className="text-[10px] font-mono" style={{ color: "#00d672" }}>No risk flags detected</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Security Signals (existing) */}
               {signals.length > 0 && (
                 <div
                   className="rounded px-3 py-2.5"
@@ -973,44 +1274,480 @@ export default function TokenTerminalPage() {
             </div>
           )}
 
-          {/* Trades Tab */}
+          {/* ====== TRADES TAB ====== */}
           {activeLeftTab === "trades" && (
-            <RecentTrades mintAddress={token.mintAddress} />
-          )}
-
-          {/* Holders Tab */}
-          {activeLeftTab === "holders" && (
-            <TopHolders mintAddress={token.mintAddress} />
-          )}
-
-          {/* Info Tab */}
-          {activeLeftTab === "info" && (
-            <div className="space-y-3">
-              {/* Description */}
-              {token.description && (
-                <div
-                  className="rounded px-3 py-2.5"
-                  style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
-                >
-                  <p className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color: "#5c6380" }}>
-                    About
-                  </p>
-                  <p className="text-xs leading-relaxed" style={{ color: "#9ca3b8" }}>
-                    {token.description}
-                  </p>
+            <div
+              className="rounded overflow-hidden"
+              style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
+            >
+              {/* Header */}
+              <div
+                className="flex items-center justify-between h-8 px-3"
+                style={{ borderBottom: "1px solid #1a1f2e" }}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-mono uppercase tracking-widest" style={{ color: "#5c6380" }}>
+                    Recent Trades
+                  </span>
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#00d672" }} />
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: "#00d672" }} />
+                  </span>
                 </div>
-              )}
+                {mockTrades.length > 0 && (
+                  <span className="text-[9px] font-mono" style={{ color: "#5c6380" }}>
+                    {mockTrades.length} trades
+                  </span>
+                )}
+              </div>
 
-              {/* Social Links */}
-              {(token.twitter || token.telegram || token.website) && (
+              <div className="px-3 py-2">
+                {/* Loading skeleton */}
+                {tradesLoading && mockTrades.length === 0 && (
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[440px]">
+                      <thead>
+                        <tr>
+                          {["Time", "Type", "Amount", "Price", "Maker"].map((h) => (
+                            <th
+                              key={h}
+                              className={`text-[8px] uppercase tracking-wider pb-1.5 font-normal ${h === "Type" || h === "Maker" || h === "Time" ? "text-left" : "text-right"} ${h === "Time" ? "pr-2" : h === "Maker" ? "pl-2" : "px-2"}`}
+                              style={{ color: "#5c6380" }}
+                            >
+                              {h}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Array.from({ length: 8 }).map((_, i) => (
+                          <tr key={i}>
+                            <td className="py-1.5 pr-2"><span className="inline-block w-10 h-3 rounded animate-pulse" style={{ background: "#10131c" }} /></td>
+                            <td className="py-1.5 px-2"><span className="inline-block w-8 h-3 rounded animate-pulse" style={{ background: "#10131c" }} /></td>
+                            <td className="py-1.5 px-2 text-right"><span className="inline-block w-12 h-3 rounded animate-pulse" style={{ background: "#10131c" }} /></td>
+                            <td className="py-1.5 px-2 text-right"><span className="inline-block w-16 h-3 rounded animate-pulse" style={{ background: "#10131c" }} /></td>
+                            <td className="py-1.5 pl-2"><span className="inline-block w-16 h-3 rounded animate-pulse" style={{ background: "#10131c" }} /></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* Trades table */}
+                {mockTrades.length > 0 && (
+                  <div className="overflow-x-auto terminal-scrollbar-x">
+                    <table className="w-full min-w-[440px]">
+                      <thead>
+                        <tr>
+                          <th className="text-[8px] uppercase tracking-wider text-left pr-2 pb-1.5 font-normal" style={{ color: "#5c6380" }}>Time</th>
+                          <th className="text-[8px] uppercase tracking-wider text-left px-2 pb-1.5 font-normal" style={{ color: "#5c6380" }}>Type</th>
+                          <th className="text-[8px] uppercase tracking-wider text-right px-2 pb-1.5 font-normal" style={{ color: "#5c6380" }}>Amount</th>
+                          <th className="text-[8px] uppercase tracking-wider text-right px-2 pb-1.5 font-normal" style={{ color: "#5c6380" }}>Price</th>
+                          <th className="text-[8px] uppercase tracking-wider text-left pl-2 pb-1.5 font-normal" style={{ color: "#5c6380" }}>Maker</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {mockTrades.map((trade) => {
+                          const isBuy = trade.type === "buy";
+                          return (
+                            <tr
+                              key={trade.id}
+                              style={{ borderLeft: `2px solid ${isBuy ? "rgba(0,214,114,0.2)" : "rgba(242,54,69,0.2)"}` }}
+                            >
+                              <td className="py-1.5 pr-2 text-[10px] font-mono whitespace-nowrap" style={{ color: "#5c6380" }}>
+                                {relativeTime(trade.timestamp)}
+                              </td>
+                              <td className="py-1.5 px-2">
+                                <span
+                                  className="text-[9px] font-mono font-bold uppercase px-1.5 py-0.5 rounded"
+                                  style={{
+                                    color: isBuy ? "#00d672" : "#f23645",
+                                    background: isBuy ? "rgba(0,214,114,0.08)" : "rgba(242,54,69,0.08)",
+                                  }}
+                                >
+                                  {trade.type}
+                                </span>
+                              </td>
+                              <td className="py-1.5 px-2 text-right text-[10px] font-mono" style={{ color: "#eef0f6" }}>
+                                {trade.amountSol.toFixed(trade.amountSol < 1 ? 4 : 2)} SOL
+                              </td>
+                              <td className="py-1.5 px-2 text-right text-[10px] font-mono" style={{ color: "#9ca3b8" }}>
+                                {formatMockPrice(trade.priceUsd)}
+                              </td>
+                              <td className="py-1.5 pl-2">
+                                <button
+                                  onClick={() => handleCopy(trade.maker, `trade-${trade.id}`)}
+                                  className="flex items-center gap-1 text-[10px] font-mono transition-colors"
+                                  style={{ color: "#9ca3b8" }}
+                                >
+                                  <span>{shortenAddress(trade.maker)}</span>
+                                  <span style={{ color: copied === `trade-${trade.id}` ? "#00d672" : "#363d54", fontSize: "8px" }}>
+                                    {copied === `trade-${trade.id}` ? "\u2713" : "\u2398"}
+                                  </span>
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* Empty state */}
+                {!tradesLoading && mockTrades.length === 0 && (
+                  <div className="flex flex-col items-center py-6">
+                    <p className="text-[10px] font-mono" style={{ color: "#5c6380" }}>No trade data available</p>
+                  </div>
+                )}
+
+                {/* Load More button */}
+                {mockTrades.length > 0 && (
+                  <div className="flex justify-center pt-2 pb-1" style={{ borderTop: "1px solid #1a1f2e" }}>
+                    <button
+                      onClick={handleLoadMoreTrades}
+                      disabled={tradesLoading}
+                      className="flex items-center gap-1.5 px-4 py-1.5 rounded text-[10px] font-mono transition-colors disabled:opacity-50"
+                      style={{ background: "#10131c", border: "1px solid #1a1f2e", color: "#9ca3b8" }}
+                    >
+                      {tradesLoading ? (
+                        <>
+                          <span
+                            className="inline-block w-3 h-3 rounded-full animate-spin"
+                            style={{ border: "1px solid rgba(156,163,184,0.3)", borderTopColor: "#9ca3b8" }}
+                          />
+                          Loading...
+                        </>
+                      ) : (
+                        <>Load More (Page {tradesPage + 1})</>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ====== HOLDERS TAB ====== */}
+          {activeLeftTab === "holders" && (
+            <div className="space-y-3">
+              {/* Distribution Bar (CSS pie-chart analog) */}
+              {mockHolders.length > 0 && (
                 <div
                   className="rounded px-3 py-2.5"
                   style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
                 >
                   <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color: "#5c6380" }}>
-                    Socials
+                    Top 10 Distribution
                   </p>
-                  <div className="flex flex-wrap gap-1.5">
+                  {/* Stacked horizontal bar */}
+                  <div className="flex h-4 rounded-full overflow-hidden" style={{ background: "#10131c" }}>
+                    {mockHolders.map((holder, idx) => (
+                      <div
+                        key={holder.address}
+                        className="h-full transition-all duration-500"
+                        style={{
+                          width: `${holder.percentHeld}%`,
+                          background: HOLDER_COLORS[idx % HOLDER_COLORS.length],
+                          opacity: 0.85,
+                        }}
+                        title={`${shortenAddress(holder.address)}: ${holder.percentHeld}%`}
+                      />
+                    ))}
+                    {/* Remaining % */}
+                    <div
+                      className="h-full flex-1"
+                      style={{ background: "#181c28" }}
+                      title={`Others: ${(100 - mockHolders.reduce((s, h) => s + h.percentHeld, 0)).toFixed(1)}%`}
+                    />
+                  </div>
+                  {/* Legend */}
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+                    {mockHolders.slice(0, 5).map((holder, idx) => (
+                      <div key={holder.address} className="flex items-center gap-1">
+                        <span
+                          className="inline-block w-2 h-2 rounded-sm"
+                          style={{ background: HOLDER_COLORS[idx % HOLDER_COLORS.length] }}
+                        />
+                        <span className="text-[8px] font-mono" style={{ color: "#5c6380" }}>
+                          {shortenAddress(holder.address)} {holder.percentHeld}%
+                        </span>
+                      </div>
+                    ))}
+                    <div className="flex items-center gap-1">
+                      <span className="inline-block w-2 h-2 rounded-sm" style={{ background: "#181c28" }} />
+                      <span className="text-[8px] font-mono" style={{ color: "#5c6380" }}>
+                        Others {(100 - mockHolders.reduce((s, h) => s + h.percentHeld, 0)).toFixed(1)}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Holders Table */}
+              <div
+                className="rounded overflow-hidden"
+                style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
+              >
+                <div
+                  className="flex items-center justify-between h-8 px-3"
+                  style={{ borderBottom: "1px solid #1a1f2e" }}
+                >
+                  <span className="text-[9px] font-mono uppercase tracking-widest" style={{ color: "#5c6380" }}>
+                    Top Holders
+                  </span>
+                  {mockHolders.length > 0 && (
+                    <span className="text-[9px] font-mono" style={{ color: "#5c6380" }}>
+                      {mockHolders.length} wallets
+                    </span>
+                  )}
+                </div>
+
+                <div className="px-3 py-2">
+                  {/* Loading skeleton */}
+                  {holdersLoading && mockHolders.length === 0 && (
+                    <table className="w-full">
+                      <thead>
+                        <tr>
+                          {["#", "Address", "%", "Bar", "Value"].map((h) => (
+                            <th
+                              key={h}
+                              className={`text-[8px] uppercase tracking-wider pb-1.5 font-normal ${h === "#" || h === "%" || h === "Value" ? "text-right" : "text-left"} ${h === "#" ? "pr-2 w-6" : h === "Value" ? "pl-2" : "px-2"}`}
+                              style={{ color: "#5c6380" }}
+                            >
+                              {h === "Bar" ? "" : h}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Array.from({ length: 6 }).map((_, i) => (
+                          <tr key={i}>
+                            <td className="py-1.5 pr-2 text-right"><span className="inline-block w-4 h-3 rounded animate-pulse" style={{ background: "#10131c" }} /></td>
+                            <td className="py-1.5 px-2"><span className="inline-block w-20 h-3 rounded animate-pulse" style={{ background: "#10131c" }} /></td>
+                            <td className="py-1.5 px-2 text-right"><span className="inline-block w-8 h-3 rounded animate-pulse" style={{ background: "#10131c" }} /></td>
+                            <td className="py-1.5 px-2"><span className="inline-block w-full h-2 rounded animate-pulse" style={{ background: "#10131c" }} /></td>
+                            <td className="py-1.5 pl-2 text-right"><span className="inline-block w-12 h-3 rounded animate-pulse" style={{ background: "#10131c" }} /></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+
+                  {/* Data table */}
+                  {mockHolders.length > 0 && (
+                    <div className="overflow-x-auto terminal-scrollbar-x">
+                      <table className="w-full min-w-[420px]">
+                        <thead>
+                          <tr>
+                            <th className="text-[8px] uppercase tracking-wider text-right pr-2 pb-1.5 font-normal w-6" style={{ color: "#5c6380" }}>#</th>
+                            <th className="text-[8px] uppercase tracking-wider text-left px-2 pb-1.5 font-normal" style={{ color: "#5c6380" }}>Address</th>
+                            <th className="text-[8px] uppercase tracking-wider text-right px-2 pb-1.5 font-normal w-14" style={{ color: "#5c6380" }}>%</th>
+                            <th className="text-[8px] uppercase tracking-wider text-left px-2 pb-1.5 font-normal w-24" style={{ color: "#5c6380" }}></th>
+                            <th className="text-[8px] uppercase tracking-wider text-right pl-2 pb-1.5 font-normal w-16" style={{ color: "#5c6380" }}>Value</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {mockHolders.map((holder, idx) => {
+                            const isDev = holder.isDev;
+                            const isConcentrated = holder.percentHeld > 10;
+                            const rowBg = isDev
+                              ? "rgba(240,160,0,0.05)"
+                              : isConcentrated
+                                ? "rgba(242,54,69,0.04)"
+                                : "transparent";
+                            const rowBorder = isDev
+                              ? "rgba(240,160,0,0.15)"
+                              : isConcentrated
+                                ? "rgba(242,54,69,0.12)"
+                                : "transparent";
+                            const pctColor = isDev ? "#f0a000" : isConcentrated ? "#f23645" : "#eef0f6";
+                            const barColor = HOLDER_COLORS[idx % HOLDER_COLORS.length];
+
+                            return (
+                              <tr
+                                key={holder.address}
+                                className="transition-colors"
+                                style={{ background: rowBg, borderLeft: `2px solid ${rowBorder}` }}
+                              >
+                                <td className="py-1.5 pr-2 text-right text-[10px] font-mono" style={{ color: "#5c6380" }}>
+                                  {idx + 1}
+                                </td>
+                                <td className="py-1.5 px-2">
+                                  <div className="flex items-center gap-1.5">
+                                    <button
+                                      onClick={() => handleCopy(holder.address, `holder-${idx}`)}
+                                      className="text-[10px] font-mono transition-colors"
+                                      style={{ color: isDev ? "#f0a000" : "#9ca3b8" }}
+                                    >
+                                      {shortenAddress(holder.address)}
+                                    </button>
+                                    {copied === `holder-${idx}` && (
+                                      <span className="text-[8px]" style={{ color: "#00d672" }}>{"\u2713"}</span>
+                                    )}
+                                    {isDev && (
+                                      <span
+                                        className="text-[7px] font-bold uppercase tracking-wider px-1 py-0.5 rounded"
+                                        style={{ background: "rgba(240,160,0,0.12)", color: "#f0a000" }}
+                                      >
+                                        DEV
+                                      </span>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="py-1.5 px-2 text-right text-[10px] font-mono font-semibold" style={{ color: pctColor }}>
+                                  {holder.percentHeld.toFixed(1)}%
+                                </td>
+                                <td className="py-1.5 px-2">
+                                  <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: "#10131c" }}>
+                                    <div
+                                      className="h-full rounded-full transition-all duration-500"
+                                      style={{ width: `${Math.min(holder.percentHeld * 4, 100)}%`, background: barColor }}
+                                    />
+                                  </div>
+                                </td>
+                                <td className="py-1.5 pl-2 text-right text-[10px] font-mono" style={{ color: "#9ca3b8" }}>
+                                  {holder.valueSol.toFixed(2)} SOL
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {/* Empty state */}
+                  {!holdersLoading && mockHolders.length === 0 && (
+                    <div className="flex flex-col items-center py-6">
+                      <p className="text-[10px] font-mono" style={{ color: "#5c6380" }}>No holder data available</p>
+                      <p className="text-[9px] font-mono mt-1" style={{ color: "#363d54" }}>Holder analysis coming soon</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ====== INFO TAB ====== */}
+          {activeLeftTab === "info" && (
+            <div className="space-y-3">
+              {/* Token Metadata Grid */}
+              <div
+                className="rounded px-3 py-2.5"
+                style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
+              >
+                <p className="text-[10px] uppercase tracking-wider mb-2.5" style={{ color: "#5c6380" }}>
+                  Token Metadata
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5">
+                  {/* Mint Address */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px]" style={{ color: "#5c6380" }}>Mint Address</span>
+                    <button
+                      onClick={() => handleCopy(token.mintAddress, "info-mint")}
+                      className="flex items-center gap-1 text-[10px] font-mono transition-colors"
+                      style={{ color: "#9ca3b8" }}
+                    >
+                      <span>{shortenAddress(token.mintAddress)}</span>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={copied === "info-mint" ? "#00d672" : "#5c6380"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  {/* Created */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px]" style={{ color: "#5c6380" }}>Created</span>
+                    <span className="text-[10px] font-mono" style={{ color: "#eef0f6" }}>
+                      {new Date(token.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} ({tokenAge(token.createdAt)} ago)
+                    </span>
+                  </div>
+
+                  {/* Platform */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px]" style={{ color: "#5c6380" }}>Platform</span>
+                    <span className="text-[10px] font-mono font-semibold" style={{ color: token.isGraduated ? "#00d672" : "#8b5cf6" }}>
+                      {token.isGraduated ? "Raydium" : "Pump.fun"}
+                    </span>
+                  </div>
+
+                  {/* Liquidity */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px]" style={{ color: "#5c6380" }}>Liquidity</span>
+                    <span className="text-[10px] font-mono" style={{ color: "#eef0f6" }}>
+                      {bondingProgress != null ? `${bondingSol.toFixed(2)} SOL` : marketCapSol != null ? `${(marketCapSol * 0.1).toFixed(2)} SOL` : "\u2014"}
+                    </span>
+                  </div>
+
+                  {/* Total Supply */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px]" style={{ color: "#5c6380" }}>Total Supply</span>
+                    <span className="text-[10px] font-mono" style={{ color: "#eef0f6" }}>
+                      1,000,000,000
+                    </span>
+                  </div>
+
+                  {/* Market Cap */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px]" style={{ color: "#5c6380" }}>Market Cap</span>
+                    <span className="text-[10px] font-mono" style={{ color: "#eef0f6" }}>
+                      {marketCapUsd != null ? formatUsd(marketCapUsd) : marketCapSol != null ? `${formatNumber(marketCapSol)} SOL` : "\u2014"}
+                    </span>
+                  </div>
+
+                  {/* Creator */}
+                  {token.creatorAddress && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px]" style={{ color: "#5c6380" }}>Creator</span>
+                      <button
+                        onClick={() => handleCopy(token.creatorAddress, "info-creator")}
+                        className="flex items-center gap-1 text-[10px] font-mono transition-colors"
+                        style={{ color: "#9ca3b8" }}
+                      >
+                        <span>{shortenAddress(token.creatorAddress)}</span>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={copied === "info-creator" ? "#00d672" : "#5c6380"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Bonding Curve */}
+                  {token.bondingCurveAddress && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px]" style={{ color: "#5c6380" }}>Bonding Curve</span>
+                      <button
+                        onClick={() => handleCopy(token.bondingCurveAddress!, "info-bonding")}
+                        className="flex items-center gap-1 text-[10px] font-mono transition-colors"
+                        style={{ color: "#9ca3b8" }}
+                      >
+                        <span>{shortenAddress(token.bondingCurveAddress)}</span>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={copied === "info-bonding" ? "#00d672" : "#5c6380"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Links Section */}
+              <div
+                className="rounded px-3 py-2.5"
+                style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
+              >
+                <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color: "#5c6380" }}>
+                  Links
+                </p>
+
+                {/* Social Links */}
+                {(token.twitter || token.telegram || token.website) && (
+                  <div className="flex flex-wrap gap-1.5 mb-2.5">
                     {token.twitter && (
                       <a
                         href={token.twitter}
@@ -1023,6 +1760,9 @@ export default function TokenTerminalPage() {
                           <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                         </svg>
                         Twitter
+                        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#5c6380" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
+                        </svg>
                       </a>
                     )}
                     {token.telegram && (
@@ -1037,6 +1777,9 @@ export default function TokenTerminalPage() {
                           <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
                         </svg>
                         Telegram
+                        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#5c6380" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
+                        </svg>
                       </a>
                     )}
                     {token.website && (
@@ -1048,98 +1791,18 @@ export default function TokenTerminalPage() {
                         style={{ background: "#10131c", border: "1px solid #1a1f2e", color: "#9ca3b8" }}
                       >
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <circle cx="12" cy="12" r="10" />
-                          <line x1="2" y1="12" x2="22" y2="12" />
-                          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                          <circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                         </svg>
                         Website
+                        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#5c6380" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
+                        </svg>
                       </a>
                     )}
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Contract Details */}
-              <div
-                className="rounded px-3 py-2.5"
-                style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
-              >
-                <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color: "#5c6380" }}>
-                  Contract Details
-                </p>
-                <div className="space-y-2">
-                  {/* Mint Address */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px]" style={{ color: "#5c6380" }}>Mint Address</span>
-                    <button
-                      onClick={() => handleCopy(token.mintAddress, "info-mint")}
-                      className="flex items-center gap-1 text-[10px] font-mono transition-colors"
-                      style={{ color: "#9ca3b8" }}
-                    >
-                      <span>{shortenAddress(token.mintAddress)}</span>
-                      <span style={{ color: copied === "info-mint" ? "#00d672" : "#5c6380" }}>
-                        {copied === "info-mint" ? "\u2713" : "\u2398"}
-                      </span>
-                    </button>
-                  </div>
-                  {/* Bonding Curve Address */}
-                  {token.bondingCurveAddress && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px]" style={{ color: "#5c6380" }}>Bonding Curve</span>
-                      <button
-                        onClick={() => handleCopy(token.bondingCurveAddress!, "info-bonding")}
-                        className="flex items-center gap-1 text-[10px] font-mono transition-colors"
-                        style={{ color: "#9ca3b8" }}
-                      >
-                        <span>{shortenAddress(token.bondingCurveAddress)}</span>
-                        <span style={{ color: copied === "info-bonding" ? "#00d672" : "#5c6380" }}>
-                          {copied === "info-bonding" ? "\u2713" : "\u2398"}
-                        </span>
-                      </button>
-                    </div>
-                  )}
-                  {/* Creator Address */}
-                  {token.creatorAddress && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px]" style={{ color: "#5c6380" }}>Creator</span>
-                      <button
-                        onClick={() => handleCopy(token.creatorAddress, "info-creator")}
-                        className="flex items-center gap-1 text-[10px] font-mono transition-colors"
-                        style={{ color: "#9ca3b8" }}
-                      >
-                        <span>{shortenAddress(token.creatorAddress)}</span>
-                        <span style={{ color: copied === "info-creator" ? "#00d672" : "#5c6380" }}>
-                          {copied === "info-creator" ? "\u2713" : "\u2398"}
-                        </span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Creation Date */}
-              <div
-                className="rounded px-3 py-2.5"
-                style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase tracking-wider" style={{ color: "#5c6380" }}>
-                    Created
-                  </span>
-                  <span className="text-[11px] font-mono" style={{ color: "#eef0f6" }}>
-                    {new Date(token.createdAt).toLocaleString()} ({tokenAge(token.createdAt)} ago)
-                  </span>
-                </div>
-              </div>
-
-              {/* Platform links */}
-              <div
-                className="rounded px-3 py-2.5"
-                style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
-              >
-                <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color: "#5c6380" }}>
-                  View On
-                </p>
+                {/* Explorer Links */}
                 <div className="flex items-center gap-1">
                   {[
                     { label: "Pump.fun", url: `https://pump.fun/coin/${token.mintAddress}` },
@@ -1152,10 +1815,13 @@ export default function TokenTerminalPage() {
                       href={link.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex-1 flex items-center justify-center h-7 rounded text-[10px] font-mono font-medium tracking-wider transition-colors"
+                      className="flex-1 flex items-center justify-center gap-1 h-7 rounded text-[10px] font-mono font-medium tracking-wider transition-colors"
                       style={{ background: "#10131c", border: "1px solid #1a1f2e", color: "#5c6380" }}
                     >
                       {link.label}
+                      <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
+                      </svg>
                     </a>
                   ))}
                 </div>
