@@ -9,6 +9,7 @@ import { Sparkline } from "@/components/ui/Sparkline";
 import { SecurityDots } from "@/components/ui/SecurityDots";
 import { useToast } from "@/components/ui/Toast";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { VirtualizedTable } from "@/components/ui/VirtualizedTable";
 import { api } from "@/lib/api";
 
 type ExploreCategory = "new" | "graduating" | "migrated";
@@ -637,7 +638,7 @@ export default function TrenchesPage() {
 
   return (
     <ErrorBoundary fallbackTitle="Explore error">
-    <div className="flex flex-col pt-2">
+    <div className="flex flex-col pt-2" style={{ height: "100%", minHeight: 0 }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
@@ -924,50 +925,53 @@ export default function TrenchesPage() {
           </p>
         </div>
       ) : viewMode === "table" ? (
-        <div className="overflow-x-auto -mx-2 px-2 terminal-scrollbar-x">
-          {/* Table header */}
-          <div
-            className="flex items-center gap-0 px-2 py-1.5 text-[9px] uppercase tracking-[.06em] font-bold rounded-t-md sticky top-0 z-10"
-            style={{
-              borderBottom: "1px solid #1a1f2e",
-              background: "#0a0d14",
-              color: "#363d54",
-              minWidth: tableMinWidth,
-            }}
-          >
-            {columns.map((col) => (
-              <div key={col.key} style={{ width: col.width, flexShrink: 0 }}>
-                {col.sortKey ? (
-                  <SortHeader
-                    label={col.label}
-                    sortKey={col.sortKey}
-                    currentSort={sortKey}
-                    currentDirection={sortDirection}
-                    onSort={handleSortToggle}
-                    align={col.align ?? "left"}
-                  />
-                ) : col.label ? (
-                  <span className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "#5c6380" }}>
-                    {col.label}
-                  </span>
-                ) : null}
+        <div className="overflow-x-auto -mx-2 px-2 terminal-scrollbar-x" style={{ display: "flex", flexDirection: "column", flex: "1 1 0%", minHeight: 0 }}>
+          <VirtualizedTable<ExploreToken>
+            items={displayTokens}
+            rowHeight={40}
+            overscan={5}
+            emptyMessage="No tokens found."
+            renderHeader={() => (
+              <div
+                className="flex items-center gap-0 px-2 py-1.5 text-[9px] uppercase tracking-[.06em] font-bold rounded-t-md"
+                style={{
+                  borderBottom: "1px solid #1a1f2e",
+                  background: "#0a0d14",
+                  color: "#363d54",
+                  minWidth: tableMinWidth,
+                  flexShrink: 0,
+                }}
+              >
+                {columns.map((col) => (
+                  <div key={col.key} style={{ width: col.width, flexShrink: 0 }}>
+                    {col.sortKey ? (
+                      <SortHeader
+                        label={col.label}
+                        sortKey={col.sortKey}
+                        currentSort={sortKey}
+                        currentDirection={sortDirection}
+                        onSort={handleSortToggle}
+                        align={col.align ?? "left"}
+                      />
+                    ) : col.label ? (
+                      <span className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "#5c6380" }}>
+                        {col.label}
+                      </span>
+                    ) : null}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-
-          {/* Table rows */}
-          <div className="flex flex-col" style={{ minWidth: tableMinWidth }}>
-            {displayTokens.map((token, idx) => (
+            )}
+            renderRow={(token, idx) => (
               <TableRow
-                key={token.id}
                 token={token}
                 isNew={newIds.has(token.id)}
                 columns={columns}
                 activeTab={activeTab}
                 rowIndex={idx}
               />
-            ))}
-          </div>
+            )}
+          />
         </div>
       ) : (
         /* Card view */
