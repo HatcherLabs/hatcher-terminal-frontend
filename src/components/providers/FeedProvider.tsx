@@ -7,25 +7,47 @@ import { useAutoSellAlertStore, type AutoSellAlertData } from "@/components/trad
 import { useToast } from "@/components/ui/Toast";
 
 export type FeedCategory = "new" | "closeToBond" | "migrated";
+export type ConnectionStatus = "connecting" | "connected" | "disconnected" | "error";
 
 interface FeedContextType {
   tokens: TokenData[];
   connected: boolean;
+  connectionStatus: ConnectionStatus;
   currentIndex: number;
   currentToken: TokenData | null;
   nextToken: () => void;
   removeToken: (mintAddress: string) => void;
   getFilteredTokens: (category: FeedCategory) => TokenData[];
+  reconnect: () => void;
 }
 
 const FeedContext = createContext<FeedContextType | null>(null);
 
+// Exponential backoff constants
+const BASE_DELAY_MS = 1000;
+const MAX_DELAY_MS = 30_000;
+const JITTER_FACTOR = 0.25; // ±25%
+
+function getBackoffDelay(attempt: number): number {
+  const exponential = Math.min(BASE_DELAY_MS * 2 ** attempt, MAX_DELAY_MS);
+  const jitter = exponential * JITTER_FACTOR * (2 * Math.random() - 1); // range: [-25%, +25%]
+  return Math.max(0, exponential + jitter);
+}
+
+function devLog(...args: unknown[]) {
+  if (process.env.NODE_ENV === "development") {
+    console.log("[FeedProvider]", ...args);
+  }
+}
+
 export function FeedProvider({ children }: { children: ReactNode }) {
   const [tokens, setTokens] = useState<TokenData[]>([]);
   const [connected, setConnected] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("disconnected");
   const [currentIndex, setCurrentIndex] = useState(0);
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const retryCountRef = useRef(0);
 
   // Load unswiped tokens from DB as fallback
   const loadUnswipedTokens = useCallback(async () => {
@@ -54,10 +76,18 @@ export function FeedProvider({ children }: { children: ReactNode }) {
       eventSourceRef.current.close();
     }
 
+    setConnectionStatus("connecting");
+    devLog("Connecting to SSE feed...");
+
     const es = api.stream("/api/tokens/feed");
     eventSourceRef.current = es;
 
-    es.onopen = () => setConnected(true);
+    es.onopen = () => {
+      setConnected(true);
+      setConnectionStatus("connected");
+      retryCountRef.current = 0;
+      devLog("Connected.");
+    };
 
     es.addEventListener("new-token", (e) => {
       const token = JSON.parse(e.data) as TokenData;
@@ -102,11 +132,22 @@ export function FeedProvider({ children }: { children: ReactNode }) {
 
     es.onerror = () => {
       setConnected(false);
+      setConnectionStatus("error");
       es.close();
-      // Reconnect with backoff
-      reconnectTimeoutRef.current = setTimeout(connect, 3000);
+      const delay = getBackoffDelay(retryCountRef.current);
+      devLog(`Connection lost. Reconnecting in ${Math.round(delay)}ms (attempt ${retryCountRef.current + 1})...`);
+      retryCountRef.current += 1;
+      reconnectTimeoutRef.current = setTimeout(connect, delay);
     };
   }, []);
+
+  const reconnect = useCallback(() => {
+    // Clear any pending automatic reconnect
+    if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+    retryCountRef.current = 0;
+    devLog("Manual reconnect triggered.");
+    connect();
+  }, [connect]);
 
   useEffect(() => {
     // Load existing tokens from DB immediately
@@ -116,6 +157,7 @@ export function FeedProvider({ children }: { children: ReactNode }) {
     return () => {
       eventSourceRef.current?.close();
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+      setConnectionStatus("disconnected");
     };
   }, [connect, loadUnswipedTokens]);
 
@@ -166,7 +208,7 @@ export function FeedProvider({ children }: { children: ReactNode }) {
 
   return (
     <FeedContext.Provider
-      value={{ tokens, connected, currentIndex, currentToken, nextToken, removeToken, getFilteredTokens }}
+      value={{ tokens, connected, connectionStatus, currentIndex, currentToken, nextToken, removeToken, getFilteredTokens, reconnect }}
     >
       {children}
     </FeedContext.Provider>
