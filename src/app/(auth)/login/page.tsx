@@ -9,7 +9,7 @@ import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { decryptAndLoad, hasEncryptedWallet } = useKey();
+  const { decryptAndLoad, hasEncryptedWallet, generateKeypair, encryptAndStore } = useKey();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -17,6 +17,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showNoWallet, setShowNoWallet] = useState(false);
+  const [generatingWallet, setGeneratingWallet] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,6 +66,29 @@ export default function LoginPage() {
   const handleImportSuccess = () => {
     setShowImportModal(false);
     router.push("/swipe");
+  };
+
+  const handleGenerateWallet = async () => {
+    setGeneratingWallet(true);
+    try {
+      const { publicKey: newPubKey } = await generateKeypair();
+      await encryptAndStore(password);
+
+      // Register the new wallet with the backend
+      try {
+        await api.raw("/api/wallet/register", {
+          method: "POST",
+          body: JSON.stringify({ publicKey: newPubKey }),
+        });
+      } catch {
+        console.warn("Failed to register new wallet with backend");
+      }
+
+      router.push("/swipe");
+    } catch {
+      setError("Failed to generate wallet");
+    }
+    setGeneratingWallet(false);
   };
 
   const handleSkip = () => {
@@ -139,26 +163,68 @@ export default function LoginPage() {
           {error && <p className="text-xs text-red text-center font-medium">{error}</p>}
 
           {showNoWallet && (
-            <div className="bg-bg-primary border border-amber/20 rounded-lg p-4 space-y-3">
-              <p className="text-xs text-amber font-medium">
-                No wallet found on this device. Import your private key to trade.
-              </p>
-              <div className="flex gap-2">
+            <div className="bg-bg-primary border border-amber/20 rounded-xl p-5 space-y-4">
+              <div className="space-y-1.5">
+                <p className="text-sm text-amber font-semibold">
+                  No wallet found on this device
+                </p>
+                <p className="text-xs text-text-muted leading-relaxed">
+                  To trade, you need a wallet on this device. Import your existing private key,
+                  or generate a new wallet.
+                </p>
+              </div>
+
+              <div className="space-y-2">
                 <button
                   type="button"
                   onClick={() => setShowImportModal(true)}
-                  className="flex-1 py-2 rounded-lg text-xs font-semibold bg-green text-bg-primary hover:brightness-110 transition-all"
+                  className="w-full py-2.5 rounded-lg text-sm font-semibold bg-green text-bg-primary hover:brightness-110 transition-all flex items-center justify-center gap-2"
                 >
-                  Import Key
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  Import Private Key
                 </button>
+
                 <button
                   type="button"
-                  onClick={handleSkip}
-                  className="flex-1 py-2 rounded-lg text-xs font-medium border border-border text-text-secondary hover:bg-bg-hover transition-colors"
+                  onClick={handleGenerateWallet}
+                  disabled={generatingWallet}
+                  className="w-full py-2.5 rounded-lg text-sm font-medium border border-border text-text-secondary hover:bg-bg-hover transition-colors flex items-center justify-center gap-2 disabled:opacity-30"
                 >
-                  Skip for now
+                  {generatingWallet ? (
+                    <>
+                      <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                      </svg>
+                      Generate New Wallet
+                    </>
+                  )}
                 </button>
+                <p className="text-[10px] text-text-faint text-center leading-relaxed">
+                  Generating a new wallet creates a different address.
+                  Use &ldquo;Import&rdquo; if you already have a wallet elsewhere.
+                </p>
               </div>
+
+              <button
+                type="button"
+                onClick={handleSkip}
+                className="w-full py-1.5 text-xs text-text-muted hover:text-text-secondary transition-colors text-center"
+              >
+                Skip for now
+              </button>
             </div>
           )}
 
@@ -193,6 +259,7 @@ export default function LoginPage() {
         <ImportKeyModal
           onClose={() => setShowImportModal(false)}
           onSuccess={handleImportSuccess}
+          encryptPassword={password}
         />
       )}
     </div>

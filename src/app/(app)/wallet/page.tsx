@@ -6,6 +6,7 @@ import { useKey } from "@/components/providers/KeyProvider";
 import { BalanceDisplay } from "@/components/wallet/BalanceDisplay";
 import { DepositQR } from "@/components/wallet/DepositQR";
 import { ImportKeyModal } from "@/components/wallet/ImportKeyModal";
+import { WithdrawModal } from "@/components/wallet/WithdrawModal";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { api } from "@/lib/api";
@@ -82,6 +83,8 @@ export default function WalletPage() {
   const { user } = useAuth();
   const { hasKey, publicKey, clearKey, importKey } = useKey();
   const [showImport, setShowImport] = useState(false);
+  const [showWithdraw, setShowWithdraw] = useState(false);
+  const [balanceSol, setBalanceSol] = useState<number>(0);
   const [showReveal, setShowReveal] = useState(false);
   const [revealPassword, setRevealPassword] = useState("");
   const [revealedKey, setRevealedKey] = useState<string | null>(null);
@@ -98,6 +101,18 @@ export default function WalletPage() {
   const [historyLoading, setHistoryLoading] = useState(true);
 
   const walletAddress = user?.wallet?.publicKey;
+
+  const fetchBalance = useCallback(async () => {
+    try {
+      const res = await api.raw("/api/wallet/balance");
+      if (res.ok) {
+        const { data } = await res.json();
+        setBalanceSol(data.sol);
+      }
+    } catch {
+      // silently fail
+    }
+  }, []);
 
   const fetchAnalytics = useCallback(async () => {
     try {
@@ -129,9 +144,10 @@ export default function WalletPage() {
 
   useEffect(() => {
     if (!walletAddress) return;
+    fetchBalance();
     fetchAnalytics();
     fetchHistory();
-  }, [walletAddress, fetchAnalytics, fetchHistory]);
+  }, [walletAddress, fetchBalance, fetchAnalytics, fetchHistory]);
 
   const handleRevealKey = async () => {
     if (!revealPassword) return;
@@ -505,12 +521,20 @@ export default function WalletPage() {
             )}
           </div>
 
-          {/* Deposit */}
+          {/* Deposit & Withdraw */}
           <div className="bg-bg-card border border-border rounded-xl p-6">
             <h2 className="text-sm font-semibold text-text-primary mb-4 text-center">
               Deposit SOL
             </h2>
             <DepositQR publicKey={walletAddress} />
+            {hasKey && (
+              <button
+                onClick={() => setShowWithdraw(true)}
+                className="w-full mt-4 py-2.5 rounded-lg text-sm font-semibold bg-red/10 border border-red/20 text-red hover:bg-red/20 transition-colors"
+              >
+                Withdraw SOL
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -519,6 +543,16 @@ export default function WalletPage() {
         <ImportKeyModal
           onClose={() => setShowImport(false)}
           onSuccess={() => setShowImport(false)}
+        />
+      )}
+
+      {showWithdraw && (
+        <WithdrawModal
+          onClose={() => {
+            setShowWithdraw(false);
+            fetchBalance();
+          }}
+          balanceSol={balanceSol}
         />
       )}
     </div>

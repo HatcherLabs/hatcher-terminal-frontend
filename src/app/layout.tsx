@@ -18,7 +18,6 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "HATCHER TERMINAL",
   description: "Swipe right to ape. Tinder for Pump.fun tokens.",
-  themeColor: "#06060b",
   other: {
     "color-scheme": "dark",
     "apple-mobile-web-app-status-bar-style": "black-translucent",
@@ -29,6 +28,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  themeColor: "#06060b",
 };
 
 export default function RootLayout({

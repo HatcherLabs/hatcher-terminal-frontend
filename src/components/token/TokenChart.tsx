@@ -88,6 +88,69 @@ async function fetchChartData(
   return json;
 }
 
+// ---- Indicator Types & Config ----
+type IndicatorKey = "sma7" | "sma25" | "ema9" | "vol";
+
+interface IndicatorConfig {
+  label: string;
+  color: string;
+}
+
+const INDICATORS: Record<IndicatorKey, IndicatorConfig> = {
+  sma7: { label: "SMA 7", color: "#7c4dff" },
+  sma25: { label: "SMA 25", color: "#ff9800" },
+  ema9: { label: "EMA 9", color: "#00bcd4" },
+  vol: { label: "VOL", color: "" },
+};
+
+const INDICATOR_KEYS: IndicatorKey[] = ["sma7", "sma25", "ema9", "vol"];
+
+const DEFAULT_INDICATORS: Record<IndicatorKey, boolean> = {
+  sma7: true,
+  sma25: false,
+  ema9: false,
+  vol: true,
+};
+
+// ---- Indicator Calculations ----
+function calculateSMA(
+  candles: CandleData[],
+  period: number
+): { time: number; value: number }[] {
+  const result: { time: number; value: number }[] = [];
+  for (let i = period - 1; i < candles.length; i++) {
+    let sum = 0;
+    for (let j = i - period + 1; j <= i; j++) {
+      sum += candles[j].close;
+    }
+    result.push({ time: candles[i].timestamp, value: sum / period });
+  }
+  return result;
+}
+
+function calculateEMA(
+  candles: CandleData[],
+  period: number
+): { time: number; value: number }[] {
+  if (candles.length < period) return [];
+  const k = 2 / (period + 1);
+  const result: { time: number; value: number }[] = [];
+
+  // Seed with SMA of first `period` candles
+  let sum = 0;
+  for (let i = 0; i < period; i++) {
+    sum += candles[i].close;
+  }
+  let ema = sum / period;
+  result.push({ time: candles[period - 1].timestamp, value: ema });
+
+  for (let i = period; i < candles.length; i++) {
+    ema = candles[i].close * k + ema * (1 - k);
+    result.push({ time: candles[i].timestamp, value: ema });
+  }
+  return result;
+}
+
 // ---- Helpers ----
 function detectPricePrecision(price: number): number {
   if (price === 0) return 8;
@@ -232,15 +295,44 @@ function TimeframeButtons({
   );
 }
 
+// ---- Indicator Toggle Buttons ----
+function IndicatorButtons({
+  active,
+  onToggle,
+}: {
+  active: Record<IndicatorKey, boolean>;
+  onToggle: (key: IndicatorKey) => void;
+}) {
+  return (
+    <div className="flex items-center gap-1">
+      {INDICATOR_KEYS.map((key) => (
+        <button
+          key={key}
+          onClick={() => onToggle(key)}
+          className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold transition-colors border ${
+            active[key]
+              ? "bg-accent/20 border-accent text-accent"
+              : "bg-bg-card border-border text-text-muted"
+          }`}
+        >
+          {INDICATORS[key].label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 // ---- TradingView Chart (native) ----
 function TradingViewChart({
   candles,
   height = 400,
   timeframe,
+  indicators,
 }: {
   candles: CandleData[];
   height?: number;
   timeframe: Timeframe;
+  indicators: Record<IndicatorKey, boolean>;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<ReturnType<
@@ -256,6 +348,7 @@ function TradingViewChart({
       createChart,
       CandlestickSeries,
       HistogramSeries,
+      LineSeries,
       ColorType,
       CrosshairMode,
     } = await import("lightweight-charts");
@@ -336,29 +429,85 @@ function TradingViewChart({
 
     candlestickSeries.setData(candleChartData);
 
-    // Volume histogram series
-    const volumeSeries = chart.addSeries(HistogramSeries, {
-      priceFormat: { type: "volume" as const },
-      priceScaleId: "volume",
-    });
+    // Volume histogram series (conditional)
+    if (indicators.vol) {
+      const volumeSeries = chart.addSeries(HistogramSeries, {
+        priceFormat: { type: "volume" as const },
+        priceScaleId: "volume",
+      });
 
-    chart.priceScale("volume").applyOptions({
-      scaleMargins: {
-        top: 0.8,
-        bottom: 0,
-      },
-    });
+      chart.priceScale("volume").applyOptions({
+        scaleMargins: {
+          top: 0.8,
+          bottom: 0,
+        },
+      });
 
-    const volumeData = candles.map((c) => ({
-      time: c.timestamp as import("lightweight-charts").UTCTimestamp,
-      value: c.volume > 0 ? c.volume : Math.abs(c.close - c.open) * 1000,
-      color:
-        c.close >= c.open
-          ? CHART_THEME.volumeUpColor
-          : CHART_THEME.volumeDownColor,
-    }));
+      const volumeData = candles.map((c) => ({
+        time: c.timestamp as import("lightweight-charts").UTCTimestamp,
+        value: c.volume > 0 ? c.volume : Math.abs(c.close - c.open) * 1000,
+        color:
+          c.close >= c.open
+            ? CHART_THEME.volumeUpColor
+            : CHART_THEME.volumeDownColor,
+      }));
 
-    volumeSeries.setData(volumeData);
+      volumeSeries.setData(volumeData);
+    }
+
+    // SMA 7 line
+    if (indicators.sma7) {
+      const sma7Data = calculateSMA(candles, 7);
+      const sma7Series = chart.addSeries(LineSeries, {
+        color: INDICATORS.sma7.color,
+        lineWidth: 1,
+        priceLineVisible: false,
+        lastValueVisible: false,
+        crosshairMarkerVisible: false,
+      });
+      sma7Series.setData(
+        sma7Data.map((d) => ({
+          time: d.time as import("lightweight-charts").UTCTimestamp,
+          value: d.value,
+        }))
+      );
+    }
+
+    // SMA 25 line
+    if (indicators.sma25) {
+      const sma25Data = calculateSMA(candles, 25);
+      const sma25Series = chart.addSeries(LineSeries, {
+        color: INDICATORS.sma25.color,
+        lineWidth: 1,
+        priceLineVisible: false,
+        lastValueVisible: false,
+        crosshairMarkerVisible: false,
+      });
+      sma25Series.setData(
+        sma25Data.map((d) => ({
+          time: d.time as import("lightweight-charts").UTCTimestamp,
+          value: d.value,
+        }))
+      );
+    }
+
+    // EMA 9 line
+    if (indicators.ema9) {
+      const ema9Data = calculateEMA(candles, 9);
+      const ema9Series = chart.addSeries(LineSeries, {
+        color: INDICATORS.ema9.color,
+        lineWidth: 1,
+        priceLineVisible: false,
+        lastValueVisible: false,
+        crosshairMarkerVisible: false,
+      });
+      ema9Series.setData(
+        ema9Data.map((d) => ({
+          time: d.time as import("lightweight-charts").UTCTimestamp,
+          value: d.value,
+        }))
+      );
+    }
 
     chart.timeScale().fitContent();
 
@@ -379,7 +528,7 @@ function TradingViewChart({
         _resizeObserver?: ResizeObserver;
       }
     )._resizeObserver = resizeObserver;
-  }, [candles, height, tfConfig.secondsVisible]);
+  }, [candles, height, tfConfig.secondsVisible, indicators]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -473,7 +622,14 @@ export function TokenChart({ mintAddress, height }: TokenChartProps) {
   const [chartMode, setChartMode] = useState<"native" | "dexscreener">(
     "native"
   );
+  const [indicators, setIndicators] = useState<Record<IndicatorKey, boolean>>(
+    () => ({ ...DEFAULT_INDICATORS })
+  );
   const mountedRef = useRef(true);
+
+  const handleToggleIndicator = useCallback((key: IndicatorKey) => {
+    setIndicators((prev) => ({ ...prev, [key]: !prev[key] }));
+  }, []);
 
   // Responsive height: mobile 280px, desktop 400px (or prop override)
   const [responsiveHeight, setResponsiveHeight] = useState(height ?? 400);
@@ -563,7 +719,15 @@ export function TokenChart({ mintAddress, height }: TokenChartProps) {
     <div className="bg-bg-elevated rounded-xl border border-border overflow-hidden">
       {/* Chart toolbar */}
       <div className="flex items-center justify-between px-3 pt-3 pb-1">
-        <TimeframeButtons active={timeframe} onChange={setTimeframe} />
+        <div className="flex items-center gap-3">
+          <TimeframeButtons active={timeframe} onChange={setTimeframe} />
+          {chartMode === "native" && (
+            <IndicatorButtons
+              active={indicators}
+              onToggle={handleToggleIndicator}
+            />
+          )}
+        </div>
         <div className="flex items-center gap-2">
           {hasDexScreener && hasCandles && (
             <button
@@ -593,6 +757,7 @@ export function TokenChart({ mintAddress, height }: TokenChartProps) {
             candles={chartData.candles}
             height={responsiveHeight}
             timeframe={timeframe}
+            indicators={indicators}
           />
         </div>
       ) : hasDexScreener ? (

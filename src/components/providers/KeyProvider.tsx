@@ -17,6 +17,7 @@ interface KeyContextType {
   hasKey: boolean;
   publicKey: string | null;
   importKey: (privateKeyBase58: string) => boolean;
+  importKeyFromBytes: (secretKeyBytes: Uint8Array) => boolean;
   clearKey: () => void;
   signTransactionBase64: (unsignedTxBase64: string) => Promise<string>;
   generateKeypair: () => Promise<{ publicKey: string; privateKey: string }>;
@@ -142,6 +143,24 @@ export function KeyProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const importKeyFromBytes = useCallback((secretKeyBytes: Uint8Array): boolean => {
+    try {
+      const kp = Keypair.fromSecretKey(secretKeyBytes);
+      const pubKey = kp.publicKey.toBase58();
+
+      setKeypair(kp);
+      setPublicKey(pubKey);
+
+      try {
+        sessionStorage.setItem(SESSION_PUB_KEY, pubKey);
+      } catch { /* ignore */ }
+
+      return true;
+    } catch {
+      return false;
+    }
+  }, []);
+
   const clearKey = useCallback(() => {
     setKeypair(null);
     setPublicKey(null);
@@ -233,6 +252,7 @@ export function KeyProvider({ children }: { children: ReactNode }) {
         hasKey: keypair !== null,
         publicKey,
         importKey,
+        importKeyFromBytes,
         clearKey,
         signTransactionBase64,
         generateKeypair,

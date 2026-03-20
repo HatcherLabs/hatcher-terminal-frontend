@@ -21,16 +21,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <CompareProvider>
             <NotificationProvider>
               <PriceAlertProvider>
-              <QuickTradeProvider>
-                <TerminalLayout>
-                  {children}
-                </TerminalLayout>
-                {/* BottomNav only renders on mobile (has md:hidden built in) */}
-                <BottomNav />
-                <ToastContainer />
-                <QuickTradeFAB />
-                <QuickTradePanel />
-              </QuickTradeProvider>
+                <QuickTradeProvider>
+                  <TerminalLayout>
+                    {children}
+                  </TerminalLayout>
+                  <BottomNav />
+                  <ToastContainer />
+                  <QuickTradeFAB />
+                  <QuickTradePanel />
+                </QuickTradeProvider>
               </PriceAlertProvider>
             </NotificationProvider>
           </CompareProvider>
