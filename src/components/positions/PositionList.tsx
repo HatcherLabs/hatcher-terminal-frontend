@@ -283,8 +283,53 @@ export function PositionList() {
     );
   }
 
+  const totalUnrealizedPnlSol = positions.reduce((sum, pos) => {
+    let pnlSolVal = pos.pnlSol;
+    if (pnlSolVal === null) {
+      let pnlPct = pos.pnlPercent;
+      if (
+        pnlPct === null &&
+        pos.entryPricePerToken > 0 &&
+        pos.currentPriceSol !== null
+      ) {
+        pnlPct =
+          ((pos.currentPriceSol - pos.entryPricePerToken) /
+            pos.entryPricePerToken) *
+          100;
+      }
+      pnlSolVal = pnlPct !== null ? pos.entrySol * (pnlPct / 100) : 0;
+    }
+    return sum + pnlSolVal;
+  }, 0);
+  const pnlIsPositive = totalUnrealizedPnlSol >= 0;
+
   return (
     <div className="space-y-3">
+      {/* Position count + total unrealized P&L bar */}
+      <div className="flex items-center justify-between bg-bg-card border border-border rounded-xl px-4 py-2.5">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">
+            Open Positions
+          </span>
+          <span className="text-xs font-mono font-bold text-text-primary bg-bg-elevated px-2 py-0.5 rounded-md">
+            {positions.length}
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] text-text-muted uppercase">
+            Unrealized P&amp;L
+          </span>
+          <span
+            className={`text-sm font-mono font-bold ${
+              pnlIsPositive ? "text-green" : "text-red"
+            }`}
+          >
+            {pnlIsPositive ? "+" : ""}
+            {totalUnrealizedPnlSol.toFixed(4)} SOL
+          </span>
+        </div>
+      </div>
+
       <PortfolioSummary stats={stats} />
       {positions.map((pos) => (
         <PositionCard
