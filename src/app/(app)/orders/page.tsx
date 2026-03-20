@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { api } from "@/lib/api";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useToast } from "@/components/ui/Toast";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import Link from "next/link";
 
 interface LimitOrder {
@@ -164,6 +165,7 @@ export default function OrdersPage() {
   };
 
   return (
+    <ErrorBoundary fallbackTitle="Orders error">
     <div style={{ maxWidth: 1200, margin: "0 auto" }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
@@ -580,5 +582,6 @@ export default function OrdersPage() {
         </div>
       )}
     </div>
+    </ErrorBoundary>
   );
 }

@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { TokenAvatar } from "@/components/ui/TokenAvatar";
 import { RiskBadge } from "@/components/ui/RiskBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { api } from "@/lib/api";
 
 /* ── types ─────────────────────────────────────────────── */
@@ -494,6 +495,7 @@ export default function GraveyardPage() {
   /* ── loading state ── */
   if (loading) {
     return (
+      <ErrorBoundary fallbackTitle="Graveyard error">
       <div className="max-w-5xl mx-auto">
         <h1
           className="text-lg font-bold mb-4 font-mono"
@@ -513,12 +515,14 @@ export default function GraveyardPage() {
           ))}
         </div>
       </div>
+      </ErrorBoundary>
     );
   }
 
   /* ── empty state ── */
   if (items.length === 0) {
     return (
+      <ErrorBoundary fallbackTitle="Graveyard error">
       <div className="max-w-5xl mx-auto">
         <h1
           className="text-lg font-bold mb-4 font-mono"
@@ -550,11 +554,13 @@ export default function GraveyardPage() {
           }}
         />
       </div>
+      </ErrorBoundary>
     );
   }
 
   /* ── main render ── */
   return (
+    <ErrorBoundary fallbackTitle="Graveyard error">
     <div className="max-w-5xl mx-auto">
       <h1
         className="text-lg font-bold mb-4 font-mono"
@@ -610,5 +616,6 @@ export default function GraveyardPage() {
         </span>
       </div>
     </div>
+    </ErrorBoundary>
   );
 }

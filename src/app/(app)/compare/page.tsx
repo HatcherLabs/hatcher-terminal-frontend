@@ -7,6 +7,7 @@ import { useWatchlist } from "@/components/providers/WatchlistProvider";
 import { useTokenPrice } from "@/hooks/useTokenPrice";
 import { TokenAvatar } from "@/components/ui/TokenAvatar";
 import { RiskBadge } from "@/components/ui/RiskBadge";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { api } from "@/lib/api";
 import type { TokenData } from "@/types/token";
 import { useSolPriceContext } from "@/components/providers/SolPriceProvider";
@@ -545,6 +546,7 @@ export default function ComparePage() {
   // ---- EMPTY STATE ----
   if (!loading && tokens.length < 2 && compareTokens.length < 2) {
     return (
+      <ErrorBoundary fallbackTitle="Compare error">
       <div className="flex flex-col items-center justify-center gap-5 pt-16 pb-24">
         {/* Live data collectors for existing tokens */}
         {tokens.map((t) => (
@@ -591,12 +593,14 @@ export default function ComparePage() {
           existingMints={compareTokens}
         />
       </div>
+      </ErrorBoundary>
     );
   }
 
   // ---- LOADING ----
   if (loading) {
     return (
+      <ErrorBoundary fallbackTitle="Compare error">
       <div className="flex flex-col pt-2">
         <h1 className="text-lg font-bold tracking-tight mb-4" style={{ color: C.textPrimary }}>
           Compare
@@ -611,6 +615,7 @@ export default function ComparePage() {
           ))}
         </div>
       </div>
+      </ErrorBoundary>
     );
   }
 
@@ -624,6 +629,7 @@ export default function ComparePage() {
         : "1fr 1fr 1fr";
 
   return (
+    <ErrorBoundary fallbackTitle="Compare error">
     <div className="flex flex-col pt-2 pb-24 md:pb-4">
       {/* Live data collectors */}
       {tokens.map((t) => (
@@ -921,5 +927,6 @@ export default function ComparePage() {
         existingMints={compareTokens}
       />
     </div>
+    </ErrorBoundary>
   );
 }

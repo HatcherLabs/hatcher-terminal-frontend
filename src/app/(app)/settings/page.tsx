@@ -8,6 +8,7 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { api } from "@/lib/api";
 import { useMEVProtection } from "@/components/trade/MEVProtection";
 import { Toggle } from "@/components/ui/Toggle";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 /* ── constants ─────────────────────────────────────────────── */
 
@@ -373,18 +374,21 @@ export default function SettingsPage() {
   /* ── loading skeleton ── */
   if (loading) {
     return (
+      <ErrorBoundary fallbackTitle="Settings error">
       <div style={{ maxWidth: 600, margin: "0 auto", padding: "0 16px" }}>
         <Skeleton className="h-8 w-40 mb-6" />
         {[1, 2, 3, 4].map((i) => (
           <Skeleton key={i} className="h-24 rounded-xl mb-4" />
         ))}
       </div>
+      </ErrorBoundary>
     );
   }
 
   /* ── error state ── */
   if (!settings) {
     return (
+      <ErrorBoundary fallbackTitle="Settings error">
       <div style={{ maxWidth: 600, margin: "0 auto", padding: "40px 16px", textAlign: "center" }}>
         <p style={{ fontSize: 13, color: C.textSecondary, fontWeight: 600 }}>
           Unable to load settings
@@ -409,6 +413,7 @@ export default function SettingsPage() {
           Refresh
         </button>
       </div>
+      </ErrorBoundary>
     );
   }
 
@@ -428,6 +433,7 @@ export default function SettingsPage() {
     : 100;
 
   return (
+    <ErrorBoundary fallbackTitle="Settings error">
     <div style={{ maxWidth: 600, margin: "0 auto", padding: "0 0 100px" }}>
       {/* Page title */}
       <h1
@@ -1197,5 +1203,6 @@ export default function SettingsPage() {
         </button>
       </div>
     </div>
+    </ErrorBoundary>
   );
 }

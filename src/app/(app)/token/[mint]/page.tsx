@@ -17,6 +17,7 @@ import { CompareButton } from "@/components/ui/CompareButton";
 import { PriceAlertButton } from "@/components/ui/PriceAlertButton";
 import { useToast } from "@/components/ui/Toast";
 import { useQuickTrade } from "@/components/providers/QuickTradeProvider";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { api } from "@/lib/api";
 import type { TokenData } from "@/types/token";
 
@@ -507,6 +508,7 @@ export default function TokenTerminalPage() {
   const signals = getSignals(token);
 
   return (
+    <ErrorBoundary fallbackTitle="Token detail error">
     <div className="max-w-terminal mx-auto px-2 pt-2 pb-24 lg:pb-4 animate-fade-in">
       {/* ====== TOKEN HEADER BAR ====== */}
       <div
@@ -1443,5 +1445,6 @@ export default function TokenTerminalPage() {
         </div>
       </div>
     </div>
+    </ErrorBoundary>
   );
 }

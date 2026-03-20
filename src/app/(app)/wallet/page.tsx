@@ -10,6 +10,7 @@ import { WithdrawModal } from "@/components/wallet/WithdrawModal";
 import { PortfolioChart } from "@/components/wallet/PortfolioChart";
 import { PnLCalendar } from "@/components/wallet/PnLCalendar";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { api } from "@/lib/api";
 
 /* ───────────────────────── Types ───────────────────────── */
@@ -502,6 +503,7 @@ export default function WalletPage() {
 
   if (!walletAddress) {
     return (
+      <ErrorBoundary fallbackTitle="Wallet error">
       <div className="flex flex-col items-center justify-center gap-3 mt-24 text-center">
         <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: C.bgPanel }}>
           <IconLock size={20} />
@@ -509,6 +511,7 @@ export default function WalletPage() {
         <p className="text-sm font-medium" style={{ color: C.textSec }}>No wallet registered.</p>
         <p className="text-xs" style={{ color: C.textMuted }}>Complete signup to generate a wallet.</p>
       </div>
+      </ErrorBoundary>
     );
   }
 
@@ -517,6 +520,7 @@ export default function WalletPage() {
   /* ─── Render ─── */
 
   return (
+    <ErrorBoundary fallbackTitle="Wallet error">
     <div className="max-w-5xl mx-auto pb-24">
       {/* ═══ HEADER ═══ */}
       <div className="flex items-center justify-between mb-6">
@@ -921,6 +925,7 @@ export default function WalletPage() {
         />
       )}
     </div>
+    </ErrorBoundary>
   );
 }
 

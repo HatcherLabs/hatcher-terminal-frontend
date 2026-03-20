@@ -7,6 +7,7 @@ import {
   useWatchlist,
   WatchlistItem,
 } from "@/components/providers/WatchlistProvider";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { api } from "@/lib/api";
 
 // ---- helpers ----
@@ -370,6 +371,7 @@ export default function WatchlistPage() {
 
   if (watchlist.length === 0) {
     return (
+      <ErrorBoundary fallbackTitle="Watchlist error">
       <div className="flex flex-col pt-2">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6 px-1">
@@ -444,10 +446,12 @@ export default function WatchlistPage() {
           </div>
         </div>
       </div>
+      </ErrorBoundary>
     );
   }
 
   return (
+    <ErrorBoundary fallbackTitle="Watchlist error">
     <div className="flex flex-col pt-2">
       {/* Header */}
       <div className="flex items-center justify-between mb-3 px-1">
@@ -1048,5 +1052,6 @@ export default function WatchlistPage() {
         })}
       </div>
     </div>
+    </ErrorBoundary>
   );
 }

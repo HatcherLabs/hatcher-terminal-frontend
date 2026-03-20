@@ -7,6 +7,7 @@ import { QuickTradeButton } from "@/components/trade/QuickTradeButton";
 import { Sparkline } from "@/components/ui/Sparkline";
 import { SecurityDots } from "@/components/ui/SecurityDots";
 import { useToast } from "@/components/ui/Toast";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { api } from "@/lib/api";
 
 type ExploreCategory = "new" | "graduating" | "migrated";
@@ -583,6 +584,7 @@ export default function TrenchesPage() {
   const tableMinWidth = columns.reduce((acc, col) => acc + col.width, 0);
 
   return (
+    <ErrorBoundary fallbackTitle="Explore error">
     <div className="flex flex-col pt-2">
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
@@ -834,6 +836,7 @@ export default function TrenchesPage() {
         </>
       )}
     </div>
+    </ErrorBoundary>
   );
 }
 

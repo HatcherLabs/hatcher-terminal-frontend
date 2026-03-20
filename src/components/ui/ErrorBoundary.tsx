@@ -1,6 +1,7 @@
 "use client";
 
 import React, { Component, type ReactNode } from "react";
+import Link from "next/link";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -10,13 +11,12 @@ interface ErrorBoundaryProps {
 interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
-  showDetails: boolean;
 }
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { hasError: false, error: null, showDetails: false };
+    this.state = { hasError: false, error: null };
   }
 
   static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
@@ -24,63 +24,106 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   handleRetry = () => {
-    this.setState({ hasError: false, error: null, showDetails: false });
+    this.setState({ hasError: false, error: null });
   };
 
   render() {
     if (this.state.hasError) {
+      const isDev = process.env.NODE_ENV === "development";
+
       return (
-        <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-          <div className="w-12 h-12 rounded-full bg-red/10 flex items-center justify-center mb-4">
+        <div
+          className="flex flex-col items-center justify-center py-16 px-4 text-center rounded-lg mx-auto max-w-md"
+          style={{
+            backgroundColor: "#0a0d14",
+            border: "1px solid #f23645",
+          }}
+        >
+          {/* Terminal-style error icon */}
+          <div
+            className="w-12 h-12 rounded-full flex items-center justify-center mb-4"
+            style={{ backgroundColor: "rgba(242, 54, 69, 0.1)" }}
+          >
             <svg
               viewBox="0 0 24 24"
               width={24}
               height={24}
               fill="none"
-              stroke="currentColor"
+              stroke="#f23645"
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="text-red"
             >
               <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
+              <line x1="15" y1="9" x2="9" y2="15" />
+              <line x1="9" y1="9" x2="15" y2="15" />
             </svg>
           </div>
 
-          <h2 className="text-sm font-semibold text-text-primary mb-1">
+          {/* Terminal prompt style title */}
+          <h2
+            className="text-sm font-bold font-mono tracking-wider uppercase mb-1"
+            style={{ color: "#f23645" }}
+          >
             {this.props.fallbackTitle || "Something went wrong"}
           </h2>
-          <p className="text-xs text-text-muted mb-4 max-w-[280px]">
-            An unexpected error occurred. Try again or reload the page.
+
+          <p
+            className="text-xs font-mono mb-6 max-w-[280px] leading-relaxed"
+            style={{ color: "#5c6380" }}
+          >
+            An unexpected error occurred. Try again or return home.
           </p>
 
-          <button
-            onClick={this.handleRetry}
-            className="px-5 py-2 rounded-lg bg-green text-bg-primary text-sm font-semibold hover:brightness-110 transition-all mb-3"
-          >
-            Try Again
-          </button>
-
-          {this.state.error && (
-            <button
-              onClick={() =>
-                this.setState((s) => ({ showDetails: !s.showDetails }))
-              }
-              className="text-[11px] text-text-faint hover:text-text-muted transition-colors"
+          {/* Dev-only error message */}
+          {isDev && this.state.error && (
+            <div
+              className="w-full max-w-sm rounded-lg p-3 text-left mb-6"
+              style={{
+                backgroundColor: "#04060b",
+                border: "1px solid #1a1f2e",
+              }}
             >
-              {this.state.showDetails ? "Hide details" : "Show details"}
-            </button>
-          )}
-
-          {this.state.showDetails && this.state.error && (
-            <div className="mt-3 w-full max-w-sm bg-bg-card border border-border rounded-lg p-3 text-left">
-              <p className="text-[11px] font-mono text-red break-all leading-relaxed">
+              <p
+                className="text-[9px] font-bold uppercase tracking-widest mb-1.5"
+                style={{ color: "#f23645" }}
+              >
+                DEV ERROR
+              </p>
+              <p
+                className="text-[11px] font-mono break-all leading-relaxed"
+                style={{ color: "#9ca3b8" }}
+              >
                 {this.state.error.message}
               </p>
             </div>
           )}
+
+          {/* Action buttons */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={this.handleRetry}
+              className="px-5 py-2 rounded-lg text-sm font-bold font-mono uppercase tracking-wider transition-all hover:brightness-110"
+              style={{
+                backgroundColor: "#00d672",
+                color: "#04060b",
+              }}
+            >
+              Try Again
+            </button>
+
+            <Link
+              href="/"
+              className="px-5 py-2 rounded-lg text-sm font-medium font-mono uppercase tracking-wider transition-all hover:brightness-110"
+              style={{
+                backgroundColor: "#10131c",
+                color: "#9ca3b8",
+                border: "1px solid #1a1f2e",
+              }}
+            >
+              Go Home
+            </Link>
+          </div>
         </div>
       );
     }
