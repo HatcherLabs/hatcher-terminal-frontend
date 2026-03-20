@@ -3,22 +3,26 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useKey } from "@/components/providers/KeyProvider";
+import { ImportKeyModal } from "@/components/wallet/ImportKeyModal";
 import { api } from "@/lib/api";
 import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { importKey } = useKey();
+  const { decryptAndLoad, hasEncryptedWallet } = useKey();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [showNoWallet, setShowNoWallet] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setShowNoWallet(false);
 
     try {
       const isEmail = identifier.includes("@");
@@ -28,7 +32,6 @@ export default function LoginPage() {
 
       const res = await api.raw("/api/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
 
@@ -39,28 +42,33 @@ export default function LoginPage() {
         return;
       }
 
-      // Auto-decrypt and load the private key using password
-      try {
-        const keyRes = await api.raw("/api/wallet/key", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ password }),
-        });
-        if (keyRes.ok) {
-          const keyData = await keyRes.json();
-          if (keyData.data?.privateKey) {
-            importKey(keyData.data.privateKey);
-          }
+      // Try to decrypt local wallet with the login password
+      if (hasEncryptedWallet) {
+        const decrypted = await decryptAndLoad(password);
+        if (decrypted) {
+          router.push("/swipe");
+          return;
         }
-      } catch {
-        // Key decrypt failed — user can unlock from wallet page
+        // Decryption failed — possibly different password was used to encrypt,
+        // or storage is from a different account. Show import option.
+        setShowNoWallet(true);
+      } else {
+        // No encrypted wallet on this device
+        setShowNoWallet(true);
       }
-
-      router.push("/swipe");
     } catch {
       setError("Something went wrong");
     }
     setLoading(false);
+  };
+
+  const handleImportSuccess = () => {
+    setShowImportModal(false);
+    router.push("/swipe");
+  };
+
+  const handleSkip = () => {
+    router.push("/swipe");
   };
 
   return (
@@ -130,6 +138,30 @@ export default function LoginPage() {
 
           {error && <p className="text-xs text-red text-center font-medium">{error}</p>}
 
+          {showNoWallet && (
+            <div className="bg-bg-primary border border-amber/20 rounded-lg p-4 space-y-3">
+              <p className="text-xs text-amber font-medium">
+                No wallet found on this device. Import your private key to trade.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowImportModal(true)}
+                  className="flex-1 py-2 rounded-lg text-xs font-semibold bg-green text-bg-primary hover:brightness-110 transition-all"
+                >
+                  Import Key
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSkip}
+                  className="flex-1 py-2 rounded-lg text-xs font-medium border border-border text-text-secondary hover:bg-bg-hover transition-colors"
+                >
+                  Skip for now
+                </button>
+              </div>
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={loading || !identifier || !password}
@@ -156,6 +188,13 @@ export default function LoginPage() {
           </Link>
         </p>
       </div>
+
+      {showImportModal && (
+        <ImportKeyModal
+          onClose={() => setShowImportModal(false)}
+          onSuccess={handleImportSuccess}
+        />
+      )}
     </div>
   );
 }

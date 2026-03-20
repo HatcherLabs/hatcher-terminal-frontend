@@ -28,7 +28,7 @@ function getPasswordStrength(password: string): {
 
 export default function SignupPage() {
   const router = useRouter();
-  const { importKey } = useKey();
+  const { generateKeypair, importKey, encryptAndStore } = useKey();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -53,10 +53,12 @@ export default function SignupPage() {
     setError("");
 
     try {
-      // Signup request — backend generates keypair and returns it
+      // 1. Generate keypair CLIENT-SIDE
+      const { publicKey, privateKey } = await generateKeypair();
+
+      // 2. Create account on backend
       const res = await api.raw("/api/auth/signup", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           username,
           password,
@@ -70,18 +72,26 @@ export default function SignupPage() {
         return;
       }
 
-      // Backend handles keypair generation and wallet registration.
-      // The response should include the generated keys.
-      const { publicKey, privateKey } = data.data?.wallet ?? {};
+      // 3. Register public key with backend
+      const walletRes = await api.raw("/api/wallet/register", {
+        method: "POST",
+        body: JSON.stringify({ publicKey }),
+      });
 
-      if (publicKey && privateKey) {
-        // Auto-load key into memory for immediate trading
-        importKey(privateKey);
-        setGeneratedKey({ publicKey, privateKey });
-      } else {
-        // If backend doesn't return keys, redirect to swipe
-        router.push("/swipe");
+      if (!walletRes.ok) {
+        const walletData = await walletRes.json();
+        setError(walletData.error || "Failed to register wallet");
+        return;
       }
+
+      // 4. Encrypt and store private key locally (reuse account password)
+      await encryptAndStore(password);
+
+      // 5. Import key into memory for immediate use
+      importKey(privateKey);
+
+      // 6. Show the key reveal modal
+      setGeneratedKey({ publicKey, privateKey });
     } catch {
       setError("Something went wrong");
     } finally {
@@ -181,6 +191,12 @@ export default function SignupPage() {
                 </p>
               </div>
             )}
+          </div>
+
+          <div className="bg-bg-primary border border-amber/20 rounded-lg p-3">
+            <p className="text-[11px] text-amber font-medium">
+              Your password encrypts your wallet on this device. If you forget it or clear browser data, you will need your private key to recover your wallet.
+            </p>
           </div>
 
           {error && <p className="text-xs text-red text-center font-medium">{error}</p>}
