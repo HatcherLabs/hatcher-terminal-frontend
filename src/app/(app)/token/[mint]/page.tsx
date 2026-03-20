@@ -193,6 +193,7 @@ export default function TokenTerminalPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [activeLeftTab, setActiveLeftTab] = useState<"overview" | "trades" | "holders" | "info">("overview");
   const [activeTradeTab, setActiveTradeTab] = useState<"buy" | "sell">("buy");
   const [customAmount, setCustomAmount] = useState("");
   const [tradeLoading, setTradeLoading] = useState(false);
@@ -713,254 +714,452 @@ export default function TokenTerminalPage() {
           {/* Chart */}
           <TokenChart mintAddress={token.mintAddress} />
 
-          {/* Metrics grid - compact, data-dense */}
-          <div className="grid grid-cols-3 lg:grid-cols-5 gap-1.5">
-            <MetricCell
-              label="MCap"
-              value={
-                marketCapUsd != null
-                  ? formatUsd(marketCapUsd)
-                  : marketCapSol != null
-                    ? `${formatNumber(marketCapSol)} SOL`
-                    : "\u2014"
-              }
-              sub={
-                marketCapSol != null && marketCapUsd != null
-                  ? `${formatNumber(marketCapSol)} SOL`
-                  : undefined
-              }
-            />
-            <MetricCell
-              label="Vol 1h"
-              value={volume1h != null ? `$${formatNumber(volume1h)}` : "\u2014"}
-            />
-            <MetricCell
-              label="Holders"
-              value={formatNumber(token.holders)}
-            />
-            <MetricCell
-              label="Buys / Sells"
-              value={
-                buyCount != null || sellCount != null ? (
-                  <span>
-                    <span style={{ color: "#00d672" }}>{formatNumber(buyCount) || "0"}</span>
-                    <span style={{ color: "#5c6380" }}> / </span>
-                    <span style={{ color: "#f23645" }}>{formatNumber(sellCount) || "0"}</span>
-                  </span>
-                ) : (
-                  "\u2014"
-                )
-              }
-            />
-            <MetricCell
-              label="Buy Ratio"
-              value={
-                totalTrades > 0
-                  ? `${buyPressure.toFixed(0)}%`
-                  : "\u2014"
-              }
-              valueColor={
-                buyPressure > 60
-                  ? "#00d672"
-                  : buyPressure < 40
-                    ? "#f23645"
-                    : "#eef0f6"
-              }
-            />
-            <MetricCell
-              label="Dev Hold"
-              value={
-                token.devHoldPct !== null
-                  ? `${token.devHoldPct.toFixed(1)}%`
-                  : "\u2014"
-              }
-              valueColor={
-                token.devHoldPct !== null && token.devHoldPct > 15
-                  ? "#f23645"
-                  : token.devHoldPct !== null && token.devHoldPct > 10
-                    ? "#f0a000"
-                    : undefined
-              }
-            />
-            <MetricCell
-              label="Top 10 Hold"
-              value={
-                token.topHoldersPct !== null
-                  ? `${token.topHoldersPct.toFixed(1)}%`
-                  : "\u2014"
-              }
-              valueColor={
-                token.topHoldersPct !== null && token.topHoldersPct > 70
-                  ? "#f23645"
-                  : token.topHoldersPct !== null && token.topHoldersPct > 50
-                    ? "#f0a000"
-                    : undefined
-              }
-            />
-            <MetricCell
-              label="Age"
-              value={tokenAge(token.createdAt)}
-            />
-            {/* Risk level cell */}
-            <MetricCell
-              label="Risk"
-              value={
-                token.riskLevel ? (
-                  <RiskBadge level={token.riskLevel} />
-                ) : (
-                  "\u2014"
-                )
-              }
-            />
-            {/* Bonding progress cell */}
-            <MetricCell
-              label={token.isGraduated ? "Graduated" : "Bonding"}
-              value={
-                token.isGraduated ? (
-                  <span style={{ color: "#00d672" }}>Raydium</span>
-                ) : (
-                  `${bondingPct.toFixed(0)}%`
-                )
-              }
-              valueColor={
-                token.isGraduated
-                  ? "#00d672"
-                  : bondingPct >= 90
-                    ? "#00d672"
-                    : bondingPct >= 50
-                      ? "#f0a000"
-                      : undefined
-              }
-            />
+          {/* ====== TAB BAR ====== */}
+          <div
+            className="flex gap-0"
+            style={{ borderBottom: "1px solid #1a1f2e" }}
+          >
+            {(["overview", "trades", "holders", "info"] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveLeftTab(tab)}
+                className="px-3 py-1.5 font-mono transition-colors relative"
+                style={{
+                  fontSize: "11px",
+                  color: activeLeftTab === tab ? "#00d672" : "#5c6380",
+                  background: "transparent",
+                  border: "none",
+                  borderBottom: activeLeftTab === tab ? "2px solid #00d672" : "2px solid transparent",
+                  marginBottom: "-1px",
+                }}
+              >
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </button>
+            ))}
           </div>
 
-          {/* Bonding Curve Progress Bar */}
-          {!token.isGraduated && (
-            <div
-              className="rounded px-3 py-2.5"
-              style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
-            >
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[10px] uppercase tracking-wider" style={{ color: "#5c6380" }}>
-                  Bonding Progress
-                </span>
-                <span className="text-[11px] font-mono font-semibold" style={{ color: "#eef0f6" }}>
-                  {bondingPct.toFixed(1)}%
-                </span>
-              </div>
-              <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: "#10131c" }}>
-                <div
-                  className="h-full rounded-full transition-all duration-700 ease-out"
-                  style={{
-                    width: `${bondingPct}%`,
-                    background:
-                      bondingPct >= 90
+          {/* ====== TAB CONTENT ====== */}
+
+          {/* Overview Tab */}
+          {activeLeftTab === "overview" && (
+            <div className="space-y-3">
+              {/* Metrics grid - compact, data-dense */}
+              <div className="grid grid-cols-3 lg:grid-cols-5 gap-1.5">
+                <MetricCell
+                  label="MCap"
+                  value={
+                    marketCapUsd != null
+                      ? formatUsd(marketCapUsd)
+                      : marketCapSol != null
+                        ? `${formatNumber(marketCapSol)} SOL`
+                        : "\u2014"
+                  }
+                  sub={
+                    marketCapSol != null && marketCapUsd != null
+                      ? `${formatNumber(marketCapSol)} SOL`
+                      : undefined
+                  }
+                />
+                <MetricCell
+                  label="Vol 1h"
+                  value={volume1h != null ? `$${formatNumber(volume1h)}` : "\u2014"}
+                />
+                <MetricCell
+                  label="Holders"
+                  value={formatNumber(token.holders)}
+                />
+                <MetricCell
+                  label="Buys / Sells"
+                  value={
+                    buyCount != null || sellCount != null ? (
+                      <span>
+                        <span style={{ color: "#00d672" }}>{formatNumber(buyCount) || "0"}</span>
+                        <span style={{ color: "#5c6380" }}> / </span>
+                        <span style={{ color: "#f23645" }}>{formatNumber(sellCount) || "0"}</span>
+                      </span>
+                    ) : (
+                      "\u2014"
+                    )
+                  }
+                />
+                <MetricCell
+                  label="Buy Ratio"
+                  value={
+                    totalTrades > 0
+                      ? `${buyPressure.toFixed(0)}%`
+                      : "\u2014"
+                  }
+                  valueColor={
+                    buyPressure > 60
+                      ? "#00d672"
+                      : buyPressure < 40
+                        ? "#f23645"
+                        : "#eef0f6"
+                  }
+                />
+                <MetricCell
+                  label="Dev Hold"
+                  value={
+                    token.devHoldPct !== null
+                      ? `${token.devHoldPct.toFixed(1)}%`
+                      : "\u2014"
+                  }
+                  valueColor={
+                    token.devHoldPct !== null && token.devHoldPct > 15
+                      ? "#f23645"
+                      : token.devHoldPct !== null && token.devHoldPct > 10
+                        ? "#f0a000"
+                        : undefined
+                  }
+                />
+                <MetricCell
+                  label="Top 10 Hold"
+                  value={
+                    token.topHoldersPct !== null
+                      ? `${token.topHoldersPct.toFixed(1)}%`
+                      : "\u2014"
+                  }
+                  valueColor={
+                    token.topHoldersPct !== null && token.topHoldersPct > 70
+                      ? "#f23645"
+                      : token.topHoldersPct !== null && token.topHoldersPct > 50
+                        ? "#f0a000"
+                        : undefined
+                  }
+                />
+                <MetricCell
+                  label="Age"
+                  value={tokenAge(token.createdAt)}
+                />
+                <MetricCell
+                  label="Risk"
+                  value={
+                    token.riskLevel ? (
+                      <RiskBadge level={token.riskLevel} />
+                    ) : (
+                      "\u2014"
+                    )
+                  }
+                />
+                <MetricCell
+                  label={token.isGraduated ? "Graduated" : "Bonding"}
+                  value={
+                    token.isGraduated ? (
+                      <span style={{ color: "#00d672" }}>Raydium</span>
+                    ) : (
+                      `${bondingPct.toFixed(0)}%`
+                    )
+                  }
+                  valueColor={
+                    token.isGraduated
+                      ? "#00d672"
+                      : bondingPct >= 90
                         ? "#00d672"
                         : bondingPct >= 50
                           ? "#f0a000"
-                          : "#3b82f6",
-                  }}
+                          : undefined
+                  }
                 />
               </div>
-              <div className="flex items-center justify-between mt-1">
-                <span className="text-[9px] font-mono" style={{ color: "#5c6380" }}>
-                  {bondingSol.toFixed(1)} SOL
-                </span>
-                <span className="text-[9px] font-mono" style={{ color: "#5c6380" }}>
-                  {BONDING_GRADUATION_SOL} SOL
-                </span>
-              </div>
-            </div>
-          )}
 
-          {/* Buy/Sell Pressure Bar */}
-          {totalTrades > 0 && (
-            <div
-              className="rounded px-3 py-2.5"
-              style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
-            >
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[10px] uppercase tracking-wider" style={{ color: "#5c6380" }}>
-                  Buy/Sell Pressure (1h)
-                </span>
-              </div>
-              <div className="flex h-1.5 rounded-full overflow-hidden">
+              {/* Bonding Curve Progress Bar */}
+              {!token.isGraduated && (
                 <div
-                  className="transition-all duration-500"
-                  style={{ width: `${buyPressure}%`, background: "#00d672" }}
-                />
-                <div
-                  className="transition-all duration-500"
-                  style={{ width: `${100 - buyPressure}%`, background: "#f23645" }}
-                />
-              </div>
-              <div className="flex items-center justify-between mt-1">
-                <span className="text-[9px] font-mono" style={{ color: "#00d672" }}>
-                  {buyPressure.toFixed(0)}% buys
-                </span>
-                <span className="text-[9px] font-mono" style={{ color: "#f23645" }}>
-                  {(100 - buyPressure).toFixed(0)}% sells
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Security Signals */}
-          {signals.length > 0 && (
-            <div
-              className="rounded px-3 py-2.5"
-              style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
-            >
-              <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color: "#5c6380" }}>
-                Security Signals
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {signals.map((signal) => (
-                  <div
-                    key={signal.label}
-                    className="flex items-center gap-1.5 px-2 py-1 rounded"
-                    style={{ background: "#10131c", border: "1px solid #1a1f2e" }}
-                  >
-                    <span
-                      className="text-[10px]"
-                      style={{ color: signalDotColors[signal.status] }}
-                    >
-                      {signalIcons[signal.status]}
+                  className="rounded px-3 py-2.5"
+                  style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[10px] uppercase tracking-wider" style={{ color: "#5c6380" }}>
+                      Bonding Progress
                     </span>
-                    <span
-                      className="inline-block w-1.5 h-1.5 rounded-full"
-                      style={{ background: signalDotColors[signal.status] }}
-                    />
-                    <span
-                      className="text-[10px] font-medium"
-                      style={{ color: signalDotColors[signal.status] }}
-                    >
-                      {signal.label}
+                    <span className="text-[11px] font-mono font-semibold" style={{ color: "#eef0f6" }}>
+                      {bondingPct.toFixed(1)}%
                     </span>
                   </div>
-                ))}
-              </div>
+                  <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: "#10131c" }}>
+                    <div
+                      className="h-full rounded-full transition-all duration-700 ease-out"
+                      style={{
+                        width: `${bondingPct}%`,
+                        background:
+                          bondingPct >= 90
+                            ? "#00d672"
+                            : bondingPct >= 50
+                              ? "#f0a000"
+                              : "#3b82f6",
+                      }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-[9px] font-mono" style={{ color: "#5c6380" }}>
+                      {bondingSol.toFixed(1)} SOL
+                    </span>
+                    <span className="text-[9px] font-mono" style={{ color: "#5c6380" }}>
+                      {BONDING_GRADUATION_SOL} SOL
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Buy/Sell Pressure Bar */}
+              {totalTrades > 0 && (
+                <div
+                  className="rounded px-3 py-2.5"
+                  style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[10px] uppercase tracking-wider" style={{ color: "#5c6380" }}>
+                      Buy/Sell Pressure (1h)
+                    </span>
+                  </div>
+                  <div className="flex h-1.5 rounded-full overflow-hidden">
+                    <div
+                      className="transition-all duration-500"
+                      style={{ width: `${buyPressure}%`, background: "#00d672" }}
+                    />
+                    <div
+                      className="transition-all duration-500"
+                      style={{ width: `${100 - buyPressure}%`, background: "#f23645" }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-[9px] font-mono" style={{ color: "#00d672" }}>
+                      {buyPressure.toFixed(0)}% buys
+                    </span>
+                    <span className="text-[9px] font-mono" style={{ color: "#f23645" }}>
+                      {(100 - buyPressure).toFixed(0)}% sells
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Security Signals */}
+              {signals.length > 0 && (
+                <div
+                  className="rounded px-3 py-2.5"
+                  style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
+                >
+                  <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color: "#5c6380" }}>
+                    Security Signals
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {signals.map((signal) => (
+                      <div
+                        key={signal.label}
+                        className="flex items-center gap-1.5 px-2 py-1 rounded"
+                        style={{ background: "#10131c", border: "1px solid #1a1f2e" }}
+                      >
+                        <span
+                          className="text-[10px]"
+                          style={{ color: signalDotColors[signal.status] }}
+                        >
+                          {signalIcons[signal.status]}
+                        </span>
+                        <span
+                          className="inline-block w-1.5 h-1.5 rounded-full"
+                          style={{ background: signalDotColors[signal.status] }}
+                        />
+                        <span
+                          className="text-[10px] font-medium"
+                          style={{ color: signalDotColors[signal.status] }}
+                        >
+                          {signal.label}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
-          {/* ====== HOLDER ANALYSIS + RECENT TRADES ====== */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            <TopHolders mintAddress={token.mintAddress} />
+          {/* Trades Tab */}
+          {activeLeftTab === "trades" && (
             <RecentTrades mintAddress={token.mintAddress} />
-          </div>
+          )}
 
-          {/* Token Description (mobile only, desktop shows in right column) */}
-          {token.description && (
-            <div
-              className="lg:hidden rounded px-3 py-2.5"
-              style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
-            >
-              <p className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color: "#5c6380" }}>
-                About
-              </p>
-              <p className="text-xs leading-relaxed" style={{ color: "#9ca3b8" }}>
-                {token.description}
-              </p>
+          {/* Holders Tab */}
+          {activeLeftTab === "holders" && (
+            <TopHolders mintAddress={token.mintAddress} />
+          )}
+
+          {/* Info Tab */}
+          {activeLeftTab === "info" && (
+            <div className="space-y-3">
+              {/* Description */}
+              {token.description && (
+                <div
+                  className="rounded px-3 py-2.5"
+                  style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
+                >
+                  <p className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color: "#5c6380" }}>
+                    About
+                  </p>
+                  <p className="text-xs leading-relaxed" style={{ color: "#9ca3b8" }}>
+                    {token.description}
+                  </p>
+                </div>
+              )}
+
+              {/* Social Links */}
+              {(token.twitter || token.telegram || token.website) && (
+                <div
+                  className="rounded px-3 py-2.5"
+                  style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
+                >
+                  <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color: "#5c6380" }}>
+                    Socials
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {token.twitter && (
+                      <a
+                        href={token.twitter}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-mono transition-colors"
+                        style={{ background: "#10131c", border: "1px solid #1a1f2e", color: "#9ca3b8" }}
+                      >
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                        </svg>
+                        Twitter
+                      </a>
+                    )}
+                    {token.telegram && (
+                      <a
+                        href={token.telegram.startsWith("http") ? token.telegram : `https://t.me/${token.telegram}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-mono transition-colors"
+                        style={{ background: "#10131c", border: "1px solid #1a1f2e", color: "#9ca3b8" }}
+                      >
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
+                        </svg>
+                        Telegram
+                      </a>
+                    )}
+                    {token.website && (
+                      <a
+                        href={token.website.startsWith("http") ? token.website : `https://${token.website}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-mono transition-colors"
+                        style={{ background: "#10131c", border: "1px solid #1a1f2e", color: "#9ca3b8" }}
+                      >
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="10" />
+                          <line x1="2" y1="12" x2="22" y2="12" />
+                          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                        </svg>
+                        Website
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Contract Details */}
+              <div
+                className="rounded px-3 py-2.5"
+                style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
+              >
+                <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color: "#5c6380" }}>
+                  Contract Details
+                </p>
+                <div className="space-y-2">
+                  {/* Mint Address */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px]" style={{ color: "#5c6380" }}>Mint Address</span>
+                    <button
+                      onClick={() => handleCopy(token.mintAddress, "info-mint")}
+                      className="flex items-center gap-1 text-[10px] font-mono transition-colors"
+                      style={{ color: "#9ca3b8" }}
+                    >
+                      <span>{shortenAddress(token.mintAddress)}</span>
+                      <span style={{ color: copied === "info-mint" ? "#00d672" : "#5c6380" }}>
+                        {copied === "info-mint" ? "\u2713" : "\u2398"}
+                      </span>
+                    </button>
+                  </div>
+                  {/* Bonding Curve Address */}
+                  {token.bondingCurveAddress && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px]" style={{ color: "#5c6380" }}>Bonding Curve</span>
+                      <button
+                        onClick={() => handleCopy(token.bondingCurveAddress!, "info-bonding")}
+                        className="flex items-center gap-1 text-[10px] font-mono transition-colors"
+                        style={{ color: "#9ca3b8" }}
+                      >
+                        <span>{shortenAddress(token.bondingCurveAddress)}</span>
+                        <span style={{ color: copied === "info-bonding" ? "#00d672" : "#5c6380" }}>
+                          {copied === "info-bonding" ? "\u2713" : "\u2398"}
+                        </span>
+                      </button>
+                    </div>
+                  )}
+                  {/* Creator Address */}
+                  {token.creatorAddress && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px]" style={{ color: "#5c6380" }}>Creator</span>
+                      <button
+                        onClick={() => handleCopy(token.creatorAddress, "info-creator")}
+                        className="flex items-center gap-1 text-[10px] font-mono transition-colors"
+                        style={{ color: "#9ca3b8" }}
+                      >
+                        <span>{shortenAddress(token.creatorAddress)}</span>
+                        <span style={{ color: copied === "info-creator" ? "#00d672" : "#5c6380" }}>
+                          {copied === "info-creator" ? "\u2713" : "\u2398"}
+                        </span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Creation Date */}
+              <div
+                className="rounded px-3 py-2.5"
+                style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase tracking-wider" style={{ color: "#5c6380" }}>
+                    Created
+                  </span>
+                  <span className="text-[11px] font-mono" style={{ color: "#eef0f6" }}>
+                    {new Date(token.createdAt).toLocaleString()} ({tokenAge(token.createdAt)} ago)
+                  </span>
+                </div>
+              </div>
+
+              {/* Platform links */}
+              <div
+                className="rounded px-3 py-2.5"
+                style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
+              >
+                <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color: "#5c6380" }}>
+                  View On
+                </p>
+                <div className="flex items-center gap-1">
+                  {[
+                    { label: "Pump.fun", url: `https://pump.fun/coin/${token.mintAddress}` },
+                    { label: "Solscan", url: `https://solscan.io/token/${token.mintAddress}` },
+                    { label: "Birdeye", url: `https://birdeye.so/token/${token.mintAddress}?chain=solana` },
+                    { label: "DexScreener", url: `https://dexscreener.com/solana/${token.mintAddress}` },
+                  ].map((link) => (
+                    <a
+                      key={link.label}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 flex items-center justify-center h-7 rounded text-[10px] font-mono font-medium tracking-wider transition-colors"
+                      style={{ background: "#10131c", border: "1px solid #1a1f2e", color: "#5c6380" }}
+                    >
+                      {link.label}
+                    </a>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </div>
