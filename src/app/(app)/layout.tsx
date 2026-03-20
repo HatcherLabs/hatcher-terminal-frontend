@@ -15,6 +15,7 @@ import { QuickTradePanel } from "@/components/trade/QuickTradePanel";
 import { QuickTradeFAB } from "@/components/trade/QuickTradeFAB";
 import { KeyboardShortcutsModal } from "@/components/ui/KeyboardShortcutsModal";
 import { AutoSellAlert } from "@/components/trade/AutoSellAlert";
+import { SSENotificationBridge } from "@/components/providers/SSENotificationBridge";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -32,6 +33,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     <BottomNav />
                     <ToastContainer />
                     <AutoSellAlert />
+                    <SSENotificationBridge />
                     <QuickTradeFAB />
                     <QuickTradePanel />
                     <KeyboardShortcutsModal />

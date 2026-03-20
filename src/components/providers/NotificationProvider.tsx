@@ -10,11 +10,11 @@ import {
 } from "react";
 
 export type NotificationType =
-  | "trade_buy"
-  | "trade_sell"
-  | "position_update"
-  | "price_alert"
-  | "system";
+  | "price-alert"
+  | "auto-sell"
+  | "order-triggered"
+  | "trade-confirmed"
+  | "info";
 
 export interface Notification {
   id: string;
@@ -23,11 +23,7 @@ export interface Notification {
   message: string;
   timestamp: number;
   read: boolean;
-  data?: {
-    mintAddress?: string;
-    txHash?: string;
-    pnl?: number;
-  };
+  mintAddress?: string;
 }
 
 interface NotificationContextType {
@@ -91,7 +87,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       };
       setNotifications((prev) => {
         const next = [notification, ...prev];
-        // FIFO: keep only the most recent MAX_NOTIFICATIONS
         return next.slice(0, MAX_NOTIFICATIONS);
       });
     },

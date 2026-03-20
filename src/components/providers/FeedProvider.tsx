@@ -128,6 +128,26 @@ export function FeedProvider({ children }: { children: ReactNode }) {
       );
       // Push to the modal alert store
       pushAutoSellAlert(alert);
+      // Dispatch for SSENotificationBridge
+      window.dispatchEvent(
+        new CustomEvent("sse:auto-sell-alert", { detail: alert })
+      );
+    });
+
+    es.addEventListener("price-alert-triggered", (e) => {
+      const data = JSON.parse(e.data);
+      // Dispatch for SSENotificationBridge (toast + persistent notification handled there)
+      window.dispatchEvent(
+        new CustomEvent("sse:price-alert-triggered", { detail: data })
+      );
+    });
+
+    es.addEventListener("limit-order-triggered", (e) => {
+      const data = JSON.parse(e.data);
+      // Dispatch for SSENotificationBridge (toast + persistent notification handled there)
+      window.dispatchEvent(
+        new CustomEvent("sse:limit-order-triggered", { detail: data })
+      );
     });
 
     es.onerror = () => {

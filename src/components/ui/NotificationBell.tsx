@@ -5,18 +5,12 @@ import { useNotifications } from "@/components/providers/NotificationProvider";
 import { NotificationPanel } from "@/components/ui/NotificationPanel";
 
 export function NotificationBell() {
-  const { unreadCount, markAllRead } = useNotifications();
+  const { unreadCount } = useNotifications();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleToggle = () => {
-    setOpen((prev) => {
-      const willOpen = !prev;
-      if (willOpen && unreadCount > 0) {
-        markAllRead();
-      }
-      return willOpen;
-    });
+    setOpen((prev) => !prev);
   };
 
   // Close panel when clicking outside
@@ -49,15 +43,31 @@ export function NotificationBell() {
           strokeWidth="1.8"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="w-4 h-4 text-text-muted"
+          className="w-4 h-4"
+          style={{ color: "#5c6380" }}
         >
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
           <path d="M13.73 21a2 2 0 0 1-3.46 0" />
         </svg>
 
-        {/* Unread dot */}
+        {/* Unread badge */}
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red" />
+          <span
+            className="absolute flex items-center justify-center rounded-full font-mono font-bold leading-none"
+            style={{
+              top: 0,
+              right: -2,
+              minWidth: 16,
+              height: 16,
+              padding: "0 4px",
+              fontSize: 9,
+              backgroundColor: "#f23645",
+              color: "#eef0f6",
+              border: "2px solid #04060b",
+            }}
+          >
+            {unreadCount > 9 ? "9+" : unreadCount}
+          </span>
         )}
       </button>
 

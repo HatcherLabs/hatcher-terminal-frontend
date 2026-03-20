@@ -7,28 +7,28 @@ export function useTradeNotification() {
   const { addNotification } = useNotifications();
 
   const notifyBuy = useCallback(
-    (tokenName: string, amount: number, txHash?: string) => {
+    (tokenName: string, amount: number, mintAddress?: string) => {
       addNotification({
-        type: "trade_buy",
+        type: "trade-confirmed",
         title: `Bought ${tokenName}`,
         message: `Purchased ${amount} SOL worth of ${tokenName}`,
-        data: { txHash },
+        mintAddress,
       });
     },
     [addNotification]
   );
 
   const notifySell = useCallback(
-    (tokenName: string, amount: number, pnl?: number, txHash?: string) => {
+    (tokenName: string, amount: number, pnl?: number, mintAddress?: string) => {
       const pnlStr =
         pnl !== undefined
           ? ` (${pnl >= 0 ? "+" : ""}${pnl.toFixed(1)}%)`
           : "";
       addNotification({
-        type: "trade_sell",
+        type: "trade-confirmed",
         title: `Sold ${tokenName}`,
         message: `Sold ${amount} SOL worth of ${tokenName}${pnlStr}`,
-        data: { txHash, pnl },
+        mintAddress,
       });
     },
     [addNotification]
@@ -38,10 +38,10 @@ export function useTradeNotification() {
     (tokenName: string, change: number, mintAddress?: string) => {
       const direction = change >= 0 ? "up" : "down";
       addNotification({
-        type: "price_alert",
+        type: "price-alert",
         title: `${tokenName} Price Alert`,
         message: `${tokenName} is ${direction} ${Math.abs(change).toFixed(1)}% in the last hour`,
-        data: { mintAddress },
+        mintAddress,
       });
     },
     [addNotification]
