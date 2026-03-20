@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useKey } from "@/components/providers/KeyProvider";
 import { BalanceDisplay } from "@/components/wallet/BalanceDisplay";
 import { DepositQR } from "@/components/wallet/DepositQR";
 import { ImportKeyModal } from "@/components/wallet/ImportKeyModal";
 import { WithdrawModal } from "@/components/wallet/WithdrawModal";
+import { PortfolioChart } from "@/components/wallet/PortfolioChart";
+import { PnLCalendar } from "@/components/wallet/PnLCalendar";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { api } from "@/lib/api";
@@ -43,11 +45,17 @@ interface TradeHistoryItem {
   exitTimestamp: string | null;
   pnlSol: number | null;
   pnlPercent: number | null;
+  txHash?: string | null;
   token: {
     name: string;
     ticker: string;
     imageUri: string | null;
   };
+}
+
+interface PortfolioSnapshot {
+  time: string;
+  value: number;
 }
 
 function formatHoldTime(ms: number): string {
@@ -79,6 +87,49 @@ function PnlText({ value, className = "" }: { value: number; className?: string 
   return <span className={`${color} ${className}`}>{formatPnl(value)}</span>;
 }
 
+function escapeCsvField(field: string): string {
+  if (field.includes(",") || field.includes('"') || field.includes("\n")) {
+    return `"${field.replace(/"/g, '""')}"`;
+  }
+  return field;
+}
+
+function exportTradesToCsv(trades: TradeHistoryItem[]) {
+  const header = ["Date", "Token", "Type", "Amount (SOL)", "Price", "P&L", "TX Hash"];
+  const rows = trades.map((trade) => {
+    const date = trade.exitTimestamp
+      ? new Date(trade.exitTimestamp).toISOString().split("T")[0]
+      : new Date(trade.entryTimestamp).toISOString().split("T")[0];
+    const token = `${trade.token.ticker} (${trade.token.name})`;
+    const type = trade.exitSol !== null ? "Sell" : "Buy";
+    const amount = trade.exitSol !== null
+      ? trade.exitSol.toFixed(6)
+      : trade.entrySol.toFixed(6);
+    const price = trade.exitPricePerToken !== null
+      ? trade.exitPricePerToken.toFixed(12)
+      : trade.entryPricePerToken.toFixed(12);
+    const pnl = trade.pnlSol !== null ? formatPnl(trade.pnlSol) : "--";
+    const txHash = trade.txHash ?? "";
+
+    return [date, token, type, amount, price, pnl, txHash].map(escapeCsvField).join(",");
+  });
+
+  const csvContent = [header.join(","), ...rows].join("\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+
+  const today = new Date().toISOString().split("T")[0];
+  const filename = `hatcher-trades-${today}.csv`;
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 export default function WalletPage() {
   const { user } = useAuth();
   const { hasKey, publicKey, clearKey, importKey } = useKey();
@@ -99,6 +150,10 @@ export default function WalletPage() {
   // Trade history state
   const [tradeHistory, setTradeHistory] = useState<TradeHistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
+
+  // Portfolio chart state
+  const [portfolioSnapshots, setPortfolioSnapshots] = useState<PortfolioSnapshot[]>([]);
+  const [snapshotsLoading, setSnapshotsLoading] = useState(true);
 
   const walletAddress = user?.wallet?.publicKey;
 
@@ -142,12 +197,38 @@ export default function WalletPage() {
     }
   }, []);
 
+  const fetchPortfolioSnapshots = useCallback(async () => {
+    try {
+      const res = await api.raw("/api/wallet/portfolio-history");
+      if (res.ok) {
+        const { data } = await res.json();
+        setPortfolioSnapshots(data);
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setSnapshotsLoading(false);
+    }
+  }, []);
+
+  // Derive daily P&L from trade history
+  const dailyPnl = useMemo(() => {
+    const pnlMap: Record<string, number> = {};
+    for (const trade of tradeHistory) {
+      if (trade.pnlSol === null || !trade.exitTimestamp) continue;
+      const dateStr = new Date(trade.exitTimestamp).toISOString().split("T")[0];
+      pnlMap[dateStr] = (pnlMap[dateStr] ?? 0) + trade.pnlSol;
+    }
+    return pnlMap;
+  }, [tradeHistory]);
+
   useEffect(() => {
     if (!walletAddress) return;
     fetchBalance();
     fetchAnalytics();
     fetchHistory();
-  }, [walletAddress, fetchBalance, fetchAnalytics, fetchHistory]);
+    fetchPortfolioSnapshots();
+  }, [walletAddress, fetchBalance, fetchAnalytics, fetchHistory, fetchPortfolioSnapshots]);
 
   const handleRevealKey = async () => {
     if (!revealPassword) return;
@@ -429,9 +510,40 @@ export default function WalletPage() {
             )}
           </div>
 
+          {/* Portfolio Value Chart */}
+          <div className="bg-bg-card border border-border rounded-xl p-4">
+            <h2 className="text-sm font-semibold text-text-primary mb-4">Portfolio Value</h2>
+            {snapshotsLoading ? (
+              <Skeleton className="h-[200px] w-full rounded-lg" />
+            ) : (
+              <PortfolioChart data={portfolioSnapshots} />
+            )}
+          </div>
+
+          {/* P&L Calendar */}
+          <div className="bg-bg-card border border-border rounded-xl p-4">
+            <h2 className="text-sm font-semibold text-text-primary mb-4">Daily P&L</h2>
+            <PnLCalendar dailyPnl={dailyPnl} />
+          </div>
+
           {/* Trade History */}
           <div className="bg-bg-card border border-border rounded-xl p-4">
-            <h2 className="text-sm font-semibold text-text-primary mb-4">Trade History</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-semibold text-text-primary">Trade History</h2>
+              {tradeHistory.length > 0 && (
+                <button
+                  onClick={() => exportTradesToCsv(tradeHistory)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-border text-text-secondary hover:bg-bg-hover hover:text-text-primary transition-colors"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  Export CSV
+                </button>
+              )}
+            </div>
 
             {historyLoading ? (
               <div className="space-y-3">

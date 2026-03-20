@@ -5,6 +5,7 @@ import { useToast } from "@/components/ui/Toast";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useQuickBuy } from "@/hooks/useQuickBuy";
 import { api } from "@/lib/api";
+import { useMEVProtection } from "@/components/trade/MEVProtection";
 
 const QUICK_BUY_PRESETS = [0.1, 0.25, 0.5, 1.0, 2.0];
 
@@ -25,6 +26,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const toast = useToast();
   const { setAmount: setQuickBuyAmount } = useQuickBuy();
+  const { enabled: mevEnabled, toggle: toggleMEV } = useMEVProtection();
 
   useEffect(() => {
     api.raw("/api/settings")
@@ -418,6 +420,58 @@ export default function SettingsPage() {
               className="w-full bg-bg-primary border border-border rounded-lg px-3 py-2 text-sm font-mono text-text-primary focus:border-green focus:outline-none"
               placeholder="Custom priority fee"
             />
+          </div>
+
+          {/* MEV Protection */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-text-secondary">
+                  MEV Protection
+                </p>
+                <p className="text-[10px] text-text-muted">
+                  Prevents sandwich attacks on your transactions
+                </p>
+              </div>
+              <button
+                onClick={toggleMEV}
+                className={`relative w-10 h-5 rounded-full transition-colors ${
+                  mevEnabled ? "bg-green" : "bg-bg-elevated border border-border"
+                }`}
+                aria-label="Toggle MEV protection"
+              >
+                <span
+                  className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                    mevEnabled ? "translate-x-5" : "translate-x-0.5"
+                  }`}
+                />
+              </button>
+            </div>
+
+            {mevEnabled && (
+              <div className="flex items-center gap-2 bg-green/10 border border-green/20 rounded-lg px-3 py-2">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-4 h-4 text-green shrink-0"
+                >
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                <span className="text-[11px] font-medium text-green font-mono">
+                  Protected
+                </span>
+              </div>
+            )}
+
+            <p className="text-[10px] text-text-faint leading-relaxed">
+              Routes swaps through private transaction pools to prevent MEV bots
+              from front-running or sandwiching your trades. May slightly increase
+              confirmation time.
+            </p>
           </div>
         </div>
 
