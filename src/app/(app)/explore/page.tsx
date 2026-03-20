@@ -52,6 +52,23 @@ function relativeTime(iso: string): string {
   return `${days}d`;
 }
 
+function computeHeat(t: { holders?: number | null; buyCount?: number | null; sellCount?: number | null; volume1h?: number | null; bondingProgress?: number | null; marketCapSol?: number | null }): number {
+  let score = 30;
+  const buys = t.buyCount ?? 0;
+  const sells = t.sellCount ?? 0;
+  const totalTx = buys + sells;
+  if (totalTx > 100) score += 15;
+  else if (totalTx > 30) score += 8;
+  if (buys > sells * 2) score += 10;
+  if ((t.holders ?? 0) > 100) score += 10;
+  else if ((t.holders ?? 0) > 30) score += 5;
+  if ((t.volume1h ?? 0) > 10000) score += 10;
+  if ((t.bondingProgress ?? 0) > 60) score += 10;
+  else if ((t.bondingProgress ?? 0) > 30) score += 5;
+  if ((t.marketCapSol ?? 0) > 100) score += 5;
+  return Math.min(99, Math.max(10, score));
+}
+
 // ---- types ----
 
 interface ExploreToken {
@@ -505,10 +522,10 @@ export default function TrenchesPage() {
               <SortHeader label="Vol" sortKey="volume" currentSort={sortKey} currentDirection={sortDirection} onSort={handleSortToggle} align="left" />
             </div>
             <div style={{ width: 60 }}>B/S</div>
-            <div style={{ width: 90 }}>Chart</div>
-            <div style={{ width: 55 }}>
-              <SortHeader label="Chg%" sortKey="bonding" currentSort={sortKey} currentDirection={sortDirection} onSort={handleSortToggle} align="left" />
+            <div style={{ width: 75 }}>
+              <SortHeader label="Bonding" sortKey="bonding" currentSort={sortKey} currentDirection={sortDirection} onSort={handleSortToggle} align="left" />
             </div>
+            <div style={{ width: 90 }}>Chart</div>
             <div style={{ width: 50 }}>Risk</div>
             <div style={{ width: 35 }}>Sec</div>
             <div style={{ flex: 1, textAlign: "right" }}>Action</div>
@@ -566,8 +583,7 @@ function TableRow({
   isNew: boolean;
 }) {
   const mcapUsd = token.marketCapSol != null ? token.marketCapSol * SOL_PRICE_USD : null;
-  const heat = token.heatScore ?? Math.floor(Math.random() * 60 + 30); // fallback until backend adds heat
-  const pctChange = token.priceChange5m ?? null;
+  const heat = token.heatScore ?? computeHeat(token);
   const riskLevel = token.riskLevel;
   const riskColor = riskLevel === "LOW" || riskLevel === undefined ? "#00d672"
     : riskLevel === "MED" ? "#f0a000"
@@ -674,23 +690,45 @@ function TableRow({
         </span>
       </div>
 
+      {/* BONDING */}
+      <div style={{ width: 75 }} className="flex items-center gap-1.5">
+        {token.bondingProgress != null ? (
+          <>
+            <div className="flex-1 h-[5px] rounded-full overflow-hidden" style={{ background: "#04060b" }}>
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: `${Math.min(token.bondingProgress, 100)}%`,
+                  background: token.bondingProgress >= 90 ? "#00d672"
+                    : token.bondingProgress >= 50 ? "#f0a000"
+                    : "#3b82f6",
+                  transition: "width 0.5s ease",
+                }}
+              />
+            </div>
+            <span className="font-mono text-[9px] font-bold shrink-0" style={{
+              color: token.bondingProgress >= 90 ? "#00d672"
+                : token.bondingProgress >= 50 ? "#f0a000"
+                : "#5c6380",
+            }}>
+              {token.bondingProgress.toFixed(0)}%
+            </span>
+          </>
+        ) : token.isGraduated ? (
+          <span className="font-mono text-[8px] font-bold px-1.5 py-0.5 rounded" style={{ background: "#00d67218", color: "#00d672" }}>
+            GRADUATED
+          </span>
+        ) : (
+          <span className="font-mono text-[9px]" style={{ color: "#363d54" }}>—</span>
+        )}
+      </div>
+
       {/* CHART (sparkline) */}
       <div style={{ width: 90 }}>
         {token.sparkline && token.sparkline.length > 2 ? (
           <Sparkline data={token.sparkline} width={82} height={22} />
         ) : (
           <div className="w-[82px] h-[22px] rounded" style={{ background: "#0a0d14" }} />
-        )}
-      </div>
-
-      {/* CHG% */}
-      <div style={{ width: 55 }}>
-        {pctChange != null ? (
-          <span className="font-mono text-[11px] font-bold" style={{ color: pctChange >= 0 ? "#00d672" : "#f23645" }}>
-            {pctChange >= 0 ? "+" : ""}{pctChange.toFixed(1)}%
-          </span>
-        ) : (
-          <span className="font-mono text-[11px]" style={{ color: "#363d54" }}>—</span>
         )}
       </div>
 
@@ -750,7 +788,7 @@ function CardRow({
 }) {
   const mcapUsd =
     token.marketCapSol != null ? token.marketCapSol * SOL_PRICE_USD : null;
-  const heat = token.heatScore ?? Math.floor(Math.random() * 60 + 30);
+  const heat = token.heatScore ?? computeHeat(token);
 
   return (
     <Link

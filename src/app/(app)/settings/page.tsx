@@ -471,30 +471,79 @@ export default function SettingsPage() {
             </p>
           </div>
           <div className="grid grid-cols-3 gap-3">
-            {[
-              { label: "Min MCAP", key: "minHolders" as const, placeholder: "$10K", note: "SOL" },
-              { label: "Max Dev%", key: "maxDevHoldPct" as const, placeholder: "30%", note: "%" },
-              { label: "Min Holders", key: "minHolders" as const, placeholder: "10", note: "" },
-            ].map((field, i) => (
-              <div key={i}>
-                <label
-                  className="text-[9px] uppercase tracking-wider font-semibold block mb-1.5"
-                  style={{ color: "#5c6380" }}
-                >
-                  {field.label}
-                </label>
-                <div
-                  className="rounded-lg px-2.5 py-1.5 text-xs font-mono"
-                  style={{
-                    background: "#04060b",
-                    border: "1px solid #1a1f2e",
-                    color: "#eef0f6",
-                  }}
-                >
-                  {field.placeholder}
-                </div>
-              </div>
-            ))}
+            <div>
+              <label
+                className="text-[9px] uppercase tracking-wider font-semibold block mb-1.5"
+                style={{ color: "#5c6380" }}
+              >
+                Min MCAP (SOL)
+              </label>
+              <input
+                type="number"
+                step="1"
+                min="0"
+                value={settings.minHolders ?? ""}
+                onChange={(e) =>
+                  setSettings({ ...settings, minHolders: parseFloat(e.target.value) || null })
+                }
+                className="w-full rounded-lg px-2.5 py-1.5 text-xs font-mono focus:outline-none transition-colors"
+                style={{
+                  background: "#04060b",
+                  border: "1px solid #1a1f2e",
+                  color: "#eef0f6",
+                }}
+                placeholder="10"
+              />
+            </div>
+            <div>
+              <label
+                className="text-[9px] uppercase tracking-wider font-semibold block mb-1.5"
+                style={{ color: "#5c6380" }}
+              >
+                Max Dev%
+              </label>
+              <input
+                type="number"
+                step="1"
+                min="0"
+                max="100"
+                value={settings.maxDevHoldPct ?? ""}
+                onChange={(e) =>
+                  setSettings({ ...settings, maxDevHoldPct: parseFloat(e.target.value) || null })
+                }
+                className="w-full rounded-lg px-2.5 py-1.5 text-xs font-mono focus:outline-none transition-colors"
+                style={{
+                  background: "#04060b",
+                  border: "1px solid #1a1f2e",
+                  color: "#eef0f6",
+                }}
+                placeholder="30"
+              />
+            </div>
+            <div>
+              <label
+                className="text-[9px] uppercase tracking-wider font-semibold block mb-1.5"
+                style={{ color: "#5c6380" }}
+              >
+                Min Holders
+              </label>
+              <input
+                type="number"
+                step="1"
+                min="0"
+                value={settings.minHolders ?? ""}
+                onChange={(e) =>
+                  setSettings({ ...settings, minHolders: parseFloat(e.target.value) || null })
+                }
+                className="w-full rounded-lg px-2.5 py-1.5 text-xs font-mono focus:outline-none transition-colors"
+                style={{
+                  background: "#04060b",
+                  border: "1px solid #1a1f2e",
+                  color: "#eef0f6",
+                }}
+                placeholder="10"
+              />
+            </div>
           </div>
         </div>
 
