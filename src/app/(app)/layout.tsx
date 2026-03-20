@@ -7,6 +7,7 @@ import { CompareProvider } from "@/components/providers/CompareProvider";
 import { NotificationProvider } from "@/components/providers/NotificationProvider";
 import { QuickTradeProvider } from "@/components/providers/QuickTradeProvider";
 import { PriceAlertProvider } from "@/components/providers/PriceAlertProvider";
+import { SolPriceProvider } from "@/components/providers/SolPriceProvider";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { TerminalLayout } from "@/components/layout/TerminalLayout";
 import { ToastContainer } from "@/components/ui/Toast";
@@ -18,27 +19,29 @@ import { AutoSellAlert } from "@/components/trade/AutoSellAlert";
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
-      <FeedProvider>
-        <WatchlistProvider>
-          <CompareProvider>
-            <NotificationProvider>
-              <PriceAlertProvider>
-                <QuickTradeProvider>
-                  <TerminalLayout>
-                    {children}
-                  </TerminalLayout>
-                  <BottomNav />
-                  <ToastContainer />
-                  <AutoSellAlert />
-                  <QuickTradeFAB />
-                  <QuickTradePanel />
-                  <KeyboardShortcutsModal />
-                </QuickTradeProvider>
-              </PriceAlertProvider>
-            </NotificationProvider>
-          </CompareProvider>
-        </WatchlistProvider>
-      </FeedProvider>
+      <SolPriceProvider>
+        <FeedProvider>
+          <WatchlistProvider>
+            <CompareProvider>
+              <NotificationProvider>
+                <PriceAlertProvider>
+                  <QuickTradeProvider>
+                    <TerminalLayout>
+                      {children}
+                    </TerminalLayout>
+                    <BottomNav />
+                    <ToastContainer />
+                    <AutoSellAlert />
+                    <QuickTradeFAB />
+                    <QuickTradePanel />
+                    <KeyboardShortcutsModal />
+                  </QuickTradeProvider>
+                </PriceAlertProvider>
+              </NotificationProvider>
+            </CompareProvider>
+          </WatchlistProvider>
+        </FeedProvider>
+      </SolPriceProvider>
     </AuthProvider>
   );
 }

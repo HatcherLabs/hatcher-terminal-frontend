@@ -10,8 +10,7 @@ import { MiniChart } from "@/components/token/MiniChart";
 import { TokenLinks } from "@/components/token/TokenLinks";
 import { api } from "@/lib/api";
 import type { TokenData } from "@/types/token";
-
-const SOL_PRICE_USD = Number(process.env.NEXT_PUBLIC_SOL_PRICE_USD || 150);
+import { useSolPriceContext } from "@/components/providers/SolPriceProvider";
 
 // ---- helpers ----
 
@@ -53,6 +52,7 @@ interface TokenColumnProps {
 
 function TokenColumn({ token, onRemove, allTokens }: TokenColumnProps) {
   const router = useRouter();
+  const { solPrice: SOL_PRICE_USD } = useSolPriceContext();
   const liveData = useTokenPrice(token.mintAddress);
 
   const priceSol = liveData?.priceSol ?? null;

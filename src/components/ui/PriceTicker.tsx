@@ -4,8 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useFeed } from "@/components/providers/FeedProvider";
 import { api } from "@/lib/api";
-
-const SOL_PRICE_USD = Number(process.env.NEXT_PUBLIC_SOL_PRICE_USD || 150);
+import { useSolPriceContext } from "@/components/providers/SolPriceProvider";
 const TICKER_REFRESH_INTERVAL = 30_000;
 const MAX_TRENDING = 12;
 
@@ -47,7 +46,7 @@ export function PriceTicker({ dismissable = false, onDismiss }: PriceTickerProps
   const router = useRouter();
   const { tokens: feedTokens } = useFeed();
   const [items, setItems] = useState<TickerItem[]>([]);
-  const [solPrice] = useState<number>(SOL_PRICE_USD);
+  const { solPrice } = useSolPriceContext();
   const [paused, setPaused] = useState(false);
   const mountedRef = useRef(true);
 

@@ -1,6 +1,7 @@
-import { AnimatedPrice } from "@/components/ui/AnimatedPrice";
+"use client";
 
-const SOL_PRICE_USD = Number(process.env.NEXT_PUBLIC_SOL_PRICE_USD || 150);
+import { AnimatedPrice } from "@/components/ui/AnimatedPrice";
+import { useSolPriceContext } from "@/components/providers/SolPriceProvider";
 const BONDING_GRADUATION_SOL = 85;
 
 interface TokenStatsProps {
@@ -152,7 +153,8 @@ export function TokenStats({
   liveBuyCount,
   liveSellCount,
 }: TokenStatsProps) {
-  const staticMcapUsd = marketCapSol != null ? marketCapSol * SOL_PRICE_USD : null;
+  const { solPrice } = useSolPriceContext();
+  const staticMcapUsd = marketCapSol != null ? marketCapSol * solPrice : null;
   const mcapUsd = liveMarketCapUsd != null ? liveMarketCapUsd : staticMcapUsd;
   const effectivePriceChange5m = livePriceChange5m != null ? livePriceChange5m : priceChange5m;
   const effectivePriceChange1h = livePriceChange1h != null ? livePriceChange1h : priceChange1h;

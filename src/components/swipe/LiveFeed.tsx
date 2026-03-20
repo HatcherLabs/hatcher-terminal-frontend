@@ -2,15 +2,16 @@
 
 import { useRouter } from "next/navigation";
 import { TokenAvatar } from "@/components/ui/TokenAvatar";
+import { useSolPriceContext } from "@/components/providers/SolPriceProvider";
 import type { TokenData } from "@/types/token";
 
 interface LiveFeedProps {
   tokens: TokenData[];
 }
 
-function formatMcap(mcapSol: number | null): string {
+function formatMcap(mcapSol: number | null, solPrice: number): string {
   if (mcapSol === null) return "--";
-  const usd = mcapSol * 150; // approximate
+  const usd = mcapSol * solPrice;
   if (usd >= 1_000_000) return `$${(usd / 1_000_000).toFixed(1)}M`;
   if (usd >= 1_000) return `$${(usd / 1_000).toFixed(0)}K`;
   return `$${usd.toFixed(0)}`;
@@ -32,6 +33,7 @@ function MiniSparkline({ positive }: { positive: boolean }) {
 
 export function LiveFeed({ tokens }: LiveFeedProps) {
   const router = useRouter();
+  const { solPrice } = useSolPriceContext();
 
   return (
     <div
@@ -96,7 +98,7 @@ export function LiveFeed({ tokens }: LiveFeedProps) {
                 className="text-[9px] font-mono shrink-0"
                 style={{ color: "#5c6380" }}
               >
-                {formatMcap(token.marketCapSol)}
+                {formatMcap(token.marketCapSol, solPrice)}
               </span>
               <MiniSparkline positive={isPositive} />
               <span

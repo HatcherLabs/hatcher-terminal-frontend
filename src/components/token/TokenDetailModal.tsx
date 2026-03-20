@@ -7,8 +7,7 @@ import { RiskBadge } from "@/components/ui/RiskBadge";
 import { TokenLinks } from "./TokenLinks";
 import { TokenChart } from "./TokenChart";
 import type { TokenData } from "@/types/token";
-
-const SOL_PRICE_USD = Number(process.env.NEXT_PUBLIC_SOL_PRICE_USD || 150);
+import { useSolPriceContext } from "@/components/providers/SolPriceProvider";
 
 interface TokenDetailModalProps {
   token: TokenData | null;
@@ -63,6 +62,7 @@ export function TokenDetailModal({
   onBuy,
   onPass,
 }: TokenDetailModalProps) {
+  const { solPrice: SOL_PRICE_USD } = useSolPriceContext();
   const [copied, setCopied] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
 
