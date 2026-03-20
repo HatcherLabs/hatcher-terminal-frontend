@@ -23,37 +23,25 @@ const shortcutGroups: ShortcutGroup[] = [
     shortcuts: [
       { keys: ["1"], description: "Go to Swipe" },
       { keys: ["2"], description: "Go to Explore" },
-      { keys: ["3"], description: "Go to Portfolio" },
-      { keys: ["4"], description: "Go to Passed" },
-      { keys: ["5"], description: "Go to Compare" },
-      { keys: ["6"], description: "Go to Wallet" },
-      { keys: ["7"], description: "Go to Settings" },
+      { keys: ["3"], description: "Go to Watchlist" },
+      { keys: ["4"], description: "Go to Portfolio" },
+      { keys: ["5"], description: "Go to Orders" },
+      { keys: ["6"], description: "Go to Graveyard" },
+      { keys: ["7"], description: "Go to Alerts" },
+      { keys: ["8"], description: "Go to Smart Money" },
+      { keys: ["9"], description: "Go to Copy Trade" },
     ],
   },
   {
-    title: "Trading",
+    title: "Actions",
     shortcuts: [
-      { keys: ["B"], description: "Quick buy (when token selected)" },
-      { keys: ["S"], description: "Quick sell (when token selected)" },
-      { keys: ["W"], description: "Toggle watchlist for current token" },
-    ],
-  },
-  {
-    title: "Swipe",
-    shortcuts: [
-      { keys: ["\u2192"], description: "Buy token (swipe right)" },
-      { keys: ["\u2190"], description: "Pass on token (swipe left)" },
-      { keys: ["\u2191"], description: "Add to watchlist" },
-      { keys: ["Z"], description: "Undo last swipe" },
-    ],
-  },
-  {
-    title: "General",
-    shortcuts: [
-      { keys: ["Ctrl", "K"], description: "Open command palette" },
-      { keys: ["/"], description: "Open command palette" },
-      { keys: ["?"], description: "Toggle this help" },
-      { keys: ["Esc"], description: "Close any open modal or panel" },
+      { keys: ["B"], description: "Quick Buy" },
+      { keys: ["S"], description: "Quick Sell" },
+      { keys: ["W"], description: "Toggle Watchlist" },
+      { keys: ["/"], description: "Command Palette" },
+      { keys: ["?"], description: "Shortcuts Help" },
+      { keys: ["Ctrl", "K"], description: "Command Palette" },
+      { keys: ["Esc"], description: "Close modal/panel" },
     ],
   },
 ];
@@ -62,7 +50,7 @@ function Kbd({ children }: { children: string }) {
   return (
     <kbd
       className="inline-flex items-center justify-center min-w-[22px] h-[22px] rounded px-1.5 py-0.5 font-mono text-[11px] leading-none"
-      style={{ backgroundColor: "#1f2435", color: "#5c6380" }}
+      style={{ backgroundColor: "#181c28", color: "#5c6380" }}
     >
       {children}
     </kbd>
@@ -134,13 +122,15 @@ export function ShortcutsModal({ isOpen, onClose }: ShortcutsModalProps) {
           className="flex items-center justify-between px-5 py-3.5"
           style={{ borderBottomWidth: 1, borderColor: "#1a1f2e" }}
         >
-          <h2 className="text-sm font-bold text-text-primary">
+          <h2 className="text-sm font-bold" style={{ color: "#eef0f6" }}>
             Keyboard Shortcuts
           </h2>
           <button
             onClick={onClose}
-            className="w-7 h-7 flex items-center justify-center rounded-full text-text-muted hover:text-text-primary transition-colors"
-            style={{ backgroundColor: "#1f2435" }}
+            className="w-7 h-7 flex items-center justify-center rounded-full transition-colors"
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#eef0f6")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "#5c6380")}
+            style={{ backgroundColor: "#181c28" }}
             aria-label="Close shortcuts modal"
           >
             <svg
@@ -167,7 +157,7 @@ export function ShortcutsModal({ isOpen, onClose }: ShortcutsModalProps) {
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search shortcuts..."
             className="w-full h-8 rounded-md px-3 text-xs font-mono text-text-secondary placeholder:text-text-faint outline-none focus:ring-1 focus:ring-accent/40"
-            style={{ backgroundColor: "#1f2435", borderWidth: 1, borderColor: "#1a1f2e" }}
+            style={{ backgroundColor: "#10131c", borderWidth: 1, borderColor: "#1a1f2e" }}
           />
         </div>
 
