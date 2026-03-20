@@ -203,7 +203,7 @@ export default function SettingsPage() {
                       autoSellProfitPct: parseFloat(e.target.value) || null,
                     })
                   }
-                  className="w-full bg-[#06060b] border border-[#1a1a2a] rounded-lg px-3 py-2 text-sm font-mono text-[#e8e8f0] focus:border-[#00ff88] focus:outline-none transition-colors duration-200"
+                  className="w-full bg-[#04060b] border border-[#1a1f2e] rounded-lg px-3 py-2 text-sm font-mono text-[#eef0f6] focus:border-[#00d672] focus:outline-none transition-colors duration-200"
                   placeholder="Custom take profit %"
                 />
               </>
@@ -266,7 +266,7 @@ export default function SettingsPage() {
                       stopLossPct: parseFloat(e.target.value) || null,
                     })
                   }
-                  className="w-full bg-[#06060b] border border-[#1a1a2a] rounded-lg px-3 py-2 text-sm font-mono text-[#e8e8f0] focus:border-[#ff3b5c] focus:outline-none transition-colors duration-200"
+                  className="w-full bg-[#04060b] border border-[#1a1f2e] rounded-lg px-3 py-2 text-sm font-mono text-[#eef0f6] focus:border-[#f23645] focus:outline-none transition-colors duration-200"
                   placeholder="Custom stop loss %"
                 />
               </>
@@ -310,7 +310,7 @@ export default function SettingsPage() {
               setSettings({ ...settings, buyAmountSol: val });
               if (val > 0) setQuickBuyAmount(val);
             }}
-            className="w-full mt-3 bg-[#06060b] border border-[#1a1a2a] rounded-lg px-3 py-2 text-sm font-mono text-[#e8e8f0] focus:border-[#00ff88] focus:outline-none transition-colors duration-200"
+            className="w-full mt-3 bg-[#04060b] border border-[#1a1f2e] rounded-lg px-3 py-2 text-sm font-mono text-[#eef0f6] focus:border-[#00d672] focus:outline-none transition-colors duration-200"
             placeholder="Custom amount"
           />
         </div>
@@ -360,7 +360,7 @@ export default function SettingsPage() {
                   slippageBps: Math.round(parseFloat(e.target.value || "0") * 100),
                 })
               }
-              className="w-full bg-[#06060b] border border-[#1a1a2a] rounded-lg px-3 py-2 text-sm font-mono text-[#e8e8f0] focus:border-[#00ff88] focus:outline-none transition-colors duration-200"
+              className="w-full bg-[#04060b] border border-[#1a1f2e] rounded-lg px-3 py-2 text-sm font-mono text-[#eef0f6] focus:border-[#00d672] focus:outline-none transition-colors duration-200"
               placeholder="Custom slippage %"
             />
             {settings.slippageBps > 1500 && (
@@ -408,7 +408,7 @@ export default function SettingsPage() {
               onChange={(e) =>
                 setSettings({ ...settings, priorityFeeSol: parseFloat(e.target.value) || 0 })
               }
-              className="w-full bg-[#06060b] border border-[#1a1a2a] rounded-lg px-3 py-2 text-sm font-mono text-[#e8e8f0] focus:border-[#00ff88] focus:outline-none transition-colors duration-200"
+              className="w-full bg-[#04060b] border border-[#1a1f2e] rounded-lg px-3 py-2 text-sm font-mono text-[#eef0f6] focus:border-[#00d672] focus:outline-none transition-colors duration-200"
               placeholder="Custom priority fee"
             />
           </div>
@@ -470,7 +470,7 @@ export default function SettingsPage() {
             onChange={(e) =>
               setSettings({ ...settings, maxRiskLevel: e.target.value || null })
             }
-            className="w-full mt-2 bg-[#06060b] border border-[#1a1a2a] rounded-lg px-3 py-2 text-sm text-[#e8e8f0] focus:border-[#00ff88] focus:outline-none transition-colors duration-200"
+            className="w-full mt-2 bg-[#04060b] border border-[#1a1f2e] rounded-lg px-3 py-2 text-sm text-[#eef0f6] focus:border-[#00d672] focus:outline-none transition-colors duration-200"
           >
             <option value="">Show all</option>
             <option value="LOW">LOW only</option>

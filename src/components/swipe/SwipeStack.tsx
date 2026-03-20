@@ -499,10 +499,10 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
             disabled={swiping}
             className="w-12 h-12 sm:w-14 sm:h-14 rounded-full text-xl sm:text-2xl flex items-center justify-center transition-all duration-200 disabled:opacity-30 hover:scale-105 active:scale-95"
             style={{
-              background: "rgba(255,59,92,0.08)",
-              border: "2px solid #ff3b5c",
-              color: "#ff3b5c",
-              boxShadow: "0 0 16px rgba(255,59,92,0.15)",
+              background: "rgba(242,54,69,0.08)",
+              border: "2px solid #f23645",
+              color: "#f23645",
+              boxShadow: "0 0 16px rgba(242,54,69,0.15)",
             }}
             aria-label="Pass on token"
           >
@@ -538,10 +538,10 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
             disabled={swiping}
             className="w-9 h-9 sm:w-10 sm:h-10 rounded-full text-lg flex items-center justify-center transition-all duration-200 disabled:opacity-30 hover:scale-105 active:scale-95"
             style={{
-              background: "rgba(255,170,0,0.06)",
-              border: "2px solid #ffaa00",
-              color: "#ffaa00",
-              boxShadow: "0 0 12px rgba(255,170,0,0.1)",
+              background: "rgba(240,160,0,0.06)",
+              border: "2px solid #f0a000",
+              color: "#f0a000",
+              boxShadow: "0 0 12px rgba(240,160,0,0.1)",
             }}
             aria-label="Add to watchlist"
             title="Add to watchlist (swipe up)"
@@ -556,10 +556,10 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
             disabled={swiping}
             className="w-12 h-12 sm:w-14 sm:h-14 rounded-full text-xl sm:text-2xl flex items-center justify-center transition-all duration-200 disabled:opacity-30 hover:scale-105 active:scale-95"
             style={{
-              background: "rgba(0,255,136,0.08)",
-              border: "2px solid #00ff88",
-              color: "#00ff88",
-              boxShadow: "0 0 16px rgba(0,255,136,0.15)",
+              background: "rgba(0,214,114,0.08)",
+              border: "2px solid #00d672",
+              color: "#00d672",
+              boxShadow: "0 0 16px rgba(0,214,114,0.15)",
             }}
             aria-label="Buy token"
           >

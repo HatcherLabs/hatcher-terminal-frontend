@@ -118,8 +118,8 @@ export function Sidebar({ onOpenShortcuts }: SidebarProps) {
         expanded ? "w-40" : "w-12"
       }`}
       style={{
-        background: "rgba(13,13,26,0.95)",
-        borderRight: "1px solid rgba(26,26,46,0.8)",
+        background: "rgba(10,13,20,0.95)",
+        borderRight: "1px solid rgba(26,31,46,0.8)",
         backdropFilter: "blur(12px)",
       }}
       onMouseEnter={() => setExpanded(true)}
@@ -146,9 +146,9 @@ export function Sidebar({ onOpenShortcuts }: SidebarProps) {
               style={
                 active
                   ? {
-                      color: "#00ff88",
-                      background: "rgba(0,255,136,0.06)",
-                      boxShadow: "inset 0 0 12px rgba(0,255,136,0.03)",
+                      color: "#00d672",
+                      background: "rgba(0,214,114,0.06)",
+                      boxShadow: "inset 0 0 12px rgba(0,214,114,0.03)",
                     }
                   : undefined
               }
@@ -158,8 +158,8 @@ export function Sidebar({ onOpenShortcuts }: SidebarProps) {
                 <div
                   className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r"
                   style={{
-                    background: "linear-gradient(180deg, #00ff88 0%, #00cc6a 100%)",
-                    boxShadow: "0 0 6px rgba(0,255,136,0.4)",
+                    background: "linear-gradient(180deg, #00d672 0%, #00cc6a 100%)",
+                    boxShadow: "0 0 6px rgba(0,214,114,0.4)",
                   }}
                 />
               )}

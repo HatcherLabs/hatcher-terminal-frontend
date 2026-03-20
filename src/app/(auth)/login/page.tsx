@@ -108,11 +108,11 @@ export default function LoginPage() {
           <div
             className="w-10 h-10 rounded-xl mx-auto mb-3 flex items-center justify-center"
             style={{
-              background: "linear-gradient(135deg, rgba(124,77,255,0.15) 0%, rgba(0,255,136,0.1) 100%)",
-              border: "1px solid rgba(124,77,255,0.2)",
+              background: "linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(0,255,136,0.1) 100%)",
+              border: "1px solid rgba(139,92,246,0.2)",
             }}
           >
-            <span className="text-base font-black" style={{ color: "#7c4dff" }}>H</span>
+            <span className="text-base font-black" style={{ color: "#8b5cf6" }}>H</span>
           </div>
           <h1 className="text-2xl font-bold text-text-primary tracking-tight">Welcome back</h1>
           <p className="text-sm text-text-secondary font-light">Enter your credentials to trade</p>
@@ -128,7 +128,7 @@ export default function LoginPage() {
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
               required
-              className="form-input w-full bg-[#06060b] border border-[#1a1a2a] rounded-lg px-3 py-2 text-sm text-[#e8e8f0] placeholder:text-text-faint focus:border-[#00ff88] focus:outline-none transition-colors duration-200"
+              className="form-input w-full bg-[#04060b] border border-[#1a1f2e] rounded-lg px-3 py-2 text-sm text-[#eef0f6] placeholder:text-text-faint focus:border-[#00d672] focus:outline-none transition-colors duration-200"
               placeholder="degen_trader"
             />
           </div>
@@ -143,7 +143,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="form-input w-full bg-[#06060b] border border-[#1a1a2a] rounded-lg px-3 py-2 pr-11 text-sm text-[#e8e8f0] placeholder:text-text-faint focus:border-[#00ff88] focus:outline-none transition-colors duration-200"
+                className="form-input w-full bg-[#04060b] border border-[#1a1f2e] rounded-lg px-3 py-2 pr-11 text-sm text-[#eef0f6] placeholder:text-text-faint focus:border-[#00d672] focus:outline-none transition-colors duration-200"
                 placeholder="Your password"
               />
               <button

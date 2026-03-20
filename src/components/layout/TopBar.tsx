@@ -10,25 +10,26 @@ export function TopBar() {
 
   return (
     <div className="shrink-0">
-      <header className="h-12 bg-bg-card border-b border-border flex items-center px-4 gap-4">
-        {/* Logo */}
-        <div className="flex items-center gap-2 shrink-0">
+      <header
+        className="h-11 flex items-center px-3 gap-2 shrink-0"
+        style={{ borderBottom: "1px solid #1a1f2e", background: "#0a0d14" }}
+      >
+        {/* Logo — ⚡ icon + HATCHER.TRADE */}
+        <div className="flex items-center gap-1.5 shrink-0 mr-2">
           <div
-            className="w-6 h-6 rounded flex items-center justify-center"
-            style={{
-              background: "linear-gradient(135deg, rgba(124,77,255,0.2) 0%, rgba(0,255,136,0.1) 100%)",
-              border: "1px solid rgba(124,77,255,0.25)",
-            }}
+            className="w-[22px] h-[22px] rounded-[5px] flex items-center justify-center text-[11px]"
+            style={{ background: "linear-gradient(135deg, #8b5cf6, #00d672)" }}
           >
-            <span className="text-[10px] font-black" style={{ color: "#7c4dff" }}>H</span>
+            ⚡
           </div>
-          <span className="text-sm font-bold tracking-tight" style={{ color: "#e0e0e8" }}>
-            hatcher<span style={{ color: "#7c4dff" }}>.trade</span>
+          <span className="text-[13px] font-extrabold tracking-[-.01em]" style={{ fontFamily: "var(--font-sans)" }}>
+            <span style={{ color: "#8b5cf6" }}>HATCHER</span>
+            <span style={{ color: "#5c6380" }}>.TRADE</span>
           </span>
         </div>
 
         {/* Separator */}
-        <div className="w-px h-6 bg-border shrink-0" />
+        <div className="w-px h-6 shrink-0" style={{ background: "#1a1f2e" }} />
 
         {/* Search */}
         <TokenSearch />
@@ -37,30 +38,51 @@ export function TopBar() {
         <div className="flex-1" />
 
         {/* Right section */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           {/* Notifications */}
           <NotificationBell />
 
-          <div className="w-px h-6 bg-border" />
+          <div className="w-px h-6" style={{ background: "#1a1f2e" }} />
 
-          {/* Network indicator */}
-          <div className="flex items-center gap-1.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-green animate-pulse" />
-            <span className="text-[10px] text-text-muted font-mono uppercase">
-              Solana
+          {/* SOL Balance indicator */}
+          <div
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md"
+            style={{ background: "#04060b", border: "1px solid #1a1f2e" }}
+          >
+            <div
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ background: "#00d672", boxShadow: "0 0 6px #00d67260" }}
+            />
+            <span className="text-xs font-mono font-bold" style={{ color: "#eef0f6" }}>
+              — SOL
             </span>
           </div>
 
-          <div className="w-px h-6 bg-border" />
+          {/* $HATCH Tier Badge */}
+          <span
+            className="px-2 py-0.5 rounded-[4px] text-[10px] font-bold font-mono"
+            style={{
+              background: "#8b5cf618",
+              color: "#8b5cf6",
+              border: "1px solid #8b5cf625",
+            }}
+          >
+            🥚 Egg
+          </span>
+
+          <div className="w-px h-6" style={{ background: "#1a1f2e" }} />
 
           {/* User */}
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-accent/20 border border-accent/30 flex items-center justify-center">
-              <span className="text-[10px] text-accent font-bold font-mono">
+            <div
+              className="w-6 h-6 rounded flex items-center justify-center"
+              style={{ background: "#8b5cf620", border: "1px solid #8b5cf630" }}
+            >
+              <span className="text-[10px] font-bold font-mono" style={{ color: "#8b5cf6" }}>
                 {user?.username?.[0]?.toUpperCase() || "?"}
               </span>
             </div>
-            <span className="text-xs text-text-secondary font-mono hidden xl:inline">
+            <span className="text-xs font-mono hidden xl:inline" style={{ color: "#9ca3b8" }}>
               {user?.username || "Anonymous"}
             </span>
           </div>

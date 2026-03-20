@@ -9,9 +9,9 @@ interface ToggleProps {
 }
 
 const activeColorMap = {
-  green: "#00ff88",
-  red: "#ff3b5c",
-  accent: "#7c4dff",
+  green: "#00d672",
+  red: "#f23645",
+  accent: "#8b5cf6",
 } as const;
 
 export function Toggle({
@@ -37,12 +37,12 @@ export function Toggle({
       aria-checked={enabled}
       aria-label={label}
       onClick={() => onChange(!enabled)}
-      className="relative inline-flex shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7c4dff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#06060b]"
+      className="relative inline-flex shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8b5cf6] focus-visible:ring-offset-2 focus-visible:ring-offset-[#04060b]"
       style={{
         width: trackW,
         height: trackH,
-        backgroundColor: enabled ? bgColor : "#1a1a2e",
-        border: enabled ? "none" : "1px solid #2a2a44",
+        backgroundColor: enabled ? bgColor : "#1a1f2e",
+        border: enabled ? "none" : "1px solid #2a3048",
       }}
     >
       <span

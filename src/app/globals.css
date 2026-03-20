@@ -12,34 +12,36 @@
   --breakpoint-xl: 1280px;
   --breakpoint-2xl: 1536px;
 
-  /* Colors */
-  --color-bg-primary: #06060b;
-  --color-bg-card: #0d0d14;
-  --color-bg-elevated: #14141f;
-  --color-bg-hover: #1a1a28;
+  /* Colors — aligned with ui-demo.jsx C palette */
+  --color-bg-primary: #04060b;
+  --color-bg-card: #0a0d14;
+  --color-bg-elevated: #10131c;
+  --color-bg-hover: #181c28;
+  --color-bg-input: #1f2435;
 
-  --color-border: #1a1a2a;
-  --color-border-hover: #2a2a44;
+  --color-border: #1a1f2e;
+  --color-border-hover: #2a3048;
+  --color-border-active: #3a4468;
 
-  --color-text-primary: #e8e8f0;
-  --color-text-secondary: #8888a0;
-  --color-text-muted: #555568;
-  --color-text-faint: #333340;
+  --color-text-primary: #eef0f6;
+  --color-text-secondary: #9ca3b8;
+  --color-text-muted: #5c6380;
+  --color-text-faint: #363d54;
 
-  --color-green: #00ff88;
-  --color-green-dim: #00ff8810;
+  --color-green: #00d672;
+  --color-green-dim: #00d67218;
 
-  --color-red: #ff3b5c;
-  --color-red-dim: #ff3b5c10;
+  --color-red: #f23645;
+  --color-red-dim: #f2364518;
 
-  --color-amber: #ffaa00;
-  --color-amber-dim: #ffaa0010;
+  --color-amber: #f0a000;
+  --color-amber-dim: #f0a00018;
 
   --color-blue: #3b82f6;
 
-  --color-accent: #7c4dff;
-  --color-accent-hover: #651fff;
-  --color-accent-bg: #7c4dff12;
+  --color-accent: #8b5cf6;
+  --color-accent-hover: #7c3aed;
+  --color-accent-bg: #8b5cf618;
 
   /* Font families */
   --font-sans: var(--font-lexend), system-ui, sans-serif;
@@ -82,18 +84,18 @@
 }
 
 :root {
-  --bg-primary: #06060b;
-  --bg-card: #0d0d14;
-  --bg-elevated: #14141f;
-  --bg-hover: #1a1a28;
-  --border: #1a1a2a;
-  --border-hover: #2a2a44;
-  --green: #00ff88;
-  --red: #ff3b5c;
-  --accent: #7c4dff;
-  --accent-hover: #651fff;
-  --accent-bg: #7c4dff12;
-  --border-active: #3e3e6e;
+  --bg-primary: #04060b;
+  --bg-card: #0a0d14;
+  --bg-elevated: #10131c;
+  --bg-hover: #181c28;
+  --border: #1a1f2e;
+  --border-hover: #2a3048;
+  --green: #00d672;
+  --red: #f23645;
+  --accent: #8b5cf6;
+  --accent-hover: #7c3aed;
+  --accent-bg: #8b5cf618;
+  --border-active: #3a4468;
 }
 
 * {

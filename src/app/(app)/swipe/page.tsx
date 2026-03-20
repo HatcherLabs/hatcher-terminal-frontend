@@ -87,7 +87,7 @@ export default function SwipePage() {
       <SwipeTutorialOverlay />
       <div className="flex flex-col items-center pt-2">
         <h1 className="text-lg font-bold tracking-tight mb-3" style={{ color: "#ffffff" }}>
-          DISCOVER <span style={{ color: "#00ff88" }}>TOKENS</span>
+          DISCOVER <span style={{ color: "#00d672" }}>TOKENS</span>
         </h1>
 
         {/* Tab bar */}

@@ -100,8 +100,8 @@ export function BottomNav() {
     <nav
       className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-xl terminal:hidden"
       style={{
-        background: "rgba(13,13,26,0.85)",
-        borderTop: "1px solid rgba(26,26,46,0.6)",
+        background: "rgba(10,13,20,0.85)",
+        borderTop: "1px solid rgba(26,31,46,0.6)",
       }}
     >
       <div className="max-w-app mx-auto flex items-center justify-around h-14 px-1">
@@ -117,19 +117,19 @@ export function BottomNav() {
                   ? "nav-active-dot"
                   : "text-text-muted hover:text-text-secondary"
               }`}
-              style={active ? { color: "#00ff88" } : undefined}
+              style={active ? { color: "#00d672" } : undefined}
             >
               {/* Active top border accent */}
               {active && (
                 <span
                   className="absolute -top-[1px] left-1.5 right-1.5 h-[2px] rounded-b"
                   style={{
-                    background: "linear-gradient(90deg, transparent, #00ff88, transparent)",
-                    boxShadow: "0 0 8px rgba(0,255,136,0.4)",
+                    background: "linear-gradient(90deg, transparent, #00d672, transparent)",
+                    boxShadow: "0 0 8px rgba(0,214,114,0.4)",
                   }}
                 />
               )}
-              <span className="relative" style={active ? { filter: "drop-shadow(0 0 4px rgba(0,255,136,0.3))" } : undefined}>
+              <span className="relative" style={active ? { filter: "drop-shadow(0 0 4px rgba(0,214,114,0.3))" } : undefined}>
                 {item.icon}
                 {showBadge && (
                   <span className="absolute -top-1 -right-1.5 min-w-[14px] h-[14px] flex items-center justify-center rounded-full bg-green text-bg-primary text-[8px] font-bold px-0.5 leading-none">

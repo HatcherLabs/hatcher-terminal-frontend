@@ -15,8 +15,8 @@ export function SwipeOverlay({ direction, opacity }: SwipeOverlayProps) {
   const config = {
     left: {
       text: "NOPE",
-      color: "#ff3b5c",
-      colorDim: "rgba(255, 59, 92, 0.08)",
+      color: "#f23645",
+      colorDim: "rgba(242, 54, 69, 0.08)",
       icon: (
         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
           <line x1="18" y1="6" x2="6" y2="18" />
@@ -27,8 +27,8 @@ export function SwipeOverlay({ direction, opacity }: SwipeOverlayProps) {
     },
     right: {
       text: "APE IN",
-      color: "#00ff88",
-      colorDim: "rgba(0, 255, 136, 0.08)",
+      color: "#00d672",
+      colorDim: "rgba(0, 214, 114, 0.08)",
       icon: (
         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
           <polyline points="20 6 9 17 4 12" />
@@ -38,8 +38,8 @@ export function SwipeOverlay({ direction, opacity }: SwipeOverlayProps) {
     },
     up: {
       text: "WATCHLIST",
-      color: "#ffaa00",
-      colorDim: "rgba(255, 170, 0, 0.08)",
+      color: "#f0a000",
+      colorDim: "rgba(240, 160, 0, 0.08)",
       icon: (
         <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1">
           <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
