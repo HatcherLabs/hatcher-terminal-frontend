@@ -617,42 +617,47 @@ export default function TokenTerminalPage() {
         </div>
 
         {/* -- KEY METRICS GRID -- */}
-        <div className="grid grid-cols-3 gap-[1px] bg-border rounded-xl overflow-hidden">
-          <div className="bg-bg-elevated px-3 py-3 text-center">
-            <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">
-              MCap SOL
-            </p>
-            <p className="text-sm font-mono font-semibold text-text-primary">
-              {formatNumber(marketCapSol)}
-            </p>
-          </div>
-          <div className="bg-bg-elevated px-3 py-3 text-center">
-            <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">
-              Vol 1h
-            </p>
-            <p className="text-sm font-mono font-semibold text-text-primary">
-              {volume1h != null ? `$${formatNumber(volume1h)}` : "\u2014"}
-            </p>
-          </div>
-          <div className="bg-bg-elevated px-3 py-3 text-center">
-            <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">
-              Holders
-            </p>
-            <p className="text-sm font-mono font-semibold text-text-primary">
-              {formatNumber(token.holders)}
-            </p>
-          </div>
-          <div className="bg-bg-elevated px-3 py-3 text-center">
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { label: "MCap SOL", value: formatNumber(marketCapSol) },
+            { label: "Vol 1h", value: volume1h != null ? `$${formatNumber(volume1h)}` : "\u2014" },
+            { label: "Holders", value: formatNumber(token.holders) },
+          ].map((m) => (
+            <div
+              key={m.label}
+              className="px-3 py-3 text-center rounded-xl transition-colors"
+              style={{
+                background: "rgba(13,13,26,0.7)",
+                border: "1px solid rgba(26,26,46,0.8)",
+                backdropFilter: "blur(8px)",
+              }}
+            >
+              <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">
+                {m.label}
+              </p>
+              <p className="text-sm font-mono font-semibold text-text-primary">
+                {m.value}
+              </p>
+            </div>
+          ))}
+          <div
+            className="px-3 py-3 text-center rounded-xl"
+            style={{
+              background: "rgba(13,13,26,0.7)",
+              border: "1px solid rgba(26,26,46,0.8)",
+              backdropFilter: "blur(8px)",
+            }}
+          >
             <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">
               Buys / Sells
             </p>
             {buyCount != null || sellCount != null ? (
               <p className="text-sm font-mono font-semibold">
-                <span className="text-green">
+                <span style={{ color: "#00ff88" }}>
                   {formatNumber(buyCount) || "0"}
                 </span>
                 <span className="text-text-muted mx-0.5">/</span>
-                <span className="text-red">
+                <span style={{ color: "#ff3b5c" }}>
                   {formatNumber(sellCount) || "0"}
                 </span>
               </p>
@@ -662,23 +667,36 @@ export default function TokenTerminalPage() {
               </p>
             )}
           </div>
-          <div className="bg-bg-elevated px-3 py-3 text-center">
+          <div
+            className="px-3 py-3 text-center rounded-xl"
+            style={{
+              background: "rgba(13,13,26,0.7)",
+              border: "1px solid rgba(26,26,46,0.8)",
+              backdropFilter: "blur(8px)",
+            }}
+          >
             <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">
               Dev Hold
             </p>
             <p
-              className={`text-sm font-mono font-semibold ${
-                token.devHoldPct !== null && token.devHoldPct > 15
-                  ? "text-red"
-                  : "text-text-primary"
-              }`}
+              className="text-sm font-mono font-semibold"
+              style={{
+                color: token.devHoldPct !== null && token.devHoldPct > 15 ? "#ff3b5c" : undefined,
+              }}
             >
               {token.devHoldPct !== null
                 ? `${token.devHoldPct.toFixed(1)}%`
                 : "\u2014"}
             </p>
           </div>
-          <div className="bg-bg-elevated px-3 py-3 text-center">
+          <div
+            className="px-3 py-3 text-center rounded-xl"
+            style={{
+              background: "rgba(13,13,26,0.7)",
+              border: "1px solid rgba(26,26,46,0.8)",
+              backdropFilter: "blur(8px)",
+            }}
+          >
             <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">
               Age
             </p>
@@ -850,26 +868,36 @@ export default function TokenTerminalPage() {
 
       {/* ====== RIGHT COLUMN: TRADE PANEL ====== */}
       <div className="w-full md:w-[340px] md:shrink-0 md:sticky md:top-4 mt-4 md:mt-0">
-        <div className="bg-bg-card rounded-xl border border-border card-depth overflow-hidden">
+        <div
+          className="rounded-xl overflow-hidden"
+          style={{
+            background: "rgba(13,13,26,0.9)",
+            border: "1px solid rgba(26,26,46,0.9)",
+            backdropFilter: "blur(12px)",
+            boxShadow: "0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.02)",
+          }}
+        >
           {/* Buy / Sell tabs */}
-          <div className="flex border-b border-border">
+          <div className="flex" style={{ borderBottom: "1px solid rgba(26,26,46,0.8)" }}>
             <button
               onClick={() => setActiveTradeTab("buy")}
-              className={`flex-1 py-3 text-sm font-bold transition-colors ${
-                activeTradeTab === "buy"
-                  ? "text-green border-b-2 border-green bg-green/5"
-                  : "text-text-muted hover:text-text-secondary"
-              }`}
+              className="flex-1 py-3 text-sm font-bold transition-all duration-200"
+              style={{
+                color: activeTradeTab === "buy" ? "#00ff88" : undefined,
+                borderBottom: activeTradeTab === "buy" ? "2px solid #00ff88" : "2px solid transparent",
+                background: activeTradeTab === "buy" ? "rgba(0,255,136,0.05)" : "transparent",
+              }}
             >
               Buy
             </button>
             <button
               onClick={() => setActiveTradeTab("sell")}
-              className={`flex-1 py-3 text-sm font-bold transition-colors ${
-                activeTradeTab === "sell"
-                  ? "text-red border-b-2 border-red bg-red/5"
-                  : "text-text-muted hover:text-text-secondary"
-              }`}
+              className="flex-1 py-3 text-sm font-bold transition-all duration-200"
+              style={{
+                color: activeTradeTab === "sell" ? "#ff3b5c" : undefined,
+                borderBottom: activeTradeTab === "sell" ? "2px solid #ff3b5c" : "2px solid transparent",
+                background: activeTradeTab === "sell" ? "rgba(255,59,92,0.05)" : "transparent",
+              }}
             >
               Sell
             </button>
@@ -1066,11 +1094,16 @@ export default function TokenTerminalPage() {
                   ? isNaN(tradeAmount) || tradeAmount <= 0
                   : !openPosition)
               }
-              className={`w-full py-3.5 rounded-xl font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed ${
-                activeTradeTab === "buy"
-                  ? "bg-green text-bg-primary hover:brightness-110"
-                  : "bg-red text-white hover:brightness-110"
-              }`}
+              className="w-full py-3.5 rounded-xl font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110"
+              style={{
+                background: activeTradeTab === "buy"
+                  ? "linear-gradient(135deg, #00ff88 0%, #00cc6a 100%)"
+                  : "linear-gradient(135deg, #ff3b5c 0%, #cc2e49 100%)",
+                color: activeTradeTab === "buy" ? "#06060b" : "#ffffff",
+                boxShadow: activeTradeTab === "buy"
+                  ? "0 0 20px rgba(0,255,136,0.2), 0 4px 12px rgba(0,0,0,0.3)"
+                  : "0 0 20px rgba(255,59,92,0.2), 0 4px 12px rgba(0,0,0,0.3)",
+              }}
             >
               {tradeLoading ? (
                 <span className="flex items-center justify-center gap-2">

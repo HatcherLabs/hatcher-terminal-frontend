@@ -34,8 +34,14 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center relative overflow-hidden">
       {/* Background gradient orbs */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-green/[0.03] blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[300px] h-[300px] rounded-full bg-green/[0.02] blur-[80px] pointer-events-none" />
+      <div
+        className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-[140px] pointer-events-none"
+        style={{ background: "radial-gradient(circle, rgba(0,255,136,0.06) 0%, rgba(124,77,255,0.03) 60%, transparent 80%)" }}
+      />
+      <div
+        className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full blur-[100px] pointer-events-none"
+        style={{ background: "radial-gradient(circle, rgba(124,77,255,0.05) 0%, rgba(0,255,136,0.02) 50%, transparent 80%)" }}
+      />
 
       <div className="max-w-sm w-full space-y-10 relative z-10">
         {/* Logo / Brand */}
@@ -47,7 +53,16 @@ export default function LandingPage() {
 
           <h1 className="text-4xl font-bold text-text-primary tracking-tight leading-tight">
             HATCHER<br />
-            <span className="text-gradient-green">TERMINAL</span>
+            <span
+              style={{
+                background: "linear-gradient(135deg, #00ff88 0%, #00cc6a 50%, #7c4dff 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              TERMINAL
+            </span>
           </h1>
           <p className="text-base text-text-secondary font-light leading-relaxed">
             Swipe right to ape.<br />
@@ -61,7 +76,11 @@ export default function LandingPage() {
             (feature) => (
               <span
                 key={feature}
-                className="px-3 py-1 rounded-full border border-border text-text-muted text-[11px] font-medium"
+                className="px-3 py-1.5 rounded-full text-text-secondary text-[11px] font-medium backdrop-blur-sm"
+                style={{
+                  background: "rgba(13,13,26,0.6)",
+                  border: "1px solid rgba(26,26,46,0.8)",
+                }}
               >
                 {feature}
               </span>
@@ -73,13 +92,21 @@ export default function LandingPage() {
         <div className="space-y-3">
           <Link
             href="/signup"
-            className="block w-full py-3.5 rounded-xl bg-green text-bg-primary font-semibold text-sm hover:brightness-110 transition-all glow-green-sm"
+            className="block w-full py-3.5 rounded-xl text-bg-primary font-semibold text-sm transition-all hover:brightness-110 hover:shadow-lg"
+            style={{
+              background: "linear-gradient(135deg, #00ff88 0%, #00cc6a 50%, #00ff88 100%)",
+              boxShadow: "0 0 20px rgba(0,255,136,0.2), 0 0 40px rgba(0,255,136,0.1)",
+            }}
           >
             Start Trading
           </Link>
           <Link
             href="/login"
-            className="block w-full py-3.5 rounded-xl border border-border text-text-secondary font-medium text-sm hover:bg-bg-elevated hover:border-border-hover transition-all"
+            className="block w-full py-3.5 rounded-xl text-text-secondary font-medium text-sm backdrop-blur-sm transition-all hover:border-green/30 hover:text-text-primary"
+            style={{
+              background: "rgba(13,13,26,0.5)",
+              border: "1px solid rgba(26,26,46,0.8)",
+            }}
           >
             I have an account
           </Link>

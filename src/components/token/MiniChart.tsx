@@ -75,7 +75,7 @@ function MiniAreaChart({ candles }: { candles: CandleData[] }) {
       width: containerRef.current.clientWidth,
       height: 48,
       layout: {
-        background: { type: ColorType.Solid, color: "transparent" },
+        background: { type: ColorType.Solid, color: "#0d0d14" },
         textColor: "transparent",
         fontSize: 0,
       },

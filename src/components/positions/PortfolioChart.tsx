@@ -97,21 +97,26 @@ function AreaChartRenderer({
       width: el.clientWidth,
       height: el.clientHeight,
       layout: {
-        background: { type: ColorType.Solid, color: "transparent" },
+        background: { type: ColorType.Solid, color: "#0d0d14" },
         textColor: "#555568",
+        fontFamily: "var(--font-jetbrains-mono), monospace",
         fontSize: 10,
       },
       grid: {
         vertLines: { visible: false },
-        horzLines: { color: "rgba(255,255,255,0.03)" },
+        horzLines: { color: "rgba(26, 26, 46, 0.5)" },
       },
       crosshair: {
         vertLine: {
-          color: "rgba(255,255,255,0.15)",
+          color: "#555568",
+          width: 1,
+          style: 3,
           labelBackgroundColor: "#14141f",
         },
         horzLine: {
-          color: "rgba(255,255,255,0.15)",
+          color: "#555568",
+          width: 1,
+          style: 3,
           labelBackgroundColor: "#14141f",
         },
       },

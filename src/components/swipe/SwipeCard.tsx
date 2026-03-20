@@ -28,7 +28,16 @@ export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
   const liveData = useTokenPrice(token.mintAddress);
 
   return (
-    <div className="relative bg-bg-card border border-border rounded-card p-5 w-full space-y-3 no-select card-depth">
+    <div
+      className="relative rounded-card p-5 w-full space-y-3 no-select"
+      style={{
+        background: "linear-gradient(145deg, rgba(13,13,26,0.95) 0%, rgba(13,13,26,0.85) 100%)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        border: "1px solid rgba(26,26,46,0.9)",
+        boxShadow: "0 4px 24px rgba(0,0,0,0.3), 0 0 0 1px rgba(0,255,136,0.03), inset 0 1px 0 rgba(255,255,255,0.03)",
+      }}
+    >
       {/* Compare + Watchlist — top right */}
       <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
         <CompareButton
@@ -56,7 +65,15 @@ export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
         />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-bold text-text-primary truncate">
+            <h2
+              className="text-lg font-bold truncate"
+              style={{
+                background: "linear-gradient(135deg, #ffffff 0%, #b0b0c0 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
               ${token.ticker}
             </h2>
             <RiskBadge level={token.riskLevel} />
@@ -74,7 +91,12 @@ export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
                 onInfoTap(token);
               }}
               onPointerDown={(e) => e.stopPropagation()}
-              className="w-6 h-6 flex items-center justify-center rounded-full bg-bg-elevated border border-border text-text-muted hover:text-text-secondary hover:border-border-hover transition-colors text-[10px]"
+              className="w-6 h-6 flex items-center justify-center rounded-full text-text-muted hover:text-green transition-all duration-200 text-[10px] font-semibold"
+              style={{
+                background: "rgba(13,13,26,0.8)",
+                border: "1px solid rgba(26,26,46,0.9)",
+                backdropFilter: "blur(8px)",
+              }}
               aria-label={`View details for ${token.name}`}
             >
               i

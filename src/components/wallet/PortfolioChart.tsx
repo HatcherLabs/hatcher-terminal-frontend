@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { createChart, AreaSeries, type IChartApi } from "lightweight-charts";
+import { useEffect, useRef, useCallback } from "react";
 
 interface PortfolioChartProps {
   data: { time: string; value: number }[];
@@ -9,22 +8,36 @@ interface PortfolioChartProps {
 
 export function PortfolioChart({ data }: PortfolioChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const chartRef = useRef<IChartApi | null>(null);
+  const chartRef = useRef<ReturnType<
+    typeof import("lightweight-charts").createChart
+  > | null>(null);
 
-  useEffect(() => {
+  const initChart = useCallback(async () => {
     if (!containerRef.current || data.length === 0) return;
 
-    const chart = createChart(containerRef.current, {
-      autoSize: true,
+    const { createChart, AreaSeries, ColorType } = await import(
+      "lightweight-charts"
+    );
+
+    if (chartRef.current) {
+      chartRef.current.remove();
+      chartRef.current = null;
+    }
+
+    const el = containerRef.current;
+
+    const chart = createChart(el, {
+      width: el.clientWidth,
+      height: el.clientHeight,
       layout: {
-        background: { color: "transparent" },
+        background: { type: ColorType.Solid, color: "#0d0d14" },
         textColor: "#555568",
         fontFamily: "var(--font-jetbrains-mono), monospace",
         fontSize: 11,
       },
       grid: {
-        vertLines: { color: "#1a1a2a30" },
-        horzLines: { color: "#1a1a2a30" },
+        vertLines: { color: "rgba(26, 26, 46, 0.4)" },
+        horzLines: { color: "rgba(26, 26, 46, 0.4)" },
       },
       crosshair: {
         vertLine: {
@@ -61,6 +74,7 @@ export function PortfolioChart({ data }: PortfolioChartProps) {
       bottomColor: "rgba(0, 255, 136, 0.02)",
       crosshairMarkerBackgroundColor: "#00ff88",
       crosshairMarkerBorderColor: "#00ff88",
+      crosshairMarkerRadius: 4,
       priceFormat: {
         type: "price",
         precision: 4,
@@ -71,16 +85,67 @@ export function PortfolioChart({ data }: PortfolioChartProps) {
     areaSeries.setData(data as { time: string; value: number }[]);
     chart.timeScale().fitContent();
 
-    return () => {
-      chart.remove();
-      chartRef.current = null;
-    };
+    // Resize observer for responsive behavior
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width } = entry.contentRect;
+        if (width > 0 && chartRef.current) {
+          chartRef.current.applyOptions({ width });
+        }
+      }
+    });
+
+    resizeObserver.observe(el);
+    (el as HTMLDivElement & { _ro?: ResizeObserver })._ro = resizeObserver;
   }, [data]);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    initChart();
+
+    return () => {
+      if (el) {
+        const obs = (el as HTMLDivElement & { _ro?: ResizeObserver })._ro;
+        if (obs) obs.disconnect();
+      }
+      if (chartRef.current) {
+        chartRef.current.remove();
+        chartRef.current = null;
+      }
+    };
+  }, [initChart]);
 
   if (data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-[200px] text-text-muted text-xs">
-        No portfolio data available
+      <div
+        className="flex flex-col items-center justify-center h-[200px] gap-1.5"
+        style={{ background: "#0d0d14", borderRadius: 12 }}
+      >
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          style={{ color: "#333340" }}
+        >
+          <path
+            d="M3 17L9 11L13 15L21 7"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M17 7H21V11"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+        <span className="text-xs font-mono" style={{ color: "#555568" }}>
+          No portfolio data available
+        </span>
       </div>
     );
   }
@@ -89,6 +154,7 @@ export function PortfolioChart({ data }: PortfolioChartProps) {
     <div
       ref={containerRef}
       className="w-full h-[200px]"
+      style={{ borderRadius: 8, overflow: "hidden" }}
     />
   );
 }

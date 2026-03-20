@@ -497,7 +497,13 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
           <button
             onClick={() => currentToken && handleSwipe("left", currentToken)}
             disabled={swiping}
-            className="w-14 h-14 rounded-full border-2 border-red text-red text-2xl flex items-center justify-center hover:bg-red-dim transition-colors disabled:opacity-30"
+            className="w-14 h-14 rounded-full text-2xl flex items-center justify-center transition-all duration-200 disabled:opacity-30 hover:scale-105 active:scale-95"
+            style={{
+              background: "rgba(255,59,92,0.08)",
+              border: "2px solid #ff3b5c",
+              color: "#ff3b5c",
+              boxShadow: "0 0 16px rgba(255,59,92,0.15)",
+            }}
             aria-label="Pass on token"
           >
             &#10005;
@@ -530,7 +536,13 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
               }, 350);
             }}
             disabled={swiping}
-            className="w-10 h-10 rounded-full border-2 border-amber text-amber text-lg flex items-center justify-center hover:bg-amber-dim transition-colors disabled:opacity-30"
+            className="w-10 h-10 rounded-full text-lg flex items-center justify-center transition-all duration-200 disabled:opacity-30 hover:scale-105 active:scale-95"
+            style={{
+              background: "rgba(255,170,0,0.06)",
+              border: "2px solid #ffaa00",
+              color: "#ffaa00",
+              boxShadow: "0 0 12px rgba(255,170,0,0.1)",
+            }}
             aria-label="Add to watchlist"
             title="Add to watchlist (swipe up)"
           >
@@ -542,7 +554,13 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
           <button
             onClick={() => currentToken && handleSwipe("right", currentToken)}
             disabled={swiping}
-            className="w-14 h-14 rounded-full border-2 border-green text-green text-2xl flex items-center justify-center hover:bg-green-dim transition-colors disabled:opacity-30"
+            className="w-14 h-14 rounded-full text-2xl flex items-center justify-center transition-all duration-200 disabled:opacity-30 hover:scale-105 active:scale-95"
+            style={{
+              background: "rgba(0,255,136,0.08)",
+              border: "2px solid #00ff88",
+              color: "#00ff88",
+              boxShadow: "0 0 16px rgba(0,255,136,0.15)",
+            }}
             aria-label="Buy token"
           >
             &#9829;

@@ -5,16 +5,16 @@ import { api } from "@/lib/api";
 
 // ---- Chart Theme Constants ----
 const CHART_THEME = {
-  background: "transparent",
-  gridColor: "#1a1a2e",
+  background: "#0d0d14",
+  gridColor: "rgba(26, 26, 46, 0.5)",
   upColor: "#00ff88",
   downColor: "#ff3b5c",
-  crosshairColor: "#666",
-  textColor: "#8888aa",
-  labelBg: "#1a1a2e",
-  borderColor: "rgba(255,255,255,0.06)",
-  volumeUpColor: "rgba(0, 255, 136, 0.25)",
-  volumeDownColor: "rgba(255, 59, 92, 0.25)",
+  crosshairColor: "#555568",
+  textColor: "#8888a0",
+  labelBg: "#14141f",
+  borderColor: "#1a1a2a",
+  volumeUpColor: "rgba(0, 255, 136, 0.2)",
+  volumeDownColor: "rgba(255, 59, 92, 0.2)",
 } as const;
 
 // ---- Timeframe Config ----
@@ -371,6 +371,7 @@ function TradingViewChart({
       layout: {
         background: { type: ColorType.Solid, color: CHART_THEME.background },
         textColor: CHART_THEME.textColor,
+        fontFamily: "var(--font-jetbrains-mono), monospace",
         fontSize: 11,
       },
       grid: {

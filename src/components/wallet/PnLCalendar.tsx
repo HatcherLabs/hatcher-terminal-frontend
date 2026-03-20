@@ -37,23 +37,33 @@ function dateKey(year: number, month: number, day: number): string {
   return `${year}-${m}-${d}`;
 }
 
-function getCellColor(pnl: number | undefined): string {
-  if (pnl === undefined || pnl === 0) return "bg-bg-elevated";
+function getCellStyle(pnl: number | undefined): React.CSSProperties {
+  if (pnl === undefined || pnl === 0) {
+    return { backgroundColor: "#14141f" };
+  }
 
   if (pnl > 0) {
-    if (pnl >= 1) return "bg-[#00ff88]";
-    if (pnl >= 0.5) return "bg-[#00ff88]/80";
-    if (pnl >= 0.1) return "bg-[#00ff88]/50";
-    if (pnl >= 0.01) return "bg-[#00ff88]/30";
-    return "bg-[#00ff88]/15";
+    if (pnl >= 1) return { backgroundColor: "#00ff88" };
+    if (pnl >= 0.5) return { backgroundColor: "rgba(0, 255, 136, 0.7)" };
+    if (pnl >= 0.1) return { backgroundColor: "rgba(0, 255, 136, 0.45)" };
+    if (pnl >= 0.01) return { backgroundColor: "rgba(0, 255, 136, 0.25)" };
+    return { backgroundColor: "rgba(0, 255, 136, 0.12)" };
   }
 
   const absPnl = Math.abs(pnl);
-  if (absPnl >= 1) return "bg-[#ff3b5c]";
-  if (absPnl >= 0.5) return "bg-[#ff3b5c]/80";
-  if (absPnl >= 0.1) return "bg-[#ff3b5c]/50";
-  if (absPnl >= 0.01) return "bg-[#ff3b5c]/30";
-  return "bg-[#ff3b5c]/15";
+  if (absPnl >= 1) return { backgroundColor: "#ff3b5c" };
+  if (absPnl >= 0.5) return { backgroundColor: "rgba(255, 59, 92, 0.7)" };
+  if (absPnl >= 0.1) return { backgroundColor: "rgba(255, 59, 92, 0.45)" };
+  if (absPnl >= 0.01) return { backgroundColor: "rgba(255, 59, 92, 0.25)" };
+  return { backgroundColor: "rgba(255, 59, 92, 0.12)" };
+}
+
+function getCellTextColor(pnl: number | undefined): string {
+  // On bright cells (high profit/loss), use dark text for readability
+  if (pnl === undefined || pnl === 0) return "#555568";
+  const abs = Math.abs(pnl);
+  if (abs >= 0.5) return "#0d0d14";
+  return "#8888a0";
 }
 
 export function PnLCalendar({ dailyPnl }: PnLCalendarProps) {
@@ -98,13 +108,16 @@ export function PnLCalendar({ dailyPnl }: PnLCalendarProps) {
     }
   };
 
+  const hasAnyData = Object.keys(dailyPnl).length > 0;
+
   return (
     <div className="space-y-3">
       {/* Header with navigation */}
       <div className="flex items-center justify-between">
         <button
           onClick={goToPrevMonth}
-          className="p-1.5 rounded-lg text-text-muted hover:text-text-secondary hover:bg-bg-hover transition-colors"
+          className="p-1.5 rounded-lg transition-colors"
+          style={{ color: "#555568" }}
           aria-label="Previous month"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -112,14 +125,20 @@ export function PnLCalendar({ dailyPnl }: PnLCalendarProps) {
           </svg>
         </button>
         <div className="text-center">
-          <p className="text-sm font-medium text-text-primary">{formatMonth(year, month)}</p>
-          <p className={`text-xs font-mono ${monthTotal >= 0 ? "text-green" : "text-red"}`}>
+          <p className="text-sm font-medium" style={{ color: "#e8e8f0" }}>
+            {formatMonth(year, month)}
+          </p>
+          <p
+            className="text-xs font-mono"
+            style={{ color: monthTotal >= 0 ? "#00ff88" : "#ff3b5c" }}
+          >
             {monthTotal >= 0 ? "+" : ""}{monthTotal.toFixed(4)} SOL
           </p>
         </div>
         <button
           onClick={goToNextMonth}
-          className="p-1.5 rounded-lg text-text-muted hover:text-text-secondary hover:bg-bg-hover transition-colors"
+          className="p-1.5 rounded-lg transition-colors"
+          style={{ color: "#555568" }}
           aria-label="Next month"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -131,7 +150,11 @@ export function PnLCalendar({ dailyPnl }: PnLCalendarProps) {
       {/* Day labels */}
       <div className="grid grid-cols-7 gap-1">
         {DAY_LABELS.map((label, i) => (
-          <div key={i} className="text-center text-[10px] text-text-muted py-0.5">
+          <div
+            key={i}
+            className="text-center py-0.5"
+            style={{ fontSize: 10, color: "#555568" }}
+          >
             {label}
           </div>
         ))}
@@ -143,24 +166,39 @@ export function PnLCalendar({ dailyPnl }: PnLCalendarProps) {
           <div key={wi} className="grid grid-cols-7 gap-1">
             {week.map((day, di) => {
               if (day === null) {
-                return <div key={di} className="aspect-square rounded-sm" />;
+                return (
+                  <div
+                    key={di}
+                    className="aspect-square"
+                    style={{ borderRadius: 4 }}
+                  />
+                );
               }
 
               const key = dateKey(year, month, day);
               const pnl = dailyPnl[key];
-              const colorClass = getCellColor(pnl);
+              const cellStyle = getCellStyle(pnl);
+              const textColor = getCellTextColor(pnl);
 
               return (
                 <div
                   key={di}
-                  className={`aspect-square rounded-sm ${colorClass} flex items-center justify-center cursor-default group relative`}
+                  className="aspect-square flex items-center justify-center cursor-default group relative"
+                  style={{
+                    ...cellStyle,
+                    borderRadius: 4,
+                    transition: "background-color 0.15s ease",
+                  }}
                   title={
                     pnl !== undefined
                       ? `${key}: ${pnl >= 0 ? "+" : ""}${pnl.toFixed(4)} SOL`
                       : key
                   }
                 >
-                  <span className="text-[10px] font-mono text-text-muted group-hover:text-text-secondary transition-colors">
+                  <span
+                    className="font-mono"
+                    style={{ fontSize: 10, color: textColor }}
+                  >
                     {day}
                   </span>
                 </div>
@@ -170,19 +208,50 @@ export function PnLCalendar({ dailyPnl }: PnLCalendarProps) {
         ))}
       </div>
 
+      {/* Empty state hint */}
+      {!hasAnyData && (
+        <p
+          className="text-center py-2"
+          style={{ fontSize: 11, color: "#555568" }}
+        >
+          No P&L data for this month
+        </p>
+      )}
+
       {/* Legend */}
       <div className="flex items-center justify-center gap-2 pt-1">
-        <span className="text-[10px] text-text-muted">Loss</span>
+        <span style={{ fontSize: 10, color: "#555568" }}>Loss</span>
         <div className="flex gap-0.5">
-          <div className="w-3 h-3 rounded-sm bg-[#ff3b5c]" />
-          <div className="w-3 h-3 rounded-sm bg-[#ff3b5c]/50" />
-          <div className="w-3 h-3 rounded-sm bg-[#ff3b5c]/15" />
-          <div className="w-3 h-3 rounded-sm bg-bg-elevated" />
-          <div className="w-3 h-3 rounded-sm bg-[#00ff88]/15" />
-          <div className="w-3 h-3 rounded-sm bg-[#00ff88]/50" />
-          <div className="w-3 h-3 rounded-sm bg-[#00ff88]" />
+          <div
+            className="w-3 h-3"
+            style={{ backgroundColor: "#ff3b5c", borderRadius: 3 }}
+          />
+          <div
+            className="w-3 h-3"
+            style={{ backgroundColor: "rgba(255, 59, 92, 0.45)", borderRadius: 3 }}
+          />
+          <div
+            className="w-3 h-3"
+            style={{ backgroundColor: "rgba(255, 59, 92, 0.12)", borderRadius: 3 }}
+          />
+          <div
+            className="w-3 h-3"
+            style={{ backgroundColor: "#14141f", borderRadius: 3 }}
+          />
+          <div
+            className="w-3 h-3"
+            style={{ backgroundColor: "rgba(0, 255, 136, 0.12)", borderRadius: 3 }}
+          />
+          <div
+            className="w-3 h-3"
+            style={{ backgroundColor: "rgba(0, 255, 136, 0.45)", borderRadius: 3 }}
+          />
+          <div
+            className="w-3 h-3"
+            style={{ backgroundColor: "#00ff88", borderRadius: 3 }}
+          />
         </div>
-        <span className="text-[10px] text-text-muted">Profit</span>
+        <span style={{ fontSize: 10, color: "#555568" }}>Profit</span>
       </div>
     </div>
   );
