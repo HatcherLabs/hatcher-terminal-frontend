@@ -48,6 +48,15 @@ interface SwipeStackProps {
   onSessionUpdate?: (stats: SwipeSessionData) => void;
 }
 
+const SWIPE_HINT_LIMIT = 3;
+const SWIPE_HINT_STORAGE_KEY = "hatcher:swipeHintCount";
+
+function getStoredSwipeCount(): number {
+  if (typeof window === "undefined") return 0;
+  const val = localStorage.getItem(SWIPE_HINT_STORAGE_KEY);
+  return val ? parseInt(val, 10) || 0 : 0;
+}
+
 export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackProps) {
   const feed = useFeed();
   const router = useRouter();
@@ -59,6 +68,18 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
   const [swiping, setSwiping] = useState(false);
   const [buyLoading, setBuyLoading] = useState(false);
   const [detailToken, setDetailToken] = useState<TokenData | null>(null);
+
+  // Swipe hint: show for first N swipes across sessions
+  const [swipeHintCount, setSwipeHintCount] = useState(getStoredSwipeCount);
+  const showSwipeHints = swipeHintCount < SWIPE_HINT_LIMIT;
+
+  const incrementSwipeHint = useCallback(() => {
+    setSwipeHintCount((prev) => {
+      const next = prev + 1;
+      localStorage.setItem(SWIPE_HINT_STORAGE_KEY, String(next));
+      return next;
+    });
+  }, []);
 
   // Session stats
   const [session, setSession] = useState<SwipeSessionData>({
@@ -172,7 +193,8 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
       passed: prev.passed + (direction === "left" ? 1 : 0),
       totalMarketCapSol: prev.totalMarketCapSol + (token.marketCapSol ?? 0),
     }));
-  }, []);
+    incrementSwipeHint();
+  }, [incrementSwipeHint]);
 
   const handleWatchlistSwipe = useCallback(
     (token: TokenData) => {
@@ -452,6 +474,23 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
             </motion.div>
           </AnimatePresence>
         </div>
+
+        {/* Swipe hints — shown for the first few swipes */}
+        {showSwipeHints && (
+          <motion.p
+            className="mt-3 text-xs font-mono text-text-muted select-none text-center tracking-wide"
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 0.6, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+          >
+            <span className="text-red/50">&larr; PASS</span>
+            <span className="mx-4 text-text-faint">|</span>
+            <span className="text-amber/50">&uarr; WATCH</span>
+            <span className="mx-4 text-text-faint">|</span>
+            <span className="text-green/50">BUY &rarr;</span>
+          </motion.p>
+        )}
 
         {/* Action buttons with undo */}
         <div className="flex items-center gap-4 mt-4">
