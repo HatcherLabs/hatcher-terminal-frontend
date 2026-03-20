@@ -13,6 +13,16 @@ import { api } from "@/lib/api";
 type ExploreCategory = "new" | "graduating" | "migrated";
 type SortKey = "newest" | "marketCap" | "holders" | "volume" | "bonding" | "devHold" | "heat" | "buySellRatio" | "topHolders" | "risk";
 type SortDirection = "desc" | "asc";
+type AgeFilter = "all" | "5m" | "30m" | "1h" | "6h" | "24h";
+
+const AGE_FILTERS: { key: AgeFilter; label: string; maxMs: number }[] = [
+  { key: "all", label: "All", maxMs: 0 },
+  { key: "5m", label: "< 5m", maxMs: 5 * 60 * 1000 },
+  { key: "30m", label: "< 30m", maxMs: 30 * 60 * 1000 },
+  { key: "1h", label: "< 1h", maxMs: 60 * 60 * 1000 },
+  { key: "6h", label: "< 6h", maxMs: 6 * 60 * 60 * 1000 },
+  { key: "24h", label: "< 24h", maxMs: 24 * 60 * 60 * 1000 },
+];
 
 const TABS: { key: ExploreCategory; label: string; desc: string; icon: string }[] = [
   { key: "new", label: "New Pairs", desc: "Just created", icon: "+" },
@@ -377,6 +387,12 @@ export default function TrenchesPage() {
   // View mode
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
 
+  // Quick filters
+  const [ageFilter, setAgeFilter] = useState<AgeFilter>("all");
+  const [minMcap, setMinMcap] = useState("");
+  const [minHolders, setMinHolders] = useState("");
+  const [hasSocials, setHasSocials] = useState(false);
+
   // Token count for header
   const tokenCount = tokens.length;
 
@@ -579,7 +595,42 @@ export default function TrenchesPage() {
     return sorted;
   }, [tokens, sortKey, sortDirection]);
 
-  const displayTokens = searchQuery.length >= 2 ? searchResults : sortedTokens;
+  const filteredTokens = useMemo(() => {
+    let list = searchQuery.length >= 2 ? searchResults : sortedTokens;
+
+    // Age filter
+    if (ageFilter !== "all") {
+      const maxMs = AGE_FILTERS.find((f) => f.key === ageFilter)?.maxMs ?? 0;
+      if (maxMs > 0) {
+        const now = Date.now();
+        list = list.filter((t) => {
+          const ts = new Date(t.detectedAt).getTime();
+          return now - ts <= maxMs;
+        });
+      }
+    }
+
+    // Min MCap filter (parse as USD)
+    const mcapNum = parseFloat(minMcap);
+    if (!isNaN(mcapNum) && mcapNum > 0) {
+      list = list.filter((t) => (t.marketCapUsd ?? (t.marketCapSol ?? 0) * SOL_PRICE_USD) >= mcapNum);
+    }
+
+    // Min Holders filter
+    const holdersNum = parseInt(minHolders, 10);
+    if (!isNaN(holdersNum) && holdersNum > 0) {
+      list = list.filter((t) => (t.holders ?? 0) >= holdersNum);
+    }
+
+    // Has Socials filter
+    if (hasSocials) {
+      list = list.filter((t) => !!(t.twitter || t.telegram || t.website));
+    }
+
+    return list;
+  }, [searchQuery, searchResults, sortedTokens, ageFilter, minMcap, minHolders, hasSocials]);
+
+  const displayTokens = filteredTokens;
   const columns = getColumns(activeTab);
   const tableMinWidth = columns.reduce((acc, col) => acc + col.width, 0);
 
@@ -733,6 +784,116 @@ export default function TrenchesPage() {
           );
         })}
       </nav>
+
+      {/* Age filter pills + quick filters */}
+      <div
+        className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-2.5 py-1.5 mb-2 rounded-lg"
+        style={{ background: "#04060b", border: "1px solid #1a1f2e" }}
+      >
+        {/* Age pills */}
+        <div className="flex items-center gap-1">
+          <span className="text-[9px] uppercase tracking-wider font-semibold mr-1" style={{ color: "#363d54" }}>
+            Age
+          </span>
+          {AGE_FILTERS.map((f) => {
+            const isActive = ageFilter === f.key;
+            return (
+              <button
+                key={f.key}
+                onClick={() => setAgeFilter(f.key)}
+                className="px-2 py-[2px] rounded text-[10px] font-semibold transition-all duration-150"
+                style={
+                  isActive
+                    ? { background: "#00d67218", color: "#00d672", border: "1px solid #00d67230" }
+                    : { background: "transparent", color: "#5c6380", border: "1px solid transparent" }
+                }
+              >
+                {f.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Separator */}
+        <div className="w-px h-4 self-center" style={{ background: "#1a1f2e" }} />
+
+        {/* Min MCap */}
+        <div className="flex items-center gap-1">
+          <span className="text-[9px] uppercase tracking-wider font-semibold" style={{ color: "#363d54" }}>
+            MCap
+          </span>
+          <input
+            type="text"
+            value={minMcap}
+            onChange={(e) => setMinMcap(e.target.value.replace(/[^0-9.]/g, ""))}
+            placeholder="Min $"
+            className="w-[60px] px-1.5 py-[2px] rounded text-[10px] font-mono focus:outline-none"
+            style={{
+              background: "#0a0d14",
+              border: "1px solid #1a1f2e",
+              color: "#eef0f6",
+            }}
+          />
+        </div>
+
+        {/* Min Holders */}
+        <div className="flex items-center gap-1">
+          <span className="text-[9px] uppercase tracking-wider font-semibold" style={{ color: "#363d54" }}>
+            Holders
+          </span>
+          <input
+            type="text"
+            value={minHolders}
+            onChange={(e) => setMinHolders(e.target.value.replace(/[^0-9]/g, ""))}
+            placeholder="Min"
+            className="w-[48px] px-1.5 py-[2px] rounded text-[10px] font-mono focus:outline-none"
+            style={{
+              background: "#0a0d14",
+              border: "1px solid #1a1f2e",
+              color: "#eef0f6",
+            }}
+          />
+        </div>
+
+        {/* Separator */}
+        <div className="w-px h-4 self-center" style={{ background: "#1a1f2e" }} />
+
+        {/* Has Socials toggle */}
+        <button
+          onClick={() => setHasSocials((v) => !v)}
+          className="flex items-center gap-1 px-2 py-[2px] rounded text-[10px] font-semibold transition-all duration-150"
+          style={
+            hasSocials
+              ? { background: "#00d67218", color: "#00d672", border: "1px solid #00d67230" }
+              : { background: "transparent", color: "#5c6380", border: "1px solid transparent" }
+          }
+        >
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+          </svg>
+          Socials
+        </button>
+
+        {/* Clear all filters */}
+        {(ageFilter !== "all" || minMcap || minHolders || hasSocials) && (
+          <>
+            <div className="w-px h-4 self-center" style={{ background: "#1a1f2e" }} />
+            <button
+              onClick={() => {
+                setAgeFilter("all");
+                setMinMcap("");
+                setMinHolders("");
+                setHasSocials(false);
+              }}
+              className="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-[2px] rounded transition-colors"
+              style={{ color: "#f23645", background: "#f2364510" }}
+            >
+              Clear
+            </button>
+          </>
+        )}
+      </div>
 
       {/* Content */}
       {loading ? (
