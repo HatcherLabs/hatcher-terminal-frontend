@@ -5,20 +5,21 @@ import { api } from "@/lib/api";
 
 // ---- Chart Theme Constants ----
 const CHART_THEME = {
-  background: "#0a0d14",
-  gridColor: "rgba(26, 31, 46, 0.5)",
+  background: "#04060b",
+  gridColor: "#1a1f2e",
   upColor: "#00d672",
   downColor: "#f23645",
   crosshairColor: "#5c6380",
-  textColor: "#9ca3b8",
-  labelBg: "#10131c",
+  textColor: "#5c6380",
+  labelBg: "#0a0d14",
   borderColor: "#1a1f2e",
   volumeUpColor: "rgba(0, 214, 114, 0.2)",
   volumeDownColor: "rgba(242, 54, 69, 0.2)",
+  priceLineColor: "#5c6380",
 } as const;
 
 // ---- Timeframe Config ----
-type Timeframe = "1m" | "5m" | "15m" | "1h" | "4h";
+type Timeframe = "5m" | "15m" | "1H" | "4H" | "1D" | "1W";
 
 interface TimeframeConfig {
   label: string;
@@ -28,14 +29,15 @@ interface TimeframeConfig {
 }
 
 const TIMEFRAMES: Record<Timeframe, TimeframeConfig> = {
-  "1m": { label: "1m", interval: "1m", limit: 60, secondsVisible: true },
-  "5m": { label: "5m", interval: "5m", limit: 60, secondsVisible: false },
-  "15m": { label: "15m", interval: "15m", limit: 60, secondsVisible: false },
-  "1h": { label: "1h", interval: "1h", limit: 48, secondsVisible: false },
-  "4h": { label: "4h", interval: "4h", limit: 48, secondsVisible: false },
+  "5m": { label: "5m", interval: "5m", limit: 120, secondsVisible: false },
+  "15m": { label: "15m", interval: "15m", limit: 96, secondsVisible: false },
+  "1H": { label: "1H", interval: "1h", limit: 72, secondsVisible: false },
+  "4H": { label: "4H", interval: "4h", limit: 60, secondsVisible: false },
+  "1D": { label: "1D", interval: "1d", limit: 90, secondsVisible: false },
+  "1W": { label: "1W", interval: "1w", limit: 52, secondsVisible: false },
 };
 
-const TIMEFRAME_KEYS: Timeframe[] = ["1m", "5m", "15m", "1h", "4h"];
+const TIMEFRAME_KEYS: Timeframe[] = ["5m", "15m", "1H", "4H", "1D", "1W"];
 
 // ---- Interfaces ----
 interface CandleData {
@@ -58,6 +60,16 @@ interface ChartResponse {
 interface TokenChartProps {
   mintAddress: string;
   height?: number;
+}
+
+// ---- OHLCV Hover Data ----
+interface OHLCVData {
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+  time: number;
 }
 
 // ---- Cache ----
@@ -88,69 +100,6 @@ async function fetchChartData(
   return json;
 }
 
-// ---- Indicator Types & Config ----
-type IndicatorKey = "sma7" | "sma25" | "ema9" | "vol";
-
-interface IndicatorConfig {
-  label: string;
-  color: string;
-}
-
-const INDICATORS: Record<IndicatorKey, IndicatorConfig> = {
-  sma7: { label: "SMA 7", color: "#8b5cf6" },
-  sma25: { label: "SMA 25", color: "#ff9800" },
-  ema9: { label: "EMA 9", color: "#00bcd4" },
-  vol: { label: "VOL", color: "" },
-};
-
-const INDICATOR_KEYS: IndicatorKey[] = ["sma7", "sma25", "ema9", "vol"];
-
-const DEFAULT_INDICATORS: Record<IndicatorKey, boolean> = {
-  sma7: true,
-  sma25: false,
-  ema9: false,
-  vol: true,
-};
-
-// ---- Indicator Calculations ----
-function calculateSMA(
-  candles: CandleData[],
-  period: number
-): { time: number; value: number }[] {
-  const result: { time: number; value: number }[] = [];
-  for (let i = period - 1; i < candles.length; i++) {
-    let sum = 0;
-    for (let j = i - period + 1; j <= i; j++) {
-      sum += candles[j].close;
-    }
-    result.push({ time: candles[i].timestamp, value: sum / period });
-  }
-  return result;
-}
-
-function calculateEMA(
-  candles: CandleData[],
-  period: number
-): { time: number; value: number }[] {
-  if (candles.length < period) return [];
-  const k = 2 / (period + 1);
-  const result: { time: number; value: number }[] = [];
-
-  // Seed with SMA of first `period` candles
-  let sum = 0;
-  for (let i = 0; i < period; i++) {
-    sum += candles[i].close;
-  }
-  let ema = sum / period;
-  result.push({ time: candles[period - 1].timestamp, value: ema });
-
-  for (let i = period; i < candles.length; i++) {
-    ema = candles[i].close * k + ema * (1 - k);
-    result.push({ time: candles[i].timestamp, value: ema });
-  }
-  return result;
-}
-
 // ---- Helpers ----
 function detectPricePrecision(price: number): number {
   if (price === 0) return 8;
@@ -163,113 +112,184 @@ function detectPricePrecision(price: number): number {
   return 0;
 }
 
-function formatPriceSOL(price: number): string {
+function formatPriceCompact(price: number): string {
   const precision = detectPricePrecision(price);
   if (price < 0.0001) {
-    return `${price.toExponential(2)} SOL`;
+    return price.toExponential(2);
   }
-  return `${price.toFixed(precision)} SOL`;
+  return price.toFixed(precision);
 }
 
-// ---- Placeholder ----
-function ChartPlaceholder({
-  icon,
-  title,
-  subtitle,
-  height = 200,
-}: {
-  icon?: React.ReactNode;
-  title: string;
-  subtitle?: string;
-  height?: number;
-}) {
+function formatVolume(vol: number): string {
+  if (vol >= 1_000_000) return (vol / 1_000_000).toFixed(2) + "M";
+  if (vol >= 1_000) return (vol / 1_000).toFixed(2) + "K";
+  return vol.toFixed(2);
+}
+
+// ---- Loading Skeleton ----
+function ChartSkeleton({ height }: { height: number }) {
   return (
     <div
-      className="w-full rounded-xl bg-bg-elevated border border-border flex flex-col items-center justify-center gap-1.5"
-      style={{ height }}
+      className="w-full rounded-lg overflow-hidden"
+      style={{ height, background: "#04060b" }}
     >
-      {icon || (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          className="text-text-faint"
+      {/* Toolbar skeleton */}
+      <div className="flex items-center gap-2 px-3 py-2.5">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div
+            key={i}
+            className="h-6 rounded animate-pulse"
+            style={{
+              width: 32 + Math.random() * 8,
+              background: "#1a1f2e",
+            }}
+          />
+        ))}
+      </div>
+      {/* Chart area skeleton */}
+      <div className="px-3 pb-3" style={{ height: height - 48 }}>
+        <div
+          className="w-full h-full rounded animate-pulse relative overflow-hidden"
+          style={{ background: "#0a0d14" }}
         >
-          <path
-            d="M3 17L9 11L13 15L21 7"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+          {/* Fake candle bars */}
+          <div className="absolute inset-0 flex items-end justify-around px-4 pb-8 gap-1">
+            {Array.from({ length: 24 }).map((_, i) => {
+              const h = 20 + Math.random() * 50;
+              const isUp = Math.random() > 0.45;
+              return (
+                <div
+                  key={i}
+                  className="rounded-sm animate-pulse"
+                  style={{
+                    width: 4,
+                    height: `${h}%`,
+                    background: isUp
+                      ? "rgba(0, 214, 114, 0.15)"
+                      : "rgba(242, 54, 69, 0.15)",
+                    animationDelay: `${i * 80}ms`,
+                  }}
+                />
+              );
+            })}
+          </div>
+          {/* Shimmer overlay */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(90deg, transparent 0%, rgba(26, 31, 46, 0.15) 50%, transparent 100%)",
+              animation: "shimmer 2s ease-in-out infinite",
+            }}
           />
-          <path
-            d="M17 7H21V11"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      )}
-      <p className="text-xs text-text-muted">{title}</p>
-      {subtitle && (
-        <p className="text-[10px] text-text-faint">{subtitle}</p>
-      )}
+        </div>
+      </div>
+      <style jsx>{`
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+      `}</style>
     </div>
   );
 }
 
-// ---- Chart Header Overlay ----
-function ChartHeaderOverlay({ candles }: { candles: CandleData[] }) {
-  const stats = useMemo(() => {
-    if (candles.length === 0) return null;
-    const current = candles[candles.length - 1].close;
-    const open = candles[0].open;
-    const change = open !== 0 ? ((current - open) / open) * 100 : 0;
-    let high = -Infinity;
-    let low = Infinity;
-    for (const c of candles) {
-      if (c.high > high) high = c.high;
-      if (c.low < low) low = c.low;
-    }
-    return { current, change, high, low };
-  }, [candles]);
+// ---- Error State ----
+function ChartError({ height }: { height: number }) {
+  return (
+    <div
+      className="w-full rounded-lg flex flex-col items-center justify-center gap-2"
+      style={{ height, background: "#04060b" }}
+    >
+      <svg
+        width="28"
+        height="28"
+        viewBox="0 0 24 24"
+        fill="none"
+        style={{ color: "#5c6380" }}
+      >
+        <path
+          d="M3 17L9 11L13 15L21 7"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeDasharray="4 4"
+        />
+        <circle cx="21" cy="7" r="1.5" fill="currentColor" opacity="0.5" />
+      </svg>
+      <p
+        className="font-mono text-xs"
+        style={{ color: "#5c6380" }}
+      >
+        Chart data unavailable
+      </p>
+      <p
+        className="font-mono"
+        style={{ color: "#363d54", fontSize: 10 }}
+      >
+        Try again later or switch timeframe
+      </p>
+    </div>
+  );
+}
 
-  if (!stats) return null;
+// ---- OHLCV Tooltip Overlay ----
+function OHLCVOverlay({ data }: { data: OHLCVData | null }) {
+  if (!data) return null;
 
-  const changeColor =
-    stats.change > 0
-      ? "text-[#00d672]"
-      : stats.change < 0
-        ? "text-[#f23645]"
-        : "text-[#9ca3b8]";
+  const isUp = data.close >= data.open;
+  const changePercent =
+    data.open !== 0 ? ((data.close - data.open) / data.open) * 100 : 0;
 
   return (
-    <div className="absolute top-2 left-2 z-10 flex flex-col gap-0.5 pointer-events-none select-none">
-      <div className="flex items-baseline gap-2">
-        <span className="text-sm font-bold font-mono text-text-primary">
-          {formatPriceSOL(stats.current)}
+    <div
+      className="absolute top-1.5 left-2 z-10 flex items-center gap-3 pointer-events-none select-none font-mono"
+      style={{ fontSize: 10 }}
+    >
+      <span style={{ color: "#5c6380" }}>
+        O{" "}
+        <span style={{ color: isUp ? "#00d672" : "#f23645" }}>
+          {formatPriceCompact(data.open)}
         </span>
-        <span className={`text-xs font-mono font-semibold ${changeColor}`}>
-          {stats.change > 0 ? "+" : ""}
-          {stats.change.toFixed(2)}%
+      </span>
+      <span style={{ color: "#5c6380" }}>
+        H{" "}
+        <span style={{ color: isUp ? "#00d672" : "#f23645" }}>
+          {formatPriceCompact(data.high)}
         </span>
-      </div>
-      <div className="flex items-center gap-3 text-[10px] font-mono text-[#9ca3b8]">
-        <span>
-          H: {formatPriceSOL(stats.high)}
+      </span>
+      <span style={{ color: "#5c6380" }}>
+        L{" "}
+        <span style={{ color: isUp ? "#00d672" : "#f23645" }}>
+          {formatPriceCompact(data.low)}
         </span>
-        <span>
-          L: {formatPriceSOL(stats.low)}
+      </span>
+      <span style={{ color: "#5c6380" }}>
+        C{" "}
+        <span style={{ color: isUp ? "#00d672" : "#f23645" }}>
+          {formatPriceCompact(data.close)}
         </span>
-      </div>
+      </span>
+      <span style={{ color: "#5c6380" }}>
+        V{" "}
+        <span style={{ color: "#9ca3b8" }}>
+          {formatVolume(data.volume)}
+        </span>
+      </span>
+      <span
+        className="font-semibold"
+        style={{ color: isUp ? "#00d672" : "#f23645" }}
+      >
+        {changePercent > 0 ? "+" : ""}
+        {changePercent.toFixed(2)}%
+      </span>
     </div>
   );
 }
 
-// ---- Timeframe Buttons ----
-function TimeframeButtons({
+// ---- Time Range Selector ----
+function TimeRangeSelector({
   active,
   onChange,
 }: {
@@ -277,62 +297,66 @@ function TimeframeButtons({
   onChange: (tf: Timeframe) => void;
 }) {
   return (
-    <div className="flex items-center gap-1">
-      {TIMEFRAME_KEYS.map((tf) => (
-        <button
-          key={tf}
-          onClick={() => onChange(tf)}
-          className={`px-2 py-1 rounded text-[10px] font-mono font-bold transition-colors ${
-            active === tf
-              ? "bg-[#00d672]/15 text-[#00d672] border border-[#00d672]/30"
-              : "text-[#9ca3b8] hover:text-text-secondary border border-transparent hover:border-border"
-          }`}
-        >
-          {TIMEFRAMES[tf].label}
-        </button>
-      ))}
+    <div className="flex items-center gap-0.5">
+      {TIMEFRAME_KEYS.map((tf) => {
+        const isActive = active === tf;
+        return (
+          <button
+            key={tf}
+            onClick={() => onChange(tf)}
+            className="relative font-mono font-bold transition-all duration-150"
+            style={{
+              padding: "4px 8px",
+              fontSize: 11,
+              borderRadius: 4,
+              color: isActive ? "#00d672" : "#5c6380",
+              background: isActive ? "rgba(0, 214, 114, 0.08)" : "transparent",
+              border: "none",
+              cursor: "pointer",
+            }}
+            onMouseEnter={(e) => {
+              if (!isActive) {
+                e.currentTarget.style.color = "#9ca3b8";
+                e.currentTarget.style.background = "rgba(92, 99, 128, 0.08)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isActive) {
+                e.currentTarget.style.color = "#5c6380";
+                e.currentTarget.style.background = "transparent";
+              }
+            }}
+          >
+            {TIMEFRAMES[tf].label}
+            {isActive && (
+              <span
+                className="absolute bottom-0 left-1/2 -translate-x-1/2"
+                style={{
+                  width: 12,
+                  height: 1.5,
+                  borderRadius: 1,
+                  background: "#00d672",
+                }}
+              />
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 }
 
-// ---- Indicator Toggle Buttons ----
-function IndicatorButtons({
-  active,
-  onToggle,
-}: {
-  active: Record<IndicatorKey, boolean>;
-  onToggle: (key: IndicatorKey) => void;
-}) {
-  return (
-    <div className="flex items-center gap-1">
-      {INDICATOR_KEYS.map((key) => (
-        <button
-          key={key}
-          onClick={() => onToggle(key)}
-          className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold transition-colors border ${
-            active[key]
-              ? "bg-accent/20 border-accent text-accent"
-              : "bg-bg-card border-border text-text-muted"
-          }`}
-        >
-          {INDICATORS[key].label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-// ---- TradingView Chart (native) ----
-function TradingViewChart({
+// ---- Candlestick Chart ----
+function CandlestickChart({
   candles,
-  height = 400,
+  height,
   timeframe,
-  indicators,
+  onCrosshairMove,
 }: {
   candles: CandleData[];
-  height?: number;
+  height: number;
   timeframe: Timeframe;
-  indicators: Record<IndicatorKey, boolean>;
+  onCrosshairMove: (data: OHLCVData | null) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<ReturnType<
@@ -348,9 +372,9 @@ function TradingViewChart({
       createChart,
       CandlestickSeries,
       HistogramSeries,
-      LineSeries,
       ColorType,
       CrosshairMode,
+      LineStyle,
     } = await import("lightweight-charts");
 
     if (chartRef.current) {
@@ -358,7 +382,6 @@ function TradingViewChart({
       chartRef.current = null;
     }
 
-    // Auto-detect price precision from median price
     const medianPrice =
       candles.length > 0
         ? candles[Math.floor(candles.length / 2)].close
@@ -372,39 +395,45 @@ function TradingViewChart({
         background: { type: ColorType.Solid, color: CHART_THEME.background },
         textColor: CHART_THEME.textColor,
         fontFamily: "var(--font-jetbrains-mono), monospace",
-        fontSize: 11,
+        fontSize: 10,
       },
       grid: {
-        vertLines: { color: CHART_THEME.gridColor },
-        horzLines: { color: CHART_THEME.gridColor },
+        vertLines: { color: CHART_THEME.gridColor, style: LineStyle.Dotted },
+        horzLines: { color: CHART_THEME.gridColor, style: LineStyle.Dotted },
       },
       crosshair: {
         mode: CrosshairMode.Normal,
         vertLine: {
           color: CHART_THEME.crosshairColor,
+          width: 1,
+          style: LineStyle.Dashed,
           labelBackgroundColor: CHART_THEME.labelBg,
         },
         horzLine: {
           color: CHART_THEME.crosshairColor,
+          width: 1,
+          style: LineStyle.Dashed,
           labelBackgroundColor: CHART_THEME.labelBg,
         },
       },
       rightPriceScale: {
         borderColor: CHART_THEME.borderColor,
         scaleMargins: {
-          top: 0.05,
+          top: 0.08,
           bottom: 0.22,
         },
+        borderVisible: false,
       },
       timeScale: {
         borderColor: CHART_THEME.borderColor,
         timeVisible: true,
         secondsVisible: tfConfig.secondsVisible,
+        borderVisible: false,
       },
       localization: {
         priceFormatter: (price: number) => {
-          if (price < 0.0001) return price.toExponential(2) + " SOL";
-          return price.toFixed(pricePrecision) + " SOL";
+          if (price < 0.0001) return price.toExponential(2);
+          return price.toFixed(pricePrecision);
         },
       },
     });
@@ -430,85 +459,68 @@ function TradingViewChart({
 
     candlestickSeries.setData(candleChartData);
 
-    // Volume histogram series (conditional)
-    if (indicators.vol) {
-      const volumeSeries = chart.addSeries(HistogramSeries, {
-        priceFormat: { type: "volume" as const },
-        priceScaleId: "volume",
-      });
-
-      chart.priceScale("volume").applyOptions({
-        scaleMargins: {
-          top: 0.8,
-          bottom: 0,
-        },
-      });
-
-      const volumeData = candles.map((c) => ({
-        time: c.timestamp as import("lightweight-charts").UTCTimestamp,
-        value: c.volume > 0 ? c.volume : Math.abs(c.close - c.open) * 1000,
-        color:
-          c.close >= c.open
-            ? CHART_THEME.volumeUpColor
-            : CHART_THEME.volumeDownColor,
-      }));
-
-      volumeSeries.setData(volumeData);
-    }
-
-    // SMA 7 line
-    if (indicators.sma7) {
-      const sma7Data = calculateSMA(candles, 7);
-      const sma7Series = chart.addSeries(LineSeries, {
-        color: INDICATORS.sma7.color,
+    // Current price line (dashed)
+    const lastCandle = candles[candles.length - 1];
+    if (lastCandle) {
+      const isUp = lastCandle.close >= lastCandle.open;
+      candlestickSeries.createPriceLine({
+        price: lastCandle.close,
+        color: isUp ? "#00d672" : "#f23645",
         lineWidth: 1,
-        priceLineVisible: false,
-        lastValueVisible: false,
-        crosshairMarkerVisible: false,
+        lineStyle: LineStyle.Dashed,
+        axisLabelVisible: true,
+        title: "",
+        lineVisible: true,
       });
-      sma7Series.setData(
-        sma7Data.map((d) => ({
-          time: d.time as import("lightweight-charts").UTCTimestamp,
-          value: d.value,
-        }))
-      );
     }
 
-    // SMA 25 line
-    if (indicators.sma25) {
-      const sma25Data = calculateSMA(candles, 25);
-      const sma25Series = chart.addSeries(LineSeries, {
-        color: INDICATORS.sma25.color,
-        lineWidth: 1,
-        priceLineVisible: false,
-        lastValueVisible: false,
-        crosshairMarkerVisible: false,
-      });
-      sma25Series.setData(
-        sma25Data.map((d) => ({
-          time: d.time as import("lightweight-charts").UTCTimestamp,
-          value: d.value,
-        }))
-      );
+    // Volume histogram
+    const volumeSeries = chart.addSeries(HistogramSeries, {
+      priceFormat: { type: "volume" as const },
+      priceScaleId: "volume",
+    });
+
+    chart.priceScale("volume").applyOptions({
+      scaleMargins: {
+        top: 0.82,
+        bottom: 0,
+      },
+    });
+
+    const volumeData = candles.map((c) => ({
+      time: c.timestamp as import("lightweight-charts").UTCTimestamp,
+      value: c.volume > 0 ? c.volume : Math.abs(c.close - c.open) * 1000,
+      color:
+        c.close >= c.open
+          ? CHART_THEME.volumeUpColor
+          : CHART_THEME.volumeDownColor,
+    }));
+
+    volumeSeries.setData(volumeData);
+
+    // Crosshair move handler for OHLCV tooltip
+    const candleMap = new Map<number, CandleData>();
+    for (const c of candles) {
+      candleMap.set(c.timestamp, c);
     }
 
-    // EMA 9 line
-    if (indicators.ema9) {
-      const ema9Data = calculateEMA(candles, 9);
-      const ema9Series = chart.addSeries(LineSeries, {
-        color: INDICATORS.ema9.color,
-        lineWidth: 1,
-        priceLineVisible: false,
-        lastValueVisible: false,
-        crosshairMarkerVisible: false,
-      });
-      ema9Series.setData(
-        ema9Data.map((d) => ({
-          time: d.time as import("lightweight-charts").UTCTimestamp,
-          value: d.value,
-        }))
-      );
-    }
+    chart.subscribeCrosshairMove((param) => {
+      if (!param.time || !param.point) {
+        onCrosshairMove(null);
+        return;
+      }
+      const candle = candleMap.get(param.time as number);
+      if (candle) {
+        onCrosshairMove({
+          open: candle.open,
+          high: candle.high,
+          low: candle.low,
+          close: candle.close,
+          volume: candle.volume,
+          time: candle.timestamp,
+        });
+      }
+    });
 
     chart.timeScale().fitContent();
 
@@ -529,7 +541,7 @@ function TradingViewChart({
         _resizeObserver?: ResizeObserver;
       }
     )._resizeObserver = resizeObserver;
-  }, [candles, height, tfConfig.secondsVisible, indicators]);
+  }, [candles, height, tfConfig.secondsVisible, onCrosshairMove]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -551,94 +563,29 @@ function TradingViewChart({
     };
   }, [initChart]);
 
-  return (
-    <div className="relative">
-      <ChartHeaderOverlay candles={candles} />
-      <div ref={containerRef} className="w-full" style={{ height }} />
-    </div>
-  );
-}
-
-// ---- DexScreener Embed with Loading Skeleton ----
-function DexScreenerEmbed({
-  pairAddress,
-  height = 400,
-  onSwitchNative,
-}: {
-  pairAddress: string;
-  height?: number;
-  onSwitchNative?: () => void;
-}) {
-  const [loaded, setLoaded] = useState(false);
-
-  return (
-    <div className="bg-bg-elevated rounded-xl overflow-hidden border border-border relative">
-      <div className="flex items-center justify-between px-3 pt-3 mb-1.5">
-        <p className="text-xs text-text-secondary font-medium">Price</p>
-        <div className="flex items-center gap-2">
-          {onSwitchNative && (
-            <button
-              onClick={onSwitchNative}
-              className="text-[10px] font-mono text-[#00d672] hover:text-[#00d672]/80 transition-colors"
-            >
-              Native Chart
-            </button>
-          )}
-          <p className="text-[10px] text-text-muted font-mono">DexScreener</p>
-        </div>
-      </div>
-
-      {/* Loading skeleton */}
-      {!loaded && (
-        <div
-          className="absolute inset-x-0 bottom-0 flex flex-col items-center justify-center gap-2 bg-bg-elevated"
-          style={{ height }}
-        >
-          <div className="w-8 h-8 border-2 border-[#9ca3b8]/30 border-t-[#9ca3b8] rounded-full animate-spin" />
-          <p className="text-[11px] text-text-muted font-mono">
-            Loading chart data...
-          </p>
-        </div>
-      )}
-
-      <iframe
-        src={`https://dexscreener.com/solana/${pairAddress}?embed=1&theme=dark&trades=0&info=0`}
-        className={`w-full border-0 transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
-        style={{ height }}
-        title="DexScreener chart"
-        loading="lazy"
-        sandbox="allow-scripts allow-same-origin"
-        onLoad={() => setLoaded(true)}
-      />
-    </div>
-  );
+  return <div ref={containerRef} className="w-full" style={{ height }} />;
 }
 
 // ---- Main TokenChart Component ----
 export function TokenChart({ mintAddress, height }: TokenChartProps) {
-  const [timeframe, setTimeframe] = useState<Timeframe>("5m");
+  const [timeframe, setTimeframe] = useState<Timeframe>("15m");
   const [chartData, setChartData] = useState<ChartResponse | null>(null);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [chartMode, setChartMode] = useState<"native" | "dexscreener">(
-    "native"
-  );
-  const [indicators, setIndicators] = useState<Record<IndicatorKey, boolean>>(
-    () => ({ ...DEFAULT_INDICATORS })
-  );
+  const [hoverData, setHoverData] = useState<OHLCVData | null>(null);
   const mountedRef = useRef(true);
 
-  const handleToggleIndicator = useCallback((key: IndicatorKey) => {
-    setIndicators((prev) => ({ ...prev, [key]: !prev[key] }));
+  const handleCrosshairMove = useCallback((data: OHLCVData | null) => {
+    setHoverData(data);
   }, []);
 
-  // Responsive height: mobile 280px, desktop 400px (or prop override)
-  const [responsiveHeight, setResponsiveHeight] = useState(height ?? 400);
+  // Responsive height: mobile 200px min, desktop 300px min (or prop override)
+  const [responsiveHeight, setResponsiveHeight] = useState(height ?? 380);
 
   useEffect(() => {
-    if (height != null) return; // prop override, skip responsive
+    if (height != null) return;
     function handleResize() {
-      setResponsiveHeight(window.innerWidth < 768 ? 280 : 400);
+      setResponsiveHeight(window.innerWidth < 768 ? 240 : 380);
     }
     handleResize();
     window.addEventListener("resize", handleResize);
@@ -671,112 +618,99 @@ export function TokenChart({ mintAddress, height }: TokenChartProps) {
     };
   }, [mintAddress, timeframe]);
 
-  // Determine what to render
+  // Default OHLCV from latest candle when not hovering
+  const defaultOHLCV = useMemo<OHLCVData | null>(() => {
+    if (!chartData?.candles?.length) return null;
+    const last = chartData.candles[chartData.candles.length - 1];
+    return {
+      open: last.open,
+      high: last.high,
+      low: last.low,
+      close: last.close,
+      volume: last.volume,
+      time: last.timestamp,
+    };
+  }, [chartData]);
+
   const hasCandles = chartData && chartData.candles.length >= 2;
-  const hasDexScreener = !!chartData?.pairAddress;
 
   // Loading skeleton
   if (loading && chartData === null) {
-    return (
-      <div
-        className="w-full rounded-xl bg-bg-elevated animate-pulse"
-        style={{ height: responsiveHeight + 52 }}
-      />
-    );
+    return <ChartSkeleton height={responsiveHeight + 40} />;
   }
 
+  // Error state
   if (error) {
-    return (
-      <ChartPlaceholder
-        title="Chart unavailable"
-        subtitle="Try again later"
-        height={responsiveHeight}
-      />
-    );
+    return <ChartError height={responsiveHeight + 40} />;
   }
 
+  // Too new
   if (chartData?.tooNew) {
     return (
-      <ChartPlaceholder
-        title="Chart available after ~2 min"
-        subtitle="Token was just created"
-        height={responsiveHeight}
-      />
+      <div
+        className="w-full rounded-lg flex flex-col items-center justify-center gap-1.5"
+        style={{ height: responsiveHeight + 40, background: "#04060b" }}
+      >
+        <div
+          className="w-5 h-5 rounded-full border-2 animate-spin"
+          style={{ borderColor: "#1a1f2e", borderTopColor: "#5c6380" }}
+        />
+        <p className="font-mono text-xs" style={{ color: "#5c6380" }}>
+          Chart available after ~2 min
+        </p>
+        <p className="font-mono" style={{ color: "#363d54", fontSize: 10 }}>
+          Token was just created
+        </p>
+      </div>
     );
   }
 
-  // No data at all
-  if (!hasCandles && !hasDexScreener) {
-    return (
-      <ChartPlaceholder
-        title="Chart data loading..."
-        subtitle="Data appears after first trades"
-        height={responsiveHeight}
-      />
-    );
+  // No data
+  if (!hasCandles) {
+    return <ChartError height={responsiveHeight + 40} />;
   }
 
   return (
-    <div className="bg-bg-elevated rounded-xl border border-border overflow-hidden">
-      {/* Chart toolbar */}
-      <div className="flex items-center justify-between px-3 pt-3 pb-1">
-        <div className="flex items-center gap-3">
-          <TimeframeButtons active={timeframe} onChange={setTimeframe} />
-          {chartMode === "native" && (
-            <IndicatorButtons
-              active={indicators}
-              onToggle={handleToggleIndicator}
+    <div
+      className="w-full rounded-lg overflow-hidden"
+      style={{
+        background: "#04060b",
+        minHeight: 200,
+      }}
+    >
+      {/* Toolbar: time range selector + loading indicator */}
+      <div className="flex items-center justify-between px-2 pt-2 pb-0.5">
+        <TimeRangeSelector active={timeframe} onChange={setTimeframe} />
+        <div className="flex items-center gap-2">
+          {loading && (
+            <div
+              className="w-3 h-3 rounded-full border animate-spin"
+              style={{ borderColor: "#1a1f2e", borderTopColor: "#5c6380" }}
             />
           )}
-        </div>
-        <div className="flex items-center gap-2">
-          {hasDexScreener && hasCandles && (
-            <button
-              onClick={() =>
-                setChartMode((m) =>
-                  m === "native" ? "dexscreener" : "native"
-                )
-              }
-              className="text-[10px] font-mono text-text-muted hover:text-text-secondary transition-colors border border-border rounded px-1.5 py-0.5"
-            >
-              {chartMode === "native" ? "DexScreener" : "Native"}
-            </button>
-          )}
-          <p className="text-[10px] text-text-muted font-mono">
-            {TIMEFRAMES[timeframe].label} candles
-          </p>
-          {loading && (
-            <span className="w-3 h-3 border border-[#9ca3b8]/30 border-t-[#9ca3b8] rounded-full animate-spin" />
-          )}
+          <span
+            className="font-mono"
+            style={{ fontSize: 10, color: "#363d54" }}
+          >
+            {TIMEFRAMES[timeframe].label}
+          </span>
         </div>
       </div>
 
-      {/* Chart content */}
-      {chartMode === "native" && hasCandles ? (
-        <div className="px-1">
-          <TradingViewChart
-            candles={chartData.candles}
+      {/* OHLCV overlay */}
+      <div className="relative">
+        <OHLCVOverlay data={hoverData ?? defaultOHLCV} />
+
+        {/* Chart */}
+        <div className="pt-4">
+          <CandlestickChart
+            candles={chartData!.candles}
             height={responsiveHeight}
             timeframe={timeframe}
-            indicators={indicators}
+            onCrosshairMove={handleCrosshairMove}
           />
         </div>
-      ) : hasDexScreener ? (
-        <DexScreenerEmbed
-          pairAddress={chartData!.pairAddress!}
-          height={responsiveHeight}
-          onSwitchNative={
-            hasCandles ? () => setChartMode("native") : undefined
-          }
-        />
-      ) : (
-        <div className="px-3 pb-3">
-          <ChartPlaceholder
-            title="No chart data available"
-            height={responsiveHeight}
-          />
-        </div>
-      )}
+      </div>
     </div>
   );
 }
