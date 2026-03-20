@@ -142,6 +142,9 @@ export default function WalletPage() {
   const [revealError, setRevealError] = useState("");
   const [revealLoading, setRevealLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedAddress, setCopiedAddress] = useState(false);
+  const [showFullAddress, setShowFullAddress] = useState(false);
+  const [keyMasked, setKeyMasked] = useState(true);
 
   // Analytics state
   const [analytics, setAnalytics] = useState<WalletAnalytics | null>(null);
@@ -265,6 +268,13 @@ export default function WalletPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const copyAddress = async () => {
+    if (!walletAddress) return;
+    await navigator.clipboard.writeText(walletAddress);
+    setCopiedAddress(true);
+    setTimeout(() => setCopiedAddress(false), 2000);
+  };
+
   const handleUnlockKey = async () => {
     if (!revealPassword) return;
     setRevealLoading(true);
@@ -303,9 +313,61 @@ export default function WalletPage() {
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Balance */}
-          <div className="bg-bg-card border border-border rounded-xl p-6 flex flex-col items-center">
+          {/* Balance & Address */}
+          <div
+            className="rounded-xl p-6 flex flex-col items-center"
+            style={{ backgroundColor: "#1a1a2e", border: "1px solid #2a2a3e" }}
+          >
             <BalanceDisplay />
+
+            {/* Public key display */}
+            <div className="w-full mt-4 pt-4" style={{ borderTop: "1px solid #2a2a3e" }}>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: "#666680" }}>
+                  Wallet Address
+                </span>
+                <button
+                  onClick={() => setShowFullAddress(!showFullAddress)}
+                  className="text-[10px] font-medium uppercase tracking-wide transition-colors"
+                  style={{ color: "#8888a0" }}
+                  type="button"
+                >
+                  {showFullAddress ? "Truncate" : "Show Full"}
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <p
+                  className="font-mono text-sm break-all leading-relaxed flex-1"
+                  style={{ color: "#e0e0e0" }}
+                >
+                  {showFullAddress
+                    ? walletAddress
+                    : `${walletAddress?.slice(0, 6)}...${walletAddress?.slice(-4)}`}
+                </p>
+                <button
+                  onClick={copyAddress}
+                  className="shrink-0 p-1.5 rounded-md transition-colors"
+                  style={{
+                    backgroundColor: copiedAddress ? "rgba(0, 230, 118, 0.10)" : "#1e1e32",
+                    border: copiedAddress ? "1px solid rgba(0, 230, 118, 0.30)" : "1px solid #2a2a3e",
+                    color: copiedAddress ? "#00e676" : "#8888a0",
+                  }}
+                  title="Copy address"
+                  type="button"
+                >
+                  {copiedAddress ? (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  ) : (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Key status */}
@@ -358,21 +420,85 @@ export default function WalletPage() {
                 )}
 
                 {showReveal && revealedKey && (
-                  <div className="space-y-2 pt-2 border-t border-border">
-                    <div className="bg-bg-primary border border-border rounded-lg p-3">
-                      <p className="font-mono text-xs text-text-primary break-all leading-relaxed">
-                        {revealedKey}
+                  <div className="space-y-2 pt-2" style={{ borderTop: "1px solid #2a2a3e" }}>
+                    {/* Warning banner */}
+                    <div
+                      className="flex items-center gap-2 p-2.5 rounded-lg"
+                      style={{
+                        backgroundColor: "rgba(255, 59, 92, 0.10)",
+                        border: "1px solid rgba(255, 59, 92, 0.20)",
+                      }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff3b5c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                        <line x1="12" y1="9" x2="12" y2="13" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                      </svg>
+                      <p className="text-[11px] font-medium" style={{ color: "#ff3b5c" }}>
+                        Never share your private key. Anyone with it can steal your funds.
                       </p>
                     </div>
+
+                    {/* Key display with toggle */}
+                    <div className="rounded-lg p-3" style={{ backgroundColor: "#12121e", border: "1px solid #2a2a3e" }}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: "rgba(255, 59, 92, 0.70)" }}>
+                          Private Key
+                        </span>
+                        <button
+                          onClick={() => setKeyMasked(!keyMasked)}
+                          className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide transition-colors"
+                          style={{ color: "#8888a0" }}
+                          type="button"
+                        >
+                          {keyMasked ? (
+                            <>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                              </svg>
+                              SHOW
+                            </>
+                          ) : (
+                            <>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                                <line x1="1" y1="1" x2="23" y2="23" />
+                                <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
+                              </svg>
+                              HIDE
+                            </>
+                          )}
+                        </button>
+                      </div>
+                      <p
+                        className="font-mono text-xs break-all leading-relaxed"
+                        style={{
+                          color: keyMasked ? "#555570" : "#e0e0e0",
+                          userSelect: keyMasked ? "none" : "text",
+                          WebkitUserSelect: keyMasked ? "none" : "text",
+                        }}
+                      >
+                        {keyMasked ? "\u2022".repeat(44) : revealedKey}
+                      </p>
+                    </div>
+
                     <button
                       onClick={copyKey}
-                      className="w-full py-1.5 text-xs font-medium rounded bg-bg-elevated hover:bg-bg-hover border border-border text-text-secondary transition-colors"
+                      className="w-full py-1.5 text-xs font-medium rounded transition-colors"
+                      style={{
+                        backgroundColor: copied ? "rgba(0, 230, 118, 0.10)" : "#1e1e32",
+                        border: copied ? "1px solid rgba(0, 230, 118, 0.30)" : "1px solid #2a2a3e",
+                        color: copied ? "#00e676" : "#8888a0",
+                      }}
                     >
                       {copied ? "COPIED!" : "COPY TO CLIPBOARD"}
                     </button>
                     <button
-                      onClick={() => { setRevealedKey(null); setShowReveal(false); setRevealPassword(""); }}
-                      className="w-full py-1.5 text-xs text-text-muted hover:text-text-secondary transition-colors"
+                      onClick={() => { setRevealedKey(null); setShowReveal(false); setRevealPassword(""); setKeyMasked(true); }}
+                      className="w-full py-1.5 text-xs transition-colors"
+                      style={{ color: "#666680" }}
                     >
                       Hide
                     </button>

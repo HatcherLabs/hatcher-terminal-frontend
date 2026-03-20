@@ -7,6 +7,7 @@ import { useQuickBuy } from "@/hooks/useQuickBuy";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { api } from "@/lib/api";
 import { useMEVProtection } from "@/components/trade/MEVProtection";
+import { Toggle } from "@/components/ui/Toggle";
 
 const QUICK_BUY_PRESETS = [0.1, 0.25, 0.5, 1.0, 2.0];
 
@@ -158,24 +159,18 @@ export default function SettingsPage() {
                   Auto-sell when position gains X%
                 </p>
               </div>
-              <button
-                onClick={() =>
+              <Toggle
+                enabled={tpEnabled}
+                onChange={(on) =>
                   setSettings({
                     ...settings,
-                    autoSellProfitPct: tpEnabled ? null : 100,
+                    autoSellProfitPct: on ? 100 : null,
                   })
                 }
-                className={`relative w-10 h-5 rounded-full transition-colors ${
-                  tpEnabled ? "bg-green" : "bg-bg-elevated border border-border"
-                }`}
-                aria-label="Toggle take profit"
-              >
-                <span
-                  className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-                    tpEnabled ? "translate-x-5" : "translate-x-0.5"
-                  }`}
-                />
-              </button>
+                activeColor="green"
+                size="sm"
+                label="Toggle take profit"
+              />
             </div>
 
             {tpEnabled && (
@@ -208,7 +203,7 @@ export default function SettingsPage() {
                       autoSellProfitPct: parseFloat(e.target.value) || null,
                     })
                   }
-                  className="w-full bg-bg-primary border border-border rounded-lg px-3 py-2 text-sm font-mono text-text-primary focus:border-green focus:outline-none"
+                  className="w-full bg-[#06060b] border border-[#1a1a2a] rounded-lg px-3 py-2 text-sm font-mono text-[#e8e8f0] focus:border-[#00ff88] focus:outline-none transition-colors duration-200"
                   placeholder="Custom take profit %"
                 />
               </>
@@ -226,24 +221,18 @@ export default function SettingsPage() {
                   Auto-sell when position loses X%
                 </p>
               </div>
-              <button
-                onClick={() =>
+              <Toggle
+                enabled={slEnabled}
+                onChange={(on) =>
                   setSettings({
                     ...settings,
-                    stopLossPct: slEnabled ? null : 50,
+                    stopLossPct: on ? 50 : null,
                   })
                 }
-                className={`relative w-10 h-5 rounded-full transition-colors ${
-                  slEnabled ? "bg-red" : "bg-bg-elevated border border-border"
-                }`}
-                aria-label="Toggle stop loss"
-              >
-                <span
-                  className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-                    slEnabled ? "translate-x-5" : "translate-x-0.5"
-                  }`}
-                />
-              </button>
+                activeColor="red"
+                size="sm"
+                label="Toggle stop loss"
+              />
             </div>
 
             {slEnabled && (
@@ -277,7 +266,7 @@ export default function SettingsPage() {
                       stopLossPct: parseFloat(e.target.value) || null,
                     })
                   }
-                  className="w-full bg-bg-primary border border-border rounded-lg px-3 py-2 text-sm font-mono text-text-primary focus:border-red focus:outline-none"
+                  className="w-full bg-[#06060b] border border-[#1a1a2a] rounded-lg px-3 py-2 text-sm font-mono text-[#e8e8f0] focus:border-[#ff3b5c] focus:outline-none transition-colors duration-200"
                   placeholder="Custom stop loss %"
                 />
               </>
@@ -321,7 +310,7 @@ export default function SettingsPage() {
               setSettings({ ...settings, buyAmountSol: val });
               if (val > 0) setQuickBuyAmount(val);
             }}
-            className="w-full mt-3 bg-bg-primary border border-border rounded-lg px-3 py-2 text-sm font-mono text-text-primary focus:border-green focus:outline-none"
+            className="w-full mt-3 bg-[#06060b] border border-[#1a1a2a] rounded-lg px-3 py-2 text-sm font-mono text-[#e8e8f0] focus:border-[#00ff88] focus:outline-none transition-colors duration-200"
             placeholder="Custom amount"
           />
         </div>
@@ -371,7 +360,7 @@ export default function SettingsPage() {
                   slippageBps: Math.round(parseFloat(e.target.value || "0") * 100),
                 })
               }
-              className="w-full bg-bg-primary border border-border rounded-lg px-3 py-2 text-sm font-mono text-text-primary focus:border-green focus:outline-none"
+              className="w-full bg-[#06060b] border border-[#1a1a2a] rounded-lg px-3 py-2 text-sm font-mono text-[#e8e8f0] focus:border-[#00ff88] focus:outline-none transition-colors duration-200"
               placeholder="Custom slippage %"
             />
             {settings.slippageBps > 1500 && (
@@ -419,7 +408,7 @@ export default function SettingsPage() {
               onChange={(e) =>
                 setSettings({ ...settings, priorityFeeSol: parseFloat(e.target.value) || 0 })
               }
-              className="w-full bg-bg-primary border border-border rounded-lg px-3 py-2 text-sm font-mono text-text-primary focus:border-green focus:outline-none"
+              className="w-full bg-[#06060b] border border-[#1a1a2a] rounded-lg px-3 py-2 text-sm font-mono text-[#e8e8f0] focus:border-[#00ff88] focus:outline-none transition-colors duration-200"
               placeholder="Custom priority fee"
             />
           </div>
@@ -435,19 +424,13 @@ export default function SettingsPage() {
                   Prevents sandwich attacks on your transactions
                 </p>
               </div>
-              <button
-                onClick={toggleMEV}
-                className={`relative w-10 h-5 rounded-full transition-colors ${
-                  mevEnabled ? "bg-green" : "bg-bg-elevated border border-border"
-                }`}
-                aria-label="Toggle MEV protection"
-              >
-                <span
-                  className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-                    mevEnabled ? "translate-x-5" : "translate-x-0.5"
-                  }`}
-                />
-              </button>
+              <Toggle
+                enabled={mevEnabled}
+                onChange={() => toggleMEV()}
+                activeColor="green"
+                size="sm"
+                label="Toggle MEV protection"
+              />
             </div>
 
             {mevEnabled && (
@@ -487,7 +470,7 @@ export default function SettingsPage() {
             onChange={(e) =>
               setSettings({ ...settings, maxRiskLevel: e.target.value || null })
             }
-            className="w-full mt-2 bg-bg-primary border border-border rounded-lg px-3 py-2 text-sm text-text-primary focus:border-green focus:outline-none"
+            className="w-full mt-2 bg-[#06060b] border border-[#1a1a2a] rounded-lg px-3 py-2 text-sm text-[#e8e8f0] focus:border-[#00ff88] focus:outline-none transition-colors duration-200"
           >
             <option value="">Show all</option>
             <option value="LOW">LOW only</option>

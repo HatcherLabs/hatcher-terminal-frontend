@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useSyncExternalStore } from "react";
+import { Toggle } from "@/components/ui/Toggle";
 
 const STORAGE_KEY = "hatcher_mev_protection";
 
@@ -66,19 +67,13 @@ export function MEVProtection() {
             Prevents sandwich attacks on your transactions
           </p>
         </div>
-        <button
-          onClick={toggle}
-          className={`relative w-10 h-5 rounded-full transition-colors ${
-            enabled ? "bg-green" : "bg-bg-elevated border border-border"
-          }`}
-          aria-label="Toggle MEV protection"
-        >
-          <span
-            className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-              enabled ? "translate-x-5" : "translate-x-0.5"
-            }`}
-          />
-        </button>
+        <Toggle
+          enabled={enabled}
+          onChange={() => toggle()}
+          activeColor="green"
+          size="sm"
+          label="Toggle MEV protection"
+        />
       </div>
 
       {/* Protected badge */}

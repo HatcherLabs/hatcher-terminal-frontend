@@ -119,7 +119,7 @@ export default function LoginPage() {
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
               required
-              className="form-input w-full bg-bg-card border border-border rounded-xl px-4 py-3 text-sm text-text-primary placeholder:text-text-faint focus:border-green/50 focus:outline-none transition-all"
+              className="form-input w-full bg-[#06060b] border border-[#1a1a2a] rounded-lg px-3 py-2 text-sm text-[#e8e8f0] placeholder:text-text-faint focus:border-[#00ff88] focus:outline-none transition-colors duration-200"
               placeholder="degen_trader"
             />
           </div>
@@ -134,7 +134,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="form-input w-full bg-bg-card border border-border rounded-xl px-4 py-3 pr-11 text-sm text-text-primary placeholder:text-text-faint focus:border-green/50 focus:outline-none transition-all"
+                className="form-input w-full bg-[#06060b] border border-[#1a1a2a] rounded-lg px-3 py-2 pr-11 text-sm text-[#e8e8f0] placeholder:text-text-faint focus:border-[#00ff88] focus:outline-none transition-colors duration-200"
                 placeholder="Your password"
               />
               <button
