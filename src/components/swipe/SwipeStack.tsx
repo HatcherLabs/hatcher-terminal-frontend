@@ -112,7 +112,7 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
   }, [useLocalIndex, feed]);
 
   // Reset local index when the filtered list changes identity
-  const prevFirstMintRef = useRef<string | undefined>();
+  const prevFirstMintRef = useRef<string | undefined>(undefined);
   useEffect(() => {
     if (!useLocalIndex) return;
     const firstMint = tokens[0]?.mintAddress;

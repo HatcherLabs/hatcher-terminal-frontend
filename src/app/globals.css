@@ -1,6 +1,85 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@source "../components/**/*.{ts,tsx}";
+@source "../app/**/*.{ts,tsx}";
+
+@theme {
+  /* Screens */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-terminal: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+
+  /* Colors */
+  --color-bg-primary: #06060b;
+  --color-bg-card: #0d0d14;
+  --color-bg-elevated: #14141f;
+  --color-bg-hover: #1a1a28;
+
+  --color-border: #1a1a2a;
+  --color-border-hover: #2a2a44;
+
+  --color-text-primary: #e8e8f0;
+  --color-text-secondary: #8888a0;
+  --color-text-muted: #555568;
+  --color-text-faint: #333340;
+
+  --color-green: #00ff88;
+  --color-green-dim: #00ff8810;
+
+  --color-red: #ff3b5c;
+  --color-red-dim: #ff3b5c10;
+
+  --color-amber: #ffaa00;
+  --color-amber-dim: #ffaa0010;
+
+  --color-blue: #3b82f6;
+
+  --color-accent: #7c4dff;
+  --color-accent-hover: #651fff;
+  --color-accent-bg: #7c4dff12;
+
+  /* Font families */
+  --font-sans: var(--font-lexend), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), monospace;
+
+  /* Max widths */
+  --container-app: 480px;
+  --container-terminal: 1400px;
+  --container-explore: 960px;
+
+  /* Border radius */
+  --radius-card: 12px;
+  --radius-btn: 8px;
+
+  /* Keyframes */
+  --animate-pulse-new: pulse-new 2s ease-out forwards;
+
+  @keyframes pulse-new {
+    0% { background-color: rgba(0, 255, 136, 0.08); }
+    50% { background-color: rgba(0, 255, 136, 0.03); }
+    100% { background-color: rgba(0, 255, 136, 0); }
+  }
+}
+
+/* Tailwind 4: max-w-app etc. need custom utilities */
+@utility max-w-app {
+  max-width: 480px;
+}
+@utility max-w-terminal {
+  max-width: 1400px;
+}
+@utility max-w-explore {
+  max-width: 960px;
+}
+@utility rounded-card {
+  border-radius: 12px;
+}
+@utility rounded-btn {
+  border-radius: 8px;
+}
 
 :root {
   --bg-primary: #06060b;

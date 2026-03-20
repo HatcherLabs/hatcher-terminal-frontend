@@ -23,7 +23,7 @@ export function FeedProvider({ children }: { children: ReactNode }) {
   const [connected, setConnected] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const eventSourceRef = useRef<EventSource | null>(null);
-  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // Load unswiped tokens from DB as fallback
   const loadUnswipedTokens = useCallback(async () => {

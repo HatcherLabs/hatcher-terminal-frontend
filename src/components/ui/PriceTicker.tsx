@@ -32,8 +32,8 @@ interface TrendingToken {
   marketCapSol: number | null;
 }
 
-function formatChangePercent(value: number | null): string {
-  if (value === null) return "";
+function formatChangePercent(value: number | null | undefined): string {
+  if (value == null) return "";
   const sign = value > 0 ? "+" : "";
   return `${sign}${value.toFixed(1)}%`;
 }
