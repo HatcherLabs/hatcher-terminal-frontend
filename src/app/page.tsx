@@ -5,6 +5,82 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
 
+const FEATURES = [
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+    ),
+    title: "Real-Time Token Discovery",
+    desc: "Pump.fun tokens appear live as they launch. AI-powered risk scoring helps you filter the noise.",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+      </svg>
+    ),
+    title: "Swipe to Trade",
+    desc: "Swipe right to buy, left to pass. One gesture, instant execution on the Solana blockchain.",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+        <line x1="3" y1="9" x2="21" y2="9" />
+        <line x1="9" y1="21" x2="9" y2="9" />
+      </svg>
+    ),
+    title: "Live Charts & Analytics",
+    desc: "Candlestick charts, portfolio tracking, P&L calendar, and trade history — all in one place.",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      </svg>
+    ),
+    title: "Non-Custodial & Secure",
+    desc: "Your private key never leaves your device. All transactions are signed locally in your browser.",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
+      </svg>
+    ),
+    title: "Limit Orders & Auto-Sell",
+    desc: "Set take-profit and stop-loss targets. Get alerts when your conditions are met.",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+        <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+        <line x1="12" y1="22.08" x2="12" y2="12" />
+      </svg>
+    ),
+    title: "MEV Protection",
+    desc: "Route trades through private pools to prevent sandwich attacks and front-running.",
+  },
+];
+
+const STATS = [
+  { value: "< 1s", label: "Trade Execution" },
+  { value: "24/7", label: "Token Monitoring" },
+  { value: "100%", label: "Non-Custodial" },
+  { value: "0%", label: "Platform Fees" },
+];
+
+const STEPS = [
+  { step: "01", title: "Create Account", desc: "Sign up in seconds. No KYC required." },
+  { step: "02", title: "Generate Wallet", desc: "A Solana wallet is created locally on your device." },
+  { step: "03", title: "Fund & Trade", desc: "Deposit SOL and start swiping through new tokens." },
+];
+
 export default function LandingPage() {
   const router = useRouter();
   const [checking, setChecking] = useState(true);
@@ -32,90 +108,285 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center relative overflow-hidden">
-      {/* Background gradient orbs */}
-      <div
-        className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-[140px] pointer-events-none"
-        style={{ background: "radial-gradient(circle, rgba(0,255,136,0.06) 0%, rgba(124,77,255,0.03) 60%, transparent 80%)" }}
-      />
-      <div
-        className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full blur-[100px] pointer-events-none"
-        style={{ background: "radial-gradient(circle, rgba(124,77,255,0.05) 0%, rgba(0,255,136,0.02) 50%, transparent 80%)" }}
-      />
+    <div className="min-h-screen overflow-x-hidden" style={{ backgroundColor: "#06060b" }}>
+      {/* ========== NAVBAR ========== */}
+      <nav
+        className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl"
+        style={{
+          backgroundColor: "rgba(6,6,11,0.85)",
+          borderBottom: "1px solid rgba(26,26,46,0.6)",
+        }}
+      >
+        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div
+              className="w-2 h-2 rounded-full animate-pulse"
+              style={{ backgroundColor: "#00ff88" }}
+            />
+            <span className="text-sm font-bold tracking-tight" style={{ color: "#e8e8f0" }}>
+              HATCHER
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/login"
+              className="px-4 py-1.5 text-xs font-medium transition-colors"
+              style={{ color: "#8888a0" }}
+            >
+              Log In
+            </Link>
+            <Link
+              href="/signup"
+              className="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all hover:brightness-110"
+              style={{
+                background: "linear-gradient(135deg, #00ff88 0%, #00cc6a 100%)",
+                color: "#06060b",
+              }}
+            >
+              Launch App
+            </Link>
+          </div>
+        </div>
+      </nav>
 
-      <div className="max-w-sm w-full space-y-10 relative z-10">
-        {/* Logo / Brand */}
-        <div className="space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-green/20 bg-green/[0.05] text-green text-[11px] font-medium tracking-wider uppercase">
-            <span className="w-1.5 h-1.5 rounded-full bg-green animate-pulse" />
+      {/* ========== HERO ========== */}
+      <section className="relative pt-32 pb-24 px-6 flex flex-col items-center text-center">
+        {/* Background glows */}
+        <div
+          className="absolute top-20 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full blur-[160px] pointer-events-none"
+          style={{ background: "radial-gradient(circle, rgba(0,255,136,0.08) 0%, rgba(124,77,255,0.04) 50%, transparent 80%)" }}
+        />
+        <div
+          className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full blur-[120px] pointer-events-none"
+          style={{ background: "radial-gradient(circle, rgba(124,77,255,0.06) 0%, transparent 70%)" }}
+        />
+
+        <div className="relative z-10 max-w-2xl">
+          <div
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-medium tracking-wider uppercase mb-8"
+            style={{
+              border: "1px solid rgba(0,255,136,0.2)",
+              backgroundColor: "rgba(0,255,136,0.05)",
+              color: "#00ff88",
+            }}
+          >
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: "#00ff88" }} />
             Live on Solana
           </div>
 
-          <h1 className="text-4xl font-bold text-text-primary tracking-tight leading-tight">
-            HATCHER<br />
+          <h1
+            className="text-5xl sm:text-6xl font-bold tracking-tight leading-[1.1] mb-6"
+            style={{ color: "#e8e8f0" }}
+          >
+            The Trading Terminal{" "}
             <span
               style={{
-                background: "linear-gradient(135deg, #00ff88 0%, #00cc6a 50%, #7c4dff 100%)",
+                background: "linear-gradient(135deg, #00ff88 0%, #00cc6a 40%, #7c4dff 100%)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
               }}
             >
-              TERMINAL
+              Built for Degens
             </span>
           </h1>
-          <p className="text-base text-text-secondary font-light leading-relaxed">
-            Swipe right to ape.<br />
-            Left to dodge the rug.
-          </p>
-        </div>
 
-        {/* Feature pills */}
-        <div className="flex flex-wrap justify-center gap-2">
-          {["Pump.fun tokens", "Live charts", "1-swipe buys", "On-chain data"].map(
-            (feature) => (
-              <span
-                key={feature}
-                className="px-3 py-1.5 rounded-full text-text-secondary text-[11px] font-medium backdrop-blur-sm"
+          <p className="text-lg font-light leading-relaxed mb-10 max-w-lg mx-auto" style={{ color: "#8888a0" }}>
+            Discover, analyze, and trade Pump.fun tokens the moment they launch.
+            Swipe right to buy. Left to dodge the rug.
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link
+              href="/signup"
+              className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-semibold text-sm transition-all hover:brightness-110 hover:shadow-lg text-center"
+              style={{
+                background: "linear-gradient(135deg, #00ff88 0%, #00cc6a 100%)",
+                color: "#06060b",
+                boxShadow: "0 0 30px rgba(0,255,136,0.2), 0 0 60px rgba(0,255,136,0.1)",
+              }}
+            >
+              Launch App
+            </Link>
+            <Link
+              href="/login"
+              className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-medium text-sm transition-all hover:border-opacity-60 text-center backdrop-blur-sm"
+              style={{
+                backgroundColor: "rgba(13,13,26,0.5)",
+                border: "1px solid rgba(26,26,46,0.8)",
+                color: "#c0c0d0",
+              }}
+            >
+              I have an account
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ========== STATS BAR ========== */}
+      <section className="px-6 pb-20">
+        <div
+          className="max-w-4xl mx-auto rounded-2xl p-6 grid grid-cols-2 sm:grid-cols-4 gap-6"
+          style={{
+            backgroundColor: "rgba(13,13,26,0.6)",
+            border: "1px solid rgba(26,26,46,0.6)",
+            backdropFilter: "blur(12px)",
+          }}
+        >
+          {STATS.map((stat) => (
+            <div key={stat.label} className="text-center">
+              <p className="text-2xl font-bold font-mono" style={{ color: "#00ff88" }}>
+                {stat.value}
+              </p>
+              <p className="text-xs mt-1" style={{ color: "#666680" }}>
+                {stat.label}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ========== FEATURES GRID ========== */}
+      <section className="px-6 pb-24">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl font-bold tracking-tight mb-3" style={{ color: "#e8e8f0" }}>
+              Everything You Need to Trade
+            </h2>
+            <p className="text-sm max-w-md mx-auto" style={{ color: "#666680" }}>
+              Built from the ground up for speed, security, and the degen lifestyle.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {FEATURES.map((feature) => (
+              <div
+                key={feature.title}
+                className="rounded-xl p-5 transition-all hover:border-opacity-60 group"
                 style={{
-                  background: "rgba(13,13,26,0.6)",
-                  border: "1px solid rgba(26,26,46,0.8)",
+                  backgroundColor: "rgba(13,13,26,0.5)",
+                  border: "1px solid rgba(26,26,46,0.6)",
                 }}
               >
-                {feature}
-              </span>
-            )
-          )}
+                <div
+                  className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
+                  style={{
+                    backgroundColor: "rgba(0,255,136,0.08)",
+                    color: "#00ff88",
+                  }}
+                >
+                  {feature.icon}
+                </div>
+                <h3 className="text-sm font-semibold mb-2" style={{ color: "#e8e8f0" }}>
+                  {feature.title}
+                </h3>
+                <p className="text-xs leading-relaxed" style={{ color: "#666680" }}>
+                  {feature.desc}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
+      </section>
 
-        {/* CTA */}
-        <div className="space-y-3">
-          <Link
-            href="/signup"
-            className="block w-full py-3.5 rounded-xl text-bg-primary font-semibold text-sm transition-all hover:brightness-110 hover:shadow-lg"
-            style={{
-              background: "linear-gradient(135deg, #00ff88 0%, #00cc6a 50%, #00ff88 100%)",
-              boxShadow: "0 0 20px rgba(0,255,136,0.2), 0 0 40px rgba(0,255,136,0.1)",
-            }}
-          >
-            Start Trading
-          </Link>
-          <Link
-            href="/login"
-            className="block w-full py-3.5 rounded-xl text-text-secondary font-medium text-sm backdrop-blur-sm transition-all hover:border-green/30 hover:text-text-primary"
-            style={{
-              background: "rgba(13,13,26,0.5)",
-              border: "1px solid rgba(26,26,46,0.8)",
-            }}
-          >
-            I have an account
-          </Link>
+      {/* ========== HOW IT WORKS ========== */}
+      <section className="px-6 pb-24">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl font-bold tracking-tight mb-3" style={{ color: "#e8e8f0" }}>
+              Start Trading in 3 Steps
+            </h2>
+            <p className="text-sm" style={{ color: "#666680" }}>
+              From zero to your first trade in under a minute.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {STEPS.map((s, i) => (
+              <div key={s.step} className="relative">
+                {/* Connector line (desktop) */}
+                {i < STEPS.length - 1 && (
+                  <div
+                    className="hidden sm:block absolute top-8 left-[calc(50%+40px)] w-[calc(100%-40px)] h-px"
+                    style={{ backgroundColor: "rgba(26,26,46,0.8)" }}
+                  />
+                )}
+                <div className="text-center">
+                  <div
+                    className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center mb-4 text-xl font-bold font-mono"
+                    style={{
+                      background: "linear-gradient(135deg, rgba(0,255,136,0.1) 0%, rgba(124,77,255,0.1) 100%)",
+                      border: "1px solid rgba(0,255,136,0.15)",
+                      color: "#00ff88",
+                    }}
+                  >
+                    {s.step}
+                  </div>
+                  <h3 className="text-sm font-semibold mb-2" style={{ color: "#e8e8f0" }}>
+                    {s.title}
+                  </h3>
+                  <p className="text-xs leading-relaxed" style={{ color: "#666680" }}>
+                    {s.desc}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
+      </section>
 
-        <p className="text-[10px] text-text-faint leading-relaxed">
-          Trading memecoins is extremely risky. You will probably lose money. DYOR.
-        </p>
-      </div>
+      {/* ========== FINAL CTA ========== */}
+      <section className="px-6 pb-24">
+        <div
+          className="max-w-3xl mx-auto rounded-2xl p-10 text-center relative overflow-hidden"
+          style={{
+            background: "linear-gradient(135deg, rgba(0,255,136,0.06) 0%, rgba(124,77,255,0.06) 100%)",
+            border: "1px solid rgba(0,255,136,0.12)",
+          }}
+        >
+          <div
+            className="absolute top-0 right-0 w-[300px] h-[300px] rounded-full blur-[100px] pointer-events-none"
+            style={{ background: "radial-gradient(circle, rgba(0,255,136,0.08), transparent 70%)" }}
+          />
+          <div className="relative z-10">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3" style={{ color: "#e8e8f0" }}>
+              Ready to Find the Next 100x?
+            </h2>
+            <p className="text-sm mb-8 max-w-md mx-auto" style={{ color: "#666680" }}>
+              Join thousands of traders using Hatcher to discover and trade the freshest tokens on Solana.
+            </p>
+            <Link
+              href="/signup"
+              className="inline-block px-10 py-3.5 rounded-xl font-semibold text-sm transition-all hover:brightness-110"
+              style={{
+                background: "linear-gradient(135deg, #00ff88 0%, #00cc6a 100%)",
+                color: "#06060b",
+                boxShadow: "0 0 30px rgba(0,255,136,0.25)",
+              }}
+            >
+              Launch App — It&apos;s Free
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ========== FOOTER ========== */}
+      <footer
+        className="px-6 py-8"
+        style={{ borderTop: "1px solid rgba(26,26,46,0.6)" }}
+      >
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#00ff88" }} />
+            <span className="text-xs font-bold tracking-tight" style={{ color: "#666680" }}>
+              HATCHER TERMINAL
+            </span>
+          </div>
+          <p className="text-[10px] text-center sm:text-right leading-relaxed" style={{ color: "#44445a" }}>
+            Trading memecoins is extremely risky. You will probably lose money. This is not financial advice. DYOR.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }
