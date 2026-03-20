@@ -10,7 +10,7 @@ import {
   ReactNode,
 } from "react";
 import { useNotifications } from "@/components/providers/NotificationProvider";
-import { useFeed } from "@/components/providers/FeedProvider";
+import { api } from "@/lib/api";
 
 export interface PriceAlert {
   id: string;
@@ -23,21 +23,40 @@ export interface PriceAlert {
   triggered: boolean;
 }
 
+/** Shape returned by the backend API */
+interface ApiAlert {
+  id: string;
+  mintAddress: string;
+  tokenTicker: string;
+  targetPrice: number;
+  direction: "above" | "below";
+  active: boolean;
+  createdAt: string;
+  // optional fields the backend may include
+  tokenName?: string;
+  triggered?: boolean;
+}
+
 interface PriceAlertContextType {
   alerts: PriceAlert[];
   activeAlerts: PriceAlert[];
-  addAlert: (
-    alert: Omit<PriceAlert, "id" | "createdAt" | "triggered">
-  ) => void;
-  removeAlert: (id: string) => void;
+  createAlert: (alert: {
+    mintAddress: string;
+    tokenName: string;
+    tokenTicker: string;
+    targetPriceSol: number;
+    direction: "above" | "below";
+  }) => Promise<void>;
+  deleteAlert: (id: string) => Promise<void>;
   getAlertsForToken: (mintAddress: string) => PriceAlert[];
+  isLoading: boolean;
 }
 
 const STORAGE_KEY = "hatcher_price_alerts";
 
 const PriceAlertContext = createContext<PriceAlertContextType | null>(null);
 
-function loadAlerts(): PriceAlert[] {
+function loadCachedAlerts(): PriceAlert[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -49,12 +68,25 @@ function loadAlerts(): PriceAlert[] {
   }
 }
 
-function saveAlerts(alerts: PriceAlert[]) {
+function cacheAlerts(alerts: PriceAlert[]) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(alerts));
   } catch {
     // Storage full or unavailable
   }
+}
+
+function apiAlertToLocal(a: ApiAlert): PriceAlert {
+  return {
+    id: a.id,
+    mintAddress: a.mintAddress,
+    tokenName: a.tokenName ?? a.tokenTicker,
+    tokenTicker: a.tokenTicker,
+    targetPriceSol: a.targetPrice,
+    direction: a.direction,
+    createdAt: new Date(a.createdAt).getTime(),
+    triggered: a.triggered ?? !a.active,
+  };
 }
 
 /** Request browser notification permission if not yet decided */
@@ -70,7 +102,11 @@ function requestBrowserNotificationPermission() {
 }
 
 /** Send a browser notification if permission is granted */
-function sendBrowserNotification(title: string, body: string, mintAddress?: string) {
+function sendBrowserNotification(
+  title: string,
+  body: string,
+  mintAddress?: string
+) {
   if (
     typeof window === "undefined" ||
     !("Notification" in window) ||
@@ -99,103 +135,171 @@ function sendBrowserNotification(title: string, body: string, mintAddress?: stri
 
 export function PriceAlertProvider({ children }: { children: ReactNode }) {
   const [alerts, setAlerts] = useState<PriceAlert[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { addNotification } = useNotifications();
-  const { tokens } = useFeed();
-  const checkedRef = useRef<Set<string>>(new Set());
-
-  // Request browser notification permission on first alert creation
   const hasRequestedPermission = useRef(false);
+  const eventSourceRef = useRef<EventSource | null>(null);
 
-  // Load from localStorage on mount
+  // ── Fetch alerts from backend on mount, fallback to cache ──
   useEffect(() => {
-    setAlerts(loadAlerts());
+    let cancelled = false;
+
+    async function fetchAlerts() {
+      // Load cache immediately so UI is never empty
+      const cached = loadCachedAlerts();
+      if (cached.length > 0) {
+        setAlerts(cached);
+      }
+
+      try {
+        const data = await api.get<ApiAlert[]>("/api/alerts?active=true");
+        if (!cancelled) {
+          const mapped = data.map(apiAlertToLocal);
+          setAlerts(mapped);
+          cacheAlerts(mapped);
+        }
+      } catch {
+        // Backend unavailable – keep cached alerts
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    fetchAlerts();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  // Persist on change
+  // ── SSE: listen for price-alert-triggered events ──
   useEffect(() => {
-    if (alerts.length > 0 || loadAlerts().length > 0) {
-      saveAlerts(alerts);
+    const es = api.stream("/api/alerts/events");
+    eventSourceRef.current = es;
+
+    const handleTriggered = (event: MessageEvent) => {
+      try {
+        const payload = JSON.parse(event.data) as {
+          alertId: string;
+          mintAddress: string;
+          tokenTicker: string;
+          targetPrice: number;
+          direction: "above" | "below";
+        };
+
+        // Mark alert as triggered locally
+        setAlerts((prev) => {
+          const next = prev.map((a) =>
+            a.id === payload.alertId ? { ...a, triggered: true } : a
+          );
+          cacheAlerts(next);
+          return next;
+        });
+
+        const title = `Price Alert: $${payload.tokenTicker}`;
+        const message = `$${payload.tokenTicker} crossed ${payload.targetPrice} SOL (${payload.direction})`;
+
+        addNotification({
+          type: "price-alert",
+          title,
+          message,
+          mintAddress: payload.mintAddress,
+        });
+
+        sendBrowserNotification(title, message, payload.mintAddress);
+      } catch {
+        // Malformed SSE data – ignore
+      }
+    };
+
+    es.addEventListener("price-alert-triggered", handleTriggered);
+
+    return () => {
+      es.removeEventListener("price-alert-triggered", handleTriggered);
+      es.close();
+      eventSourceRef.current = null;
+    };
+  }, [addNotification]);
+
+  // ── Cache alerts whenever they change ──
+  useEffect(() => {
+    if (alerts.length > 0) {
+      cacheAlerts(alerts);
     }
   }, [alerts]);
 
   const activeAlerts = alerts.filter((a) => !a.triggered);
 
-  // Check prices against alerts using feed token data
-  useEffect(() => {
-    if (activeAlerts.length === 0 || tokens.length === 0) return;
-
-    const tokenPriceMap = new Map<string, number>();
-    for (const t of tokens) {
-      if (t.marketCapSol != null) {
-        // Use marketCapSol as a proxy price indicator
-        // In a real app, this would be the actual token price
-        tokenPriceMap.set(t.mintAddress, t.marketCapSol);
-      }
-    }
-
-    setAlerts((prev) => {
-      let changed = false;
-      const next = prev.map((alert) => {
-        if (alert.triggered) return alert;
-        if (checkedRef.current.has(alert.id)) return alert;
-
-        const currentPrice = tokenPriceMap.get(alert.mintAddress);
-        if (currentPrice === undefined) return alert;
-
-        const shouldTrigger =
-          (alert.direction === "above" &&
-            currentPrice >= alert.targetPriceSol) ||
-          (alert.direction === "below" &&
-            currentPrice <= alert.targetPriceSol);
-
-        if (shouldTrigger) {
-          changed = true;
-          checkedRef.current.add(alert.id);
-
-          const alertTitle = `Price Alert: $${alert.tokenTicker}`;
-          const alertMessage = `${alert.tokenName} price went ${alert.direction} ${alert.targetPriceSol} SOL`;
-
-          addNotification({
-            type: "price_alert",
-            title: alertTitle,
-            message: alertMessage,
-            data: { mintAddress: alert.mintAddress },
-          });
-
-          // Also send a browser notification
-          sendBrowserNotification(alertTitle, alertMessage, alert.mintAddress);
-
-          return { ...alert, triggered: true };
-        }
-
-        return alert;
-      });
-      return changed ? next : prev;
-    });
-  }, [tokens, activeAlerts.length, addNotification]);
-
-  const addAlert = useCallback(
-    (alert: Omit<PriceAlert, "id" | "createdAt" | "triggered">) => {
-      // Request browser notification permission on first alert creation
+  // ── Create alert via backend ──
+  const createAlert = useCallback(
+    async (alert: {
+      mintAddress: string;
+      tokenName: string;
+      tokenTicker: string;
+      targetPriceSol: number;
+      direction: "above" | "below";
+    }) => {
       if (!hasRequestedPermission.current) {
         hasRequestedPermission.current = true;
         requestBrowserNotificationPermission();
       }
 
-      const newAlert: PriceAlert = {
-        ...alert,
-        id: Math.random().toString(36).slice(2) + Date.now().toString(36),
+      // Optimistic local insert
+      const tempId =
+        Math.random().toString(36).slice(2) + Date.now().toString(36);
+      const optimistic: PriceAlert = {
+        id: tempId,
+        mintAddress: alert.mintAddress,
+        tokenName: alert.tokenName,
+        tokenTicker: alert.tokenTicker,
+        targetPriceSol: alert.targetPriceSol,
+        direction: alert.direction,
         createdAt: Date.now(),
         triggered: false,
       };
-      setAlerts((prev) => [newAlert, ...prev]);
+      setAlerts((prev) => [optimistic, ...prev]);
+
+      try {
+        const created = await api.post<ApiAlert>("/api/alerts", {
+          mintAddress: alert.mintAddress,
+          tokenTicker: alert.tokenTicker,
+          targetPrice: alert.targetPriceSol,
+          direction: alert.direction,
+        });
+
+        // Replace optimistic entry with the real one from the backend
+        const real = apiAlertToLocal(created);
+        // Keep tokenName from our local data since backend may not return it
+        real.tokenName = alert.tokenName;
+
+        setAlerts((prev) =>
+          prev.map((a) => (a.id === tempId ? real : a))
+        );
+      } catch {
+        // Rollback optimistic insert
+        setAlerts((prev) => prev.filter((a) => a.id !== tempId));
+        throw new Error("Failed to create alert");
+      }
     },
     []
   );
 
-  const removeAlert = useCallback((id: string) => {
-    setAlerts((prev) => prev.filter((a) => a.id !== id));
-    checkedRef.current.delete(id);
+  // ── Delete alert via backend ──
+  const deleteAlert = useCallback(async (id: string) => {
+    // Optimistic remove
+    let removed: PriceAlert | undefined;
+    setAlerts((prev) => {
+      removed = prev.find((a) => a.id === id);
+      return prev.filter((a) => a.id !== id);
+    });
+
+    try {
+      await api.delete(`/api/alerts/${id}`);
+    } catch {
+      // Rollback: re-insert if delete failed
+      if (removed) {
+        setAlerts((prev) => [removed!, ...prev]);
+      }
+    }
   }, []);
 
   const getAlertsForToken = useCallback(
@@ -207,7 +311,14 @@ export function PriceAlertProvider({ children }: { children: ReactNode }) {
 
   return (
     <PriceAlertContext.Provider
-      value={{ alerts, activeAlerts, addAlert, removeAlert, getAlertsForToken }}
+      value={{
+        alerts,
+        activeAlerts,
+        createAlert,
+        deleteAlert,
+        getAlertsForToken,
+        isLoading,
+      }}
     >
       {children}
     </PriceAlertContext.Provider>
