@@ -17,6 +17,7 @@ import { BubbleMap } from "@/components/explore/BubbleMap";
 import { NewTokenBanner } from "@/components/explore/NewTokenBanner";
 import { LiveAge } from "@/components/ui/LiveAge";
 import { useNewTokenAlert } from "@/hooks/useNewTokenAlert";
+import { useWebSocketSubscription } from "@/hooks/useWebSocketSubscription";
 import { api } from "@/lib/api";
 
 type ExploreCategory = "new" | "graduating" | "migrated";
@@ -35,13 +36,13 @@ const AGE_FILTERS: { key: AgeFilter; label: string; maxMs: number }[] = [
 
 const TABS: { key: ExploreCategory; label: string; desc: string; icon: string }[] = [
   { key: "new", label: "New Pairs", desc: "Just created", icon: "+" },
-  { key: "graduating", label: "Close to Bond", desc: "60%+ bonding", icon: "\uD83D\uDD25" },
+  { key: "graduating", label: "Close to Bond", desc: "70%+ bonding", icon: "\uD83D\uDD25" },
   { key: "migrated", label: "Graduated", desc: "On Raydium", icon: "\u2713" },
 ];
 
 const SOL_PRICE_USD = Number(process.env.NEXT_PUBLIC_SOL_PRICE_USD || 150);
 const PAGE_SIZE = 30;
-const REFRESH_INTERVAL = 10_000;
+const REFRESH_INTERVAL = 30_000;
 
 // ---- helpers ----
 
@@ -404,6 +405,68 @@ export default function TrenchesPage() {
 
   // Real-time new token detection via WebSocket
   const { newTokens, dismiss: dismissNewToken, dismissAll: dismissAllNewTokens } = useNewTokenAlert();
+
+  // Track mints that changed price (for flash animation)
+  const [changedMints, setChangedMints] = useState<Map<string, "up" | "down">>(new Map());
+
+  // Real-time price updates via WebSocket
+  const priceChannels = useMemo(() => ["prices"], []);
+  const onPriceMessage = useCallback(
+    (_channel: string, data: unknown) => {
+      if (!data || typeof data !== "object") return;
+      const update = data as Record<string, unknown>;
+      const mintAddress = update.mintAddress as string | undefined;
+      if (!mintAddress) return;
+
+      setTokens((prev) => {
+        const idx = prev.findIndex((t) => t.mintAddress === mintAddress);
+        if (idx === -1) return prev;
+
+        const token = prev[idx];
+        const newMcapSol = update.marketCapSol != null ? Number(update.marketCapSol) : token.marketCapSol;
+        const prevMcap = token.marketCapSol ?? 0;
+        const direction = (newMcapSol ?? 0) > prevMcap ? "up" : (newMcapSol ?? 0) < prevMcap ? "down" : null;
+
+        const updated = {
+          ...token,
+          marketCapSol: newMcapSol,
+          marketCapUsd: update.marketCapUsd != null ? Number(update.marketCapUsd) : token.marketCapUsd,
+          bondingProgress: update.bondingProgress != null ? Number(update.bondingProgress) : token.bondingProgress,
+          volume1h: update.volume1h != null ? Number(update.volume1h) : token.volume1h,
+          buyCount: update.buyCount != null ? Number(update.buyCount) : token.buyCount,
+          sellCount: update.sellCount != null ? Number(update.sellCount) : token.sellCount,
+        };
+
+        const next = [...prev];
+        next[idx] = updated;
+
+        // Flash animation
+        if (direction) {
+          setChangedMints((m) => {
+            const copy = new Map(m);
+            copy.set(mintAddress, direction);
+            return copy;
+          });
+          setTimeout(() => {
+            setChangedMints((m) => {
+              const copy = new Map(m);
+              copy.delete(mintAddress);
+              return copy;
+            });
+          }, 1000);
+        }
+
+        return next;
+      });
+    },
+    [],
+  );
+
+  useWebSocketSubscription({
+    channels: priceChannels,
+    onMessage: onPriceMessage,
+    enabled: true,
+  });
 
   // Token count for header
   const tokenCount = tokens.length;
@@ -1005,6 +1068,7 @@ export default function TrenchesPage() {
               <TableRow
                 token={token}
                 isNew={newIds.has(token.id)}
+                priceFlash={changedMints.get(token.mintAddress) ?? null}
                 columns={columns}
                 activeTab={activeTab}
                 rowIndex={idx}
@@ -1023,6 +1087,7 @@ export default function TrenchesPage() {
               key={token.id}
               token={token}
               isNew={newIds.has(token.id)}
+              priceFlash={changedMints.get(token.mintAddress) ?? null}
               activeTab={activeTab}
             />
           ))}
@@ -1062,12 +1127,14 @@ export default function TrenchesPage() {
 function TableRow({
   token,
   isNew,
+  priceFlash,
   columns,
   activeTab,
   rowIndex,
 }: {
   token: ExploreToken;
   isNew: boolean;
+  priceFlash: "up" | "down" | null;
   columns: ColumnDef[];
   activeTab: ExploreCategory;
   rowIndex: number;
@@ -1078,8 +1145,9 @@ function TableRow({
   const riskLabel = getRiskLabel(token.riskLevel);
   const isUrgentBonding = activeTab === "graduating" && (token.bondingProgress ?? 0) >= 80;
 
-  // Alternating row bg
-  const rowBg = isNew ? "#00d67208" : rowIndex % 2 === 0 ? "transparent" : "#0a0d1440";
+  // Alternating row bg with flash animation
+  const flashBg = priceFlash === "up" ? "#00d67212" : priceFlash === "down" ? "#f2364512" : null;
+  const rowBg = flashBg ?? (isNew ? "#00d67208" : rowIndex % 2 === 0 ? "transparent" : "#0a0d1440");
 
   const renderCell = (col: ColumnDef) => {
     switch (col.key) {
@@ -1277,6 +1345,7 @@ function TableRow({
         borderBottom: "1px solid #1a1f2e08",
         fontSize: 11,
         background: rowBg,
+        transition: "background 0.3s ease",
       }}
       onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#10131c"; }}
       onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = rowBg; }}
@@ -1302,10 +1371,12 @@ function TableRow({
 function CardRow({
   token,
   isNew,
+  priceFlash,
   activeTab,
 }: {
   token: ExploreToken;
   isNew: boolean;
+  priceFlash: "up" | "down" | null;
   activeTab: ExploreCategory;
 }) {
   const mcapUsd =
@@ -1324,10 +1395,11 @@ function CardRow({
     <div
       className="relative flex flex-col overflow-hidden transition-all duration-200 hover:brightness-110"
       style={{
-        background: "#0a0d14",
-        border: isUrgentBonding ? "1px solid #f0a00050" : "1px solid #1a1f2e",
+        background: priceFlash === "up" ? "#00d67208" : priceFlash === "down" ? "#f2364508" : "#0a0d14",
+        border: priceFlash === "up" ? "1px solid #00d67230" : priceFlash === "down" ? "1px solid #f2364530" : isUrgentBonding ? "1px solid #f0a00050" : "1px solid #1a1f2e",
         borderRadius: 8,
         boxShadow: isUrgentBonding ? "0 0 12px #f0a00018" : "none",
+        transition: "background 0.3s ease, border-color 0.3s ease",
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.borderColor = isUrgentBonding ? "#f0a00080" : "#2a3148";

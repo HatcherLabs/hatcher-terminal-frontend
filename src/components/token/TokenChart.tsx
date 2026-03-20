@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { api } from "@/lib/api";
+import { useLiveCandles } from "@/hooks/useLiveCandles";
 
 // ---- Chart Theme Constants ----
 const CHART_THEME = {
@@ -19,7 +20,7 @@ const CHART_THEME = {
 } as const;
 
 // ---- Timeframe Config ----
-type Timeframe = "5m" | "15m" | "1H" | "4H" | "1D" | "1W";
+type Timeframe = "1m" | "5m" | "15m" | "1H" | "4H" | "1D" | "1W";
 
 interface TimeframeConfig {
   label: string;
@@ -29,6 +30,7 @@ interface TimeframeConfig {
 }
 
 const TIMEFRAMES: Record<Timeframe, TimeframeConfig> = {
+  "1m": { label: "1m", interval: "1m", limit: 120, secondsVisible: true },
   "5m": { label: "5m", interval: "5m", limit: 120, secondsVisible: false },
   "15m": { label: "15m", interval: "15m", limit: 96, secondsVisible: false },
   "1H": { label: "1H", interval: "1h", limit: 72, secondsVisible: false },
@@ -37,7 +39,10 @@ const TIMEFRAMES: Record<Timeframe, TimeframeConfig> = {
   "1W": { label: "1W", interval: "1w", limit: 52, secondsVisible: false },
 };
 
-const TIMEFRAME_KEYS: Timeframe[] = ["5m", "15m", "1H", "4H", "1D", "1W"];
+const TIMEFRAME_KEYS: Timeframe[] = ["1m", "5m", "15m", "1H", "4H", "1D", "1W"];
+
+/** Whether an interval is served by our local candle builder (real-time capable) */
+const LOCAL_INTERVALS = new Set(["1m", "5m", "15m", "1h"]);
 
 // ---- Interfaces ----
 interface CandleData {
@@ -89,6 +94,24 @@ async function fetchChartData(
   const cached = CACHE.get(key);
   if (cached && Date.now() - cached.ts < CACHE_TTL) {
     return cached.data;
+  }
+
+  // Try local candles endpoint first for supported intervals
+  if (LOCAL_INTERVALS.has(interval)) {
+    try {
+      const candlesRes = await api.raw(
+        `/api/tokens/${mint}/candles?interval=${interval}&limit=${limit}`
+      );
+      if (candlesRes.ok) {
+        const json: ChartResponse = await candlesRes.json();
+        if (json.candles && json.candles.length >= 2) {
+          CACHE.set(key, { data: json, ts: Date.now() });
+          return json;
+        }
+      }
+    } catch {
+      // Fall through to legacy endpoint
+    }
   }
 
   const res = await api.raw(
@@ -346,17 +369,27 @@ function TimeRangeSelector({
   );
 }
 
+// ---- Series Refs for live updates ----
+interface SeriesRefs {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  candlestickSeries: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  volumeSeries: any;
+}
+
 // ---- Candlestick Chart ----
 function CandlestickChart({
   candles,
   height,
   timeframe,
   onCrosshairMove,
+  onSeriesReady,
 }: {
   candles: CandleData[];
   height: number;
   timeframe: Timeframe;
   onCrosshairMove: (data: OHLCVData | null) => void;
+  onSeriesReady?: (refs: SeriesRefs) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<ReturnType<
@@ -498,6 +531,11 @@ function CandlestickChart({
 
     volumeSeries.setData(volumeData);
 
+    // Expose series refs for live updates
+    if (onSeriesReady) {
+      onSeriesReady({ candlestickSeries, volumeSeries });
+    }
+
     // Crosshair move handler for OHLCV tooltip
     const candleMap = new Map<number, CandleData>();
     for (const c of candles) {
@@ -541,7 +579,7 @@ function CandlestickChart({
         _resizeObserver?: ResizeObserver;
       }
     )._resizeObserver = resizeObserver;
-  }, [candles, height, tfConfig.secondsVisible, onCrosshairMove]);
+  }, [candles, height, tfConfig.secondsVisible, onCrosshairMove, onSeriesReady]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -574,10 +612,58 @@ export function TokenChart({ mintAddress, height }: TokenChartProps) {
   const [loading, setLoading] = useState(true);
   const [hoverData, setHoverData] = useState<OHLCVData | null>(null);
   const mountedRef = useRef(true);
+  const seriesRefsRef = useRef<SeriesRefs | null>(null);
 
   const handleCrosshairMove = useCallback((data: OHLCVData | null) => {
     setHoverData(data);
   }, []);
+
+  const handleSeriesReady = useCallback((refs: SeriesRefs) => {
+    seriesRefsRef.current = refs;
+  }, []);
+
+  // Live candle updates via WebSocket (only for local intervals)
+  const tfConfig = TIMEFRAMES[timeframe];
+  const isLiveCapable = LOCAL_INTERVALS.has(tfConfig.interval);
+  const { lastCandle } = useLiveCandles({
+    mintAddress,
+    interval: tfConfig.interval,
+    enabled: isLiveCapable,
+  });
+
+  // Apply live candle updates to the chart series
+  useEffect(() => {
+    if (!lastCandle || !seriesRefsRef.current) return;
+
+    const { candlestickSeries, volumeSeries } = seriesRefsRef.current;
+    const time = lastCandle.t as import("lightweight-charts").UTCTimestamp;
+
+    try {
+      candlestickSeries.update({
+        time,
+        open: lastCandle.o,
+        high: lastCandle.h,
+        low: lastCandle.l,
+        close: lastCandle.c,
+      });
+
+      const isUp = lastCandle.c >= lastCandle.o;
+      volumeSeries.update({
+        time,
+        value: lastCandle.v,
+        color: isUp
+          ? CHART_THEME.volumeUpColor
+          : CHART_THEME.volumeDownColor,
+      });
+
+      // Update OHLCV overlay with live data when not hovering
+      if (!hoverData) {
+        setHoverData(null); // triggers defaultOHLCV recalc on next render
+      }
+    } catch {
+      // Series may have been disposed
+    }
+  }, [lastCandle, hoverData]);
 
   // Responsive height: mobile 200px min, desktop 300px min (or prop override)
   const [responsiveHeight, setResponsiveHeight] = useState(height ?? 380);
@@ -688,6 +774,18 @@ export function TokenChart({ mintAddress, height }: TokenChartProps) {
               style={{ borderColor: "#1a1f2e", borderTopColor: "#5c6380" }}
             />
           )}
+          {isLiveCapable && (
+            <span
+              className="flex items-center gap-1 font-mono"
+              style={{ fontSize: 9, color: "#00d672" }}
+            >
+              <span
+                className="w-1.5 h-1.5 rounded-full animate-pulse"
+                style={{ background: "#00d672" }}
+              />
+              LIVE
+            </span>
+          )}
           <span
             className="font-mono"
             style={{ fontSize: 10, color: "#363d54" }}
@@ -708,6 +806,7 @@ export function TokenChart({ mintAddress, height }: TokenChartProps) {
             height={responsiveHeight}
             timeframe={timeframe}
             onCrosshairMove={handleCrosshairMove}
+            onSeriesReady={handleSeriesReady}
           />
         </div>
       </div>
