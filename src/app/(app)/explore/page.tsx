@@ -809,7 +809,7 @@ export default function TrenchesPage() {
         </div>
       ) : (
         /* Card view */
-        <div className="flex flex-col gap-[1px]">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 px-1">
           {displayTokens.map((token) => (
             <CardRow
               key={token.id}
@@ -1092,76 +1092,128 @@ function CardRow({
 }) {
   const mcapUsd =
     token.marketCapSol != null ? token.marketCapSol * SOL_PRICE_USD : null;
+  const volumeUsd =
+    token.volume1h != null ? token.volume1h * SOL_PRICE_USD : null;
   const heat = token.heatScore ?? computeHeat(token);
   const isUrgentBonding = activeTab === "graduating" && (token.bondingProgress ?? 0) >= 80;
+  const riskColor = getRiskColor(token.riskLevel);
+  const riskLabel = getRiskLabel(token.riskLevel);
+
+  const pct5m = token.priceChange5m;
+  const pct1h = token.priceChange1h;
 
   return (
-    <Link
-      href={`/token/${token.mintAddress}`}
-      className="w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 cursor-pointer"
+    <div
+      className="relative flex flex-col overflow-hidden transition-all duration-200 hover:brightness-110"
       style={{
-        background: isUrgentBonding ? "#f0a00008" : isNew ? "#00d67208" : "#0a0d14",
-        border: isUrgentBonding ? "1px solid #f0a00020" : "1px solid #1a1f2e",
+        background: "#0a0d14",
+        border: isUrgentBonding ? "1px solid #f0a00050" : "1px solid #1a1f2e",
+        borderRadius: 8,
+        boxShadow: isUrgentBonding ? "0 0 12px #f0a00018" : "none",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = isUrgentBonding ? "#f0a00080" : "#2a3148";
+        e.currentTarget.style.boxShadow = isUrgentBonding ? "0 0 14px #f0a00025" : "0 0 8px #1a1f2e40";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = isUrgentBonding ? "#f0a00050" : "#1a1f2e";
+        e.currentTarget.style.boxShadow = isUrgentBonding ? "0 0 12px #f0a00018" : "none";
       }}
     >
-      {/* Avatar */}
-      <div className="flex-shrink-0 w-9 h-9 rounded-full overflow-hidden" style={{ background: "#04060b" }}>
-        {token.imageUri ? (
-          <img src={token.imageUri} alt={token.name} className="w-full h-full object-cover" loading="lazy" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-[10px] font-bold font-mono" style={{ color: "#5c6380" }}>
-            {token.ticker.charAt(0)}
+
+      {/* Card link area */}
+      <Link
+        href={`/token/${token.mintAddress}`}
+        className="flex flex-col p-3 gap-2 cursor-pointer flex-1"
+      >
+        {/* Header: Avatar + Ticker + Name + Badges */}
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden" style={{ background: "#04060b" }}>
+            {token.imageUri ? (
+              <img src={token.imageUri} alt={token.name} className="w-full h-full object-cover" loading="lazy" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-[10px] font-bold font-mono" style={{ color: "#5c6380" }}>
+                {token.ticker.charAt(0)}
+              </div>
+            )}
           </div>
-        )}
-      </div>
-
-      {/* Name + ticker + metrics */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5">
-          <span className="text-[12px] font-semibold truncate" style={{ color: "#eef0f6" }}>
-            {token.name}
-          </span>
-          <span className="text-[10px] font-mono flex-shrink-0" style={{ color: "#5c6380" }}>
-            ${token.ticker}
-          </span>
-          <HeatDisplay heat={heat} />
-          {isNew && (
-            <span className="text-[7px] font-bold px-1 py-0.5 rounded animate-pulse" style={{ background: "#00d67218", color: "#00d672" }}>
-              NEW
-            </span>
-          )}
-          {isUrgentBonding && (
-            <span className="text-[7px] font-bold px-1 py-0.5 rounded animate-pulse" style={{ background: "#f0a00020", color: "#f0a000" }}>
-              GRADUATING
-            </span>
-          )}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1">
+              <span className="text-[12px] font-bold font-mono truncate" style={{ color: "#eef0f6" }}>
+                ${token.ticker}
+              </span>
+              {isNew && (
+                <span className="text-[7px] font-bold px-1 py-0.5 rounded animate-pulse flex-shrink-0" style={{ background: "#00d67218", color: "#00d672" }}>
+                  NEW
+                </span>
+              )}
+              {isUrgentBonding && (
+                <span className="text-[7px] font-bold px-1 py-0.5 rounded animate-pulse flex-shrink-0" style={{ background: "#f0a00020", color: "#f0a000" }}>
+                  GRAD
+                </span>
+              )}
+            </div>
+            <div className="text-[10px] truncate" style={{ color: "#5c6380" }}>
+              {token.name}
+            </div>
+          </div>
         </div>
 
-        {/* Metric row */}
-        <div className="flex items-center gap-2 mt-0.5 text-[10px] font-mono">
-          <span style={{ color: "#9ca3b8" }}>{relativeTime(token.detectedAt)}</span>
-          <span style={{ color: "#1a1f2e" }}>|</span>
-          <span style={{ color: "#eef0f6" }}>{formatUsdCompact(mcapUsd)}</span>
-          <span style={{ color: "#1a1f2e" }}>|</span>
-          <span style={{ color: "#9ca3b8" }}>
-            {token.holders != null ? `${formatCompact(token.holders)}H` : "\u2014"}
-          </span>
-          <span style={{ color: "#1a1f2e" }}>|</span>
-          <span style={{ color: "#00d672" }}>{formatCompact(token.buyCount ?? 0)}</span>
-          <span style={{ color: "#363d54" }}>/</span>
-          <span style={{ color: "#f23645" }}>{formatCompact(token.sellCount ?? 0)}</span>
-          <span style={{ color: "#1a1f2e" }}>|</span>
-          <span style={{
-            color: (token.devHoldPct ?? 0) > 15 ? "#f23645" : (token.devHoldPct ?? 0) > 8 ? "#f0a000" : "#9ca3b8"
-          }}>
-            {token.devHoldPct != null ? `D${token.devHoldPct.toFixed(1)}%` : ""}
-          </span>
-          <SecurityDots lpBurned={token.lpBurned} mintRevoked={token.mintRevoked} devHoldPct={token.devHoldPct ?? undefined} />
+        {/* Primary metrics: MCap + Volume */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-col">
+            <span className="text-[8px] uppercase tracking-wider" style={{ color: "#5c6380" }}>MCap</span>
+            <span className="text-[13px] font-mono font-bold" style={{ color: "#eef0f6" }}>
+              {formatUsdCompact(mcapUsd)}
+            </span>
+          </div>
+          <div className="flex flex-col items-end">
+            <span className="text-[8px] uppercase tracking-wider" style={{ color: "#5c6380" }}>Vol 1h</span>
+            <span className="text-[12px] font-mono font-semibold" style={{ color: "#9ca3b8" }}>
+              {formatUsdCompact(volumeUsd)}
+            </span>
+          </div>
         </div>
 
-        {/* Bonding bar for non-graduated */}
+        {/* Price changes: 5m% and 1h% */}
+        <div className="flex items-center gap-2">
+          <div
+            className="flex-1 flex items-center justify-center gap-1 rounded py-[3px]"
+            style={{
+              background: pct5m != null && pct5m >= 0 ? "#00d67210" : "#f2364510",
+            }}
+          >
+            <span className="text-[8px]" style={{ color: "#5c6380" }}>5m</span>
+            <span
+              className="text-[11px] font-mono font-bold"
+              style={{
+                color: pct5m != null ? (pct5m >= 0 ? "#00d672" : "#f23645") : "#363d54",
+              }}
+            >
+              {pct5m != null ? `${pct5m > 0 ? "+" : ""}${pct5m.toFixed(1)}%` : "\u2014"}
+            </span>
+          </div>
+          <div
+            className="flex-1 flex items-center justify-center gap-1 rounded py-[3px]"
+            style={{
+              background: pct1h != null && pct1h >= 0 ? "#00d67210" : "#f2364510",
+            }}
+          >
+            <span className="text-[8px]" style={{ color: "#5c6380" }}>1h</span>
+            <span
+              className="text-[11px] font-mono font-bold"
+              style={{
+                color: pct1h != null ? (pct1h >= 0 ? "#00d672" : "#f23645") : "#363d54",
+              }}
+            >
+              {pct1h != null ? `${pct1h > 0 ? "+" : ""}${pct1h.toFixed(1)}%` : "\u2014"}
+            </span>
+          </div>
+        </div>
+
+        {/* Bonding progress */}
         {token.bondingProgress != null && !token.isGraduated && (
-          <div className="mt-1 max-w-[200px]">
+          <div>
             <BondingBar
               progress={token.bondingProgress}
               isGraduated={token.isGraduated}
@@ -1170,29 +1222,75 @@ function CardRow({
           </div>
         )}
         {token.isGraduated && (
-          <div className="mt-1">
+          <div>
             <span className="font-mono text-[8px] font-bold px-1.5 py-[2px] rounded" style={{ background: "#00d67218", color: "#00d672" }}>
               GRADUATED - RAYDIUM
             </span>
           </div>
         )}
-      </div>
 
-      {/* Right side */}
-      <div className="flex items-center gap-2 flex-shrink-0">
-        {token.sparkline && token.sparkline.length > 2 && (
-          <Sparkline data={token.sparkline} width={48} height={18} />
-        )}
-        <QuickTradeButton
-          token={{ mintAddress: token.mintAddress, name: token.name, ticker: token.ticker, imageUri: token.imageUri }}
-          size={18}
-        />
-        <WatchlistButton
-          token={{ mintAddress: token.mintAddress, name: token.name, ticker: token.ticker, imageUri: token.imageUri }}
-          size={18}
-        />
+        {/* Bottom row: Holders, Risk, Heat */}
+        <div className="flex items-center justify-between gap-1 mt-auto">
+          <div className="flex items-center gap-2">
+            {/* Holders */}
+            <span className="text-[10px] font-mono" style={{ color: "#9ca3b8" }}>
+              {token.holders != null ? `${formatCompact(token.holders)} H` : "\u2014"}
+            </span>
+            {/* Risk badge */}
+            {token.riskLevel && (
+              <span
+                className="text-[8px] font-bold font-mono px-1.5 py-[1px] rounded"
+                style={{
+                  background: `${riskColor}15`,
+                  color: riskColor,
+                  border: `1px solid ${riskColor}25`,
+                }}
+              >
+                {riskLabel}
+              </span>
+            )}
+          </div>
+          {/* Heat score */}
+          <HeatDisplay heat={heat} />
+        </div>
+      </Link>
+
+      {/* Quick action buttons */}
+      <div
+        className="flex items-center border-t"
+        style={{ borderColor: "#1a1f2e" }}
+      >
+        <div className="flex-1 flex items-center justify-center gap-1 py-1.5">
+          <QuickTradeButton
+            token={{ mintAddress: token.mintAddress, name: token.name, ticker: token.ticker, imageUri: token.imageUri }}
+            size={12}
+          />
+          <span className="text-[10px] font-bold" style={{ color: "#00d672" }}>Buy</span>
+        </div>
+        <div className="w-px h-4" style={{ background: "#1a1f2e" }} />
+        <div className="flex-1 flex items-center justify-center gap-1 py-1.5">
+          <WatchlistButton
+            token={{ mintAddress: token.mintAddress, name: token.name, ticker: token.ticker, imageUri: token.imageUri }}
+            size={12}
+          />
+          <span className="text-[10px] font-bold" style={{ color: "#5c6380" }}>Watch</span>
+        </div>
+        <div className="w-px h-4" style={{ background: "#1a1f2e" }} />
+        <Link
+          href={`/token/${token.mintAddress}?compare=true`}
+          className="flex-1 flex items-center justify-center gap-1 py-1.5 text-[10px] font-bold transition-colors"
+          style={{ color: "#5c6380" }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10" />
+            <line x1="12" y1="20" x2="12" y2="4" />
+            <line x1="6" y1="20" x2="6" y2="14" />
+          </svg>
+          Compare
+        </Link>
       </div>
-    </Link>
+    </div>
   );
 }
 
