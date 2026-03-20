@@ -50,10 +50,10 @@ function BondingCurveBar({
   if (isGraduated) {
     return (
       <div className="flex items-center gap-2">
-        <div className="flex-1 h-2 rounded-full bg-bg-elevated overflow-hidden">
-          <div className="h-full w-full rounded-full bg-gradient-to-r from-green to-amber" />
+        <div className="flex-1 h-2 rounded-full bg-[#10131c] overflow-hidden">
+          <div className="h-full w-full rounded-full" style={{ background: "linear-gradient(to right, #00d672, #f0a000)" }} />
         </div>
-        <span className="text-[10px] font-bold text-amber tracking-wider whitespace-nowrap">
+        <span className="text-[10px] font-bold tracking-wider whitespace-nowrap" style={{ color: "#f0a000" }}>
           MIGRATED
         </span>
       </div>
@@ -64,27 +64,27 @@ function BondingCurveBar({
   const solInCurve = (pct / 100) * BONDING_GRADUATION_SOL;
 
   // Color logic: gray < 30%, green 30-70%, gold > 70%
-  let barColor = "bg-text-muted";
-  if (pct >= 70) barColor = "bg-amber";
-  else if (pct >= 30) barColor = "bg-green";
+  let barHex = "#5c6380";
+  if (pct >= 70) barHex = "#f0a000";
+  else if (pct >= 30) barHex = "#00d672";
 
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between text-[10px]">
-        <span className="text-text-muted uppercase tracking-wider">
+        <span className="uppercase tracking-wider" style={{ color: "#5c6380" }}>
           Bonding Curve
         </span>
-        <span className="text-text-secondary font-mono">
+        <span className="font-mono" style={{ color: "#9ca3b8" }}>
           {solInCurve.toFixed(1)} / {BONDING_GRADUATION_SOL} SOL
         </span>
       </div>
-      <div className="w-full h-2 rounded-full bg-bg-elevated overflow-hidden">
+      <div className="w-full h-2 rounded-full bg-[#10131c] overflow-hidden">
         <div
-          className={`h-full rounded-full transition-all duration-500 ${barColor}`}
-          style={{ width: `${pct}%` }}
+          className="h-full rounded-full transition-all duration-500"
+          style={{ width: `${pct}%`, backgroundColor: barHex }}
         />
       </div>
-      <p className="text-[10px] text-text-muted text-right font-mono">
+      <p className="text-[10px] text-right font-mono" style={{ color: "#5c6380" }}>
         {pct.toFixed(1)}% to Raydium
       </p>
     </div>
@@ -110,23 +110,23 @@ function BuySellBar({
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between text-[10px]">
-        <span className="text-text-muted uppercase tracking-wider">
+        <span className="uppercase tracking-wider" style={{ color: "#5c6380" }}>
           Buy / Sell
         </span>
-        <span className="text-text-secondary font-mono">
-          <span className="text-green">{buys}</span>
+        <span className="font-mono" style={{ color: "#9ca3b8" }}>
+          <span style={{ color: "#00d672" }}>{buys}</span>
           {" / "}
-          <span className="text-red">{sells}</span>
+          <span style={{ color: "#f23645" }}>{sells}</span>
         </span>
       </div>
       <div className="w-full h-1.5 rounded-full overflow-hidden flex">
         <div
-          className="h-full bg-green rounded-l-full"
-          style={{ width: `${buyPct}%` }}
+          className="h-full rounded-l-full"
+          style={{ width: `${buyPct}%`, backgroundColor: "#00d672" }}
         />
         <div
-          className="h-full bg-red rounded-r-full"
-          style={{ width: `${100 - buyPct}%` }}
+          className="h-full rounded-r-full"
+          style={{ width: `${100 - buyPct}%`, backgroundColor: "#f23645" }}
         />
       </div>
     </div>
@@ -167,17 +167,17 @@ export function TokenStats({
     <div className="space-y-3">
       {/* Market cap - prominent with animated price */}
       <div className="text-center">
-        <p className="text-[10px] text-text-muted uppercase tracking-wider">
+        <p className="text-[10px] uppercase tracking-wider" style={{ color: "#5c6380" }}>
           Market Cap
         </p>
         <AnimatedPrice
           value={mcapUsd}
           format="usd"
           showArrow
-          className="text-2xl font-bold text-text-primary leading-tight"
+          className="text-2xl font-bold leading-tight"
         />
         {mcapUsd != null && marketCapSol != null && (
-          <p className="text-[10px] text-text-muted font-mono">
+          <p className="text-[10px] font-mono" style={{ color: "#5c6380" }}>
             {formatNumber(marketCapSol)} SOL
           </p>
         )}
@@ -188,7 +188,7 @@ export function TokenStats({
         <div className="flex items-center justify-center gap-3 text-xs">
           {effectivePriceChange5m !== null && (
             <span className="inline-flex items-center gap-1">
-              <span className="text-text-muted text-[10px]">5m:</span>
+              <span className="text-[10px]" style={{ color: "#5c6380" }}>5m:</span>
               <AnimatedPrice
                 value={effectivePriceChange5m}
                 format="percent"
@@ -199,7 +199,7 @@ export function TokenStats({
           )}
           {effectivePriceChange1h !== null && (
             <span className="inline-flex items-center gap-1">
-              <span className="text-text-muted text-[10px]">1h:</span>
+              <span className="text-[10px]" style={{ color: "#5c6380" }}>1h:</span>
               <AnimatedPrice
                 value={effectivePriceChange1h}
                 format="percent"
@@ -212,40 +212,39 @@ export function TokenStats({
       )}
 
       {/* Stats grid - 4 columns */}
-      <div className="grid grid-cols-4 gap-px bg-border rounded-lg overflow-hidden">
-        <div className="bg-bg-elevated px-2 py-2 text-center">
-          <p className="text-[10px] text-text-muted uppercase tracking-wider">
+      <div className="grid grid-cols-4 gap-px rounded-lg overflow-hidden" style={{ backgroundColor: "#1a1f2e" }}>
+        <div className="bg-[#10131c] px-2 py-2 text-center">
+          <p className="text-[10px] uppercase tracking-wider" style={{ color: "#5c6380" }}>
             Holders
           </p>
-          <p className="text-sm font-mono font-medium text-text-primary mt-0.5">
+          <p className="text-sm font-mono font-medium mt-0.5" style={{ color: "#eef0f6" }}>
             {holders !== null ? formatNumber(holders) : "\u2014"}
           </p>
         </div>
-        <div className="bg-bg-elevated px-2 py-2 text-center">
-          <p className="text-[10px] text-text-muted uppercase tracking-wider">
+        <div className="bg-[#10131c] px-2 py-2 text-center">
+          <p className="text-[10px] uppercase tracking-wider" style={{ color: "#5c6380" }}>
             Vol 1h
           </p>
-          <p className="text-sm font-mono font-medium text-text-primary mt-0.5">
+          <p className="text-sm font-mono font-medium mt-0.5" style={{ color: "#eef0f6" }}>
             {effectiveVolume1h ? `$${formatNumber(effectiveVolume1h)}` : "\u2014"}
           </p>
         </div>
-        <div className="bg-bg-elevated px-2 py-2 text-center">
-          <p className="text-[10px] text-text-muted uppercase tracking-wider">
+        <div className="bg-[#10131c] px-2 py-2 text-center">
+          <p className="text-[10px] uppercase tracking-wider" style={{ color: "#5c6380" }}>
             Dev %
           </p>
           <p
-            className={`text-sm font-mono font-medium mt-0.5 ${
-              devWarn ? "text-red" : "text-text-primary"
-            }`}
+            className="text-sm font-mono font-medium mt-0.5"
+            style={{ color: devWarn ? "#f23645" : "#eef0f6" }}
           >
             {devHoldPct !== null ? `${devHoldPct.toFixed(1)}%` : "\u2014"}
           </p>
         </div>
-        <div className="bg-bg-elevated px-2 py-2 text-center">
-          <p className="text-[10px] text-text-muted uppercase tracking-wider">
+        <div className="bg-[#10131c] px-2 py-2 text-center">
+          <p className="text-[10px] uppercase tracking-wider" style={{ color: "#5c6380" }}>
             Age
           </p>
-          <p className="text-sm font-mono font-medium text-text-primary mt-0.5">
+          <p className="text-sm font-mono font-medium mt-0.5" style={{ color: "#eef0f6" }}>
             {tokenAge(createdAt)}
           </p>
         </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useQuickTrade } from "@/components/providers/QuickTradeProvider";
 
 interface QuickTradeButtonProps {
@@ -15,6 +16,7 @@ interface QuickTradeButtonProps {
 
 export function QuickTradeButton({ token, size = 18, className = "" }: QuickTradeButtonProps) {
   const { selectTokenAndOpen } = useQuickTrade();
+  const [hovered, setHovered] = useState(false);
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -31,7 +33,10 @@ export function QuickTradeButton({ token, size = 18, className = "" }: QuickTrad
   return (
     <button
       onClick={handleClick}
-      className={`flex items-center justify-center text-text-muted hover:text-accent transition-colors ${className}`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className={`flex items-center justify-center transition-colors ${className}`}
+      style={{ color: hovered ? "#8b5cf6" : "#5c6380" }}
       aria-label={`Quick trade ${token.ticker}`}
       title={`Quick trade ${token.ticker}`}
     >

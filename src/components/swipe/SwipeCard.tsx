@@ -9,6 +9,7 @@ import { useTokenPrice } from "@/hooks/useTokenPrice";
 import { useSolPriceContext } from "@/components/providers/SolPriceProvider";
 import { WatchlistButton } from "@/components/ui/WatchlistButton";
 import { CompareButton } from "@/components/ui/CompareButton";
+import { LiveAge } from "@/components/ui/LiveAge";
 import type { TokenData } from "@/types/token";
 
 interface SwipeCardProps {
@@ -60,7 +61,7 @@ function MetricCell({
   valueColor,
 }: {
   label: string;
-  value: string;
+  value: React.ReactNode;
   valueColor?: string;
 }) {
   return (
@@ -432,7 +433,7 @@ export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
           />
         </div>
         <div style={{ background: "#0e1219" }}>
-          <MetricCell label="Age" value={timeAgo(token.createdAt)} />
+          <MetricCell label="Age" value={<LiveAge createdAt={token.createdAt} className="text-xs" />} />
         </div>
       </div>
 

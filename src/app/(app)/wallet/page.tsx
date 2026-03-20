@@ -325,7 +325,7 @@ function filterSnapshots(data: PortfolioSnapshot[], range: TimeRange): Portfolio
 
 export default function WalletPage() {
   const { user } = useAuth();
-  const { hasKey, publicKey, clearKey, importKey } = useKey();
+  const { hasKey, publicKey, importKey } = useKey();
   const { solPrice } = useSolPriceContext();
 
   /* Modals */
@@ -354,6 +354,10 @@ export default function WalletPage() {
   /* Trade history */
   const [tradeHistory, setTradeHistory] = useState<TradeHistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
+
+  /* Daily P&L */
+  const [dailyPnlData, setDailyPnlData] = useState<Record<string, number>>({});
+  const [dailyPnlLoading, setDailyPnlLoading] = useState(true);
 
   /* Portfolio chart */
   const [portfolioSnapshots, setPortfolioSnapshots] = useState<PortfolioSnapshot[]>([]);
@@ -412,15 +416,21 @@ export default function WalletPage() {
     }
   }, []);
 
-  const dailyPnl = useMemo(() => {
-    const pnlMap: Record<string, number> = {};
-    for (const trade of tradeHistory) {
-      if (trade.pnlSol === null || !trade.exitTimestamp) continue;
-      const dateStr = new Date(trade.exitTimestamp).toISOString().split("T")[0];
-      pnlMap[dateStr] = (pnlMap[dateStr] ?? 0) + trade.pnlSol;
+  const fetchDailyPnl = useCallback(async () => {
+    try {
+      const res = await api.raw("/api/positions/daily-pnl?days=90");
+      if (res.ok) {
+        const { data } = await res.json();
+        const pnlMap: Record<string, number> = {};
+        for (const entry of data) {
+          pnlMap[entry.date] = entry.realizedPnl;
+        }
+        setDailyPnlData(pnlMap);
+      }
+    } catch { /* silent */ } finally {
+      setDailyPnlLoading(false);
     }
-    return pnlMap;
-  }, [tradeHistory]);
+  }, []);
 
   const filteredSnapshots = useMemo(
     () => filterSnapshots(portfolioSnapshots, chartRange),
@@ -435,9 +445,10 @@ export default function WalletPage() {
     fetchAnalytics();
     fetchHistory();
     fetchPortfolioSnapshots();
+    fetchDailyPnl();
     const balanceInterval = setInterval(fetchBalance, 15_000);
     return () => clearInterval(balanceInterval);
-  }, [walletAddress, fetchBalance, fetchAnalytics, fetchHistory, fetchPortfolioSnapshots]);
+  }, [walletAddress, fetchBalance, fetchAnalytics, fetchHistory, fetchPortfolioSnapshots, fetchDailyPnl]);
 
   /* ─── Key handlers ─── */
 
@@ -792,7 +803,15 @@ export default function WalletPage() {
             <div className="mb-3">
               <SectionLabel>Daily P&L</SectionLabel>
             </div>
-            <PnLCalendar dailyPnl={dailyPnl} />
+            {dailyPnlLoading ? (
+              <div className="space-y-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="h-6 rounded" />
+                ))}
+              </div>
+            ) : (
+              <PnLCalendar dailyPnl={dailyPnlData} />
+            )}
           </Panel>
         </div>
 

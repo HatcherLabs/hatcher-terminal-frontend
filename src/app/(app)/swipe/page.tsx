@@ -134,7 +134,8 @@ export default function SwipePage() {
 
           {/* Tab bar */}
           <nav
-            className="flex items-center gap-1 p-1 mb-3 rounded-full bg-bg-card border border-border"
+            className="flex items-center gap-1 p-1 mb-3 rounded-full"
+            style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
             role="tablist"
             aria-label="Token categories"
           >
@@ -150,24 +151,25 @@ export default function SwipePage() {
                   className={`
                     relative flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium
                     transition-all duration-200 whitespace-nowrap
-                    ${
-                      isActive
-                        ? "bg-green text-bg-primary shadow-sm"
-                        : "text-text-muted hover:text-text-secondary"
-                    }
+                    ${isActive ? "shadow-sm" : ""}
                   `}
+                  style={
+                    isActive
+                      ? { background: "#00d672", color: "#04060b" }
+                      : { color: "#5c6380" }
+                  }
                 >
                   {tab.label}
                   <span
                     className={`
                       inline-flex items-center justify-center min-w-[18px] h-[18px] px-1
                       rounded-full text-[10px] font-bold leading-none
-                      ${
-                        isActive
-                          ? "bg-bg-primary/20 text-bg-primary"
-                          : "bg-bg-elevated text-text-muted"
-                      }
                     `}
+                    style={
+                      isActive
+                        ? { background: "rgba(4,6,11,0.2)", color: "#04060b" }
+                        : { background: "#10131c", color: "#5c6380" }
+                    }
                   >
                     {counts[tab.key]}
                   </span>

@@ -53,12 +53,18 @@ function TradeRow({ position }: { position: ClosedPosition }) {
   const pnlSol = position.pnlSol ?? 0;
   const pnlPercent = position.pnlPercent ?? 0;
   const isPositive = pnlSol >= 0;
+  const pnlColor = isPositive ? "#00d672" : "#f23645";
+  const pnlColorFaded = isPositive ? "rgba(0,214,114,0.7)" : "rgba(242,54,69,0.7)";
+  const borderLeftColor = isPositive ? "rgba(0,214,114,0.3)" : "rgba(242,54,69,0.3)";
 
   return (
     <div
-      className={`bg-bg-card border border-border rounded-xl p-3 ${
-        isPositive ? "border-l-green/30" : "border-l-red/30"
-      } border-l-2`}
+      className="rounded-xl p-3"
+      style={{
+        background: "#10131c",
+        border: "1px solid #1a1f2e",
+        borderLeft: `2px solid ${borderLeftColor}`,
+      }}
     >
       <div className="flex items-center gap-3">
         <TokenAvatar
@@ -70,32 +76,24 @@ function TradeRow({ position }: { position: ClosedPosition }) {
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-sm text-text-primary">
+            <span className="font-semibold text-sm" style={{ color: "#eef0f6" }}>
               ${position.token.ticker}
             </span>
-            <span className="text-[10px] text-text-faint font-mono">
+            <span className="text-[10px] font-mono" style={{ color: "#363d54" }}>
               {formatDate(position.exitTimestamp)}
             </span>
           </div>
-          <p className="text-[11px] text-text-muted truncate">
+          <p className="text-[11px] truncate" style={{ color: "#5c6380" }}>
             {position.token.name}
           </p>
         </div>
 
         <div className="text-right">
-          <p
-            className={`text-sm font-mono font-bold ${
-              isPositive ? "text-green" : "text-red"
-            }`}
-          >
+          <p className="text-sm font-mono font-bold" style={{ color: pnlColor }}>
             {isPositive ? "+" : ""}
             {pnlPercent.toFixed(1)}%
           </p>
-          <p
-            className={`text-[10px] font-mono ${
-              isPositive ? "text-green/70" : "text-red/70"
-            }`}
-          >
+          <p className="text-[10px] font-mono" style={{ color: pnlColorFaded }}>
             {pnlSol >= 0 ? "+" : ""}
             {pnlSol.toFixed(4)} SOL
           </p>
@@ -104,22 +102,22 @@ function TradeRow({ position }: { position: ClosedPosition }) {
 
       <div className="grid grid-cols-3 gap-2 mt-2 text-[11px] font-mono">
         <div>
-          <p className="text-text-muted">Entry</p>
-          <p className="text-text-secondary">
+          <p style={{ color: "#5c6380" }}>Entry</p>
+          <p style={{ color: "#9ca3b8" }}>
             {position.entrySol.toFixed(4)} SOL
           </p>
         </div>
         <div>
-          <p className="text-text-muted">Exit</p>
-          <p className="text-text-secondary">
+          <p style={{ color: "#5c6380" }}>Exit</p>
+          <p style={{ color: "#9ca3b8" }}>
             {position.exitSol !== null
               ? `${position.exitSol.toFixed(4)} SOL`
               : "--"}
           </p>
         </div>
         <div>
-          <p className="text-text-muted">Held</p>
-          <p className="text-text-secondary">
+          <p style={{ color: "#5c6380" }}>Held</p>
+          <p style={{ color: "#9ca3b8" }}>
             {formatTimeHeld(position.entryTimestamp, position.exitTimestamp)}
           </p>
         </div>

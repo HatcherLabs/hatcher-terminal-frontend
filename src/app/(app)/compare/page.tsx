@@ -358,7 +358,7 @@ function AddTokenSearch({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search token to add..."
-            className="flex-1 bg-transparent text-sm font-mono outline-none placeholder:text-text-faint"
+            className="flex-1 bg-transparent text-sm font-mono outline-none placeholder:text-[#363d54]"
             style={{ color: C.textPrimary }}
           />
           <kbd

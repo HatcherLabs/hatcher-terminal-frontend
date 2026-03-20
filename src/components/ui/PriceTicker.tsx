@@ -164,7 +164,8 @@ export function PriceTicker({ dismissable = false, onDismiss }: PriceTickerProps
 
   return (
     <div
-      className="relative h-7 bg-bg-primary border-y border-border overflow-hidden select-none"
+      className="relative h-7 overflow-hidden select-none"
+      style={{ background: "#04060b", borderTop: "1px solid #1a1f2e", borderBottom: "1px solid #1a1f2e" }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
@@ -172,7 +173,8 @@ export function PriceTicker({ dismissable = false, onDismiss }: PriceTickerProps
       {dismissable && (
         <button
           onClick={onDismiss}
-          className="absolute right-1 top-1/2 -translate-y-1/2 z-10 w-4 h-4 flex items-center justify-center rounded bg-bg-elevated/80 text-text-faint hover:text-text-muted transition-colors text-[10px] leading-none"
+          className="absolute right-1 top-1/2 -translate-y-1/2 z-10 w-4 h-4 flex items-center justify-center rounded text-[10px] leading-none transition-colors"
+          style={{ background: "rgba(16,19,28,0.8)", color: "#363d54" }}
           aria-label="Dismiss ticker"
         >
           &times;
@@ -180,15 +182,21 @@ export function PriceTicker({ dismissable = false, onDismiss }: PriceTickerProps
       )}
 
       {/* Gradient fade edges */}
-      <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-bg-primary to-transparent z-[1] pointer-events-none" />
-      <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-bg-primary to-transparent z-[1] pointer-events-none" />
+      <div
+        className="absolute left-0 top-0 bottom-0 w-8 z-[1] pointer-events-none"
+        style={{ background: "linear-gradient(to right, #04060b, transparent)" }}
+      />
+      <div
+        className="absolute right-0 top-0 bottom-0 w-8 z-[1] pointer-events-none"
+        style={{ background: "linear-gradient(to left, #04060b, transparent)" }}
+      />
 
       {showFallback ? (
         /* Static SOL price fallback */
         <div className="flex items-center justify-center h-full">
-          <span className="text-[11px] font-mono text-text-secondary">
+          <span className="text-[11px] font-mono" style={{ color: "#9ca3b8" }}>
             <span className="font-semibold">SOL</span>{" "}
-            <span className="text-text-primary">${solPrice.toLocaleString()}</span>
+            <span style={{ color: "#eef0f6" }}>${solPrice.toLocaleString()}</span>
           </span>
         </div>
       ) : (
@@ -222,23 +230,26 @@ function TickerItemButton({
   const change = item.priceChange;
   const isUp = change !== null && change > 0;
   const isDown = change !== null && change < 0;
-  const changeColor = isUp ? "text-green" : isDown ? "text-red" : "text-text-muted";
+  const changeColor = isUp ? "#00d672" : isDown ? "#f23645" : "#5c6380";
 
   return (
     <button
       onClick={() => onClick(item.mintAddress)}
-      className="inline-flex items-center gap-1 px-3 text-[11px] font-mono shrink-0 h-full hover:bg-bg-hover/50 transition-colors cursor-pointer"
+      className="inline-flex items-center gap-1 px-3 text-[11px] font-mono shrink-0 h-full transition-colors cursor-pointer"
+      style={{ background: "transparent" }}
+      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(24,28,40,0.5)"; }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
     >
-      <span className="text-text-secondary font-semibold">${item.ticker}</span>
+      <span style={{ color: "#9ca3b8" }} className="font-semibold">${item.ticker}</span>
       {change !== null && (
-        <span className={changeColor}>
+        <span style={{ color: changeColor }}>
           {formatChangePercent(change)}
         </span>
       )}
       {item.isPosition && (
-        <span className="text-accent/60 text-[9px] ml-0.5">POS</span>
+        <span className="text-[9px] ml-0.5" style={{ color: "rgba(139,92,246,0.6)" }}>POS</span>
       )}
-      <span className="text-border mx-1">|</span>
+      <span className="mx-1" style={{ color: "#1a1f2e" }}>|</span>
     </button>
   );
 }

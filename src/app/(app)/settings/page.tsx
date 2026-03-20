@@ -353,16 +353,38 @@ export default function SettingsPage() {
   });
   const [clearWatchlistConfirm, setClearWatchlistConfirm] = useState(false);
 
-  /* hydrate local prefs from localStorage */
+  /* hydrate local prefs: try backend first, fall back to localStorage */
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("hatcher_notif_prefs");
-      if (stored) setNotifPrefs(JSON.parse(stored));
-    } catch { /* ignore */ }
-    try {
-      const stored = localStorage.getItem("hatcher_display_prefs");
-      if (stored) setDisplayPrefs(JSON.parse(stored));
-    } catch { /* ignore */ }
+    let cancelled = false;
+    (async () => {
+      /* ── notification prefs ── */
+      try {
+        const res = await api.get<typeof notifPrefs>("/api/settings/notifications");
+        if (!cancelled && res) {
+          setNotifPrefs(res);
+          try { localStorage.setItem("hatcher_notif_prefs", JSON.stringify(res)); } catch { /* ignore */ }
+        }
+      } catch {
+        try {
+          const stored = localStorage.getItem("hatcher_notif_prefs");
+          if (!cancelled && stored) setNotifPrefs(JSON.parse(stored));
+        } catch { /* ignore */ }
+      }
+      /* ── display prefs ── */
+      try {
+        const res = await api.get<typeof displayPrefs>("/api/settings/display");
+        if (!cancelled && res) {
+          setDisplayPrefs(res);
+          try { localStorage.setItem("hatcher_display_prefs", JSON.stringify(res)); } catch { /* ignore */ }
+        }
+      } catch {
+        try {
+          const stored = localStorage.getItem("hatcher_display_prefs");
+          if (!cancelled && stored) setDisplayPrefs(JSON.parse(stored));
+        } catch { /* ignore */ }
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   /* persist local prefs whenever they change */
@@ -373,6 +395,29 @@ export default function SettingsPage() {
   useEffect(() => {
     try { localStorage.setItem("hatcher_display_prefs", JSON.stringify(displayPrefs)); } catch { /* ignore */ }
   }, [displayPrefs]);
+
+  /* patch helpers: dual-write to backend + localStorage */
+  const patchNotifPrefs = useCallback(
+    (partial: Partial<typeof notifPrefs>) => {
+      setNotifPrefs((prev) => {
+        const next = { ...prev, ...partial };
+        api.patch("/api/settings/notifications", next).catch(() => { /* silent – localStorage is the fallback */ });
+        return next;
+      });
+    },
+    [],
+  );
+
+  const patchDisplayPrefs = useCallback(
+    (partial: Partial<typeof displayPrefs>) => {
+      setDisplayPrefs((prev) => {
+        const next = { ...prev, ...partial };
+        api.patch("/api/settings/display", next).catch(() => { /* silent – localStorage is the fallback */ });
+        return next;
+      });
+    },
+    [],
+  );
 
   useEffect(() => {
     api.raw("/api/settings")
@@ -1174,7 +1219,7 @@ export default function SettingsPage() {
             <SettingRow label="Price Alerts" description="Get notified when tokens hit your target price">
               <Toggle
                 enabled={notifPrefs.priceAlerts}
-                onChange={(on) => setNotifPrefs((p) => ({ ...p, priceAlerts: on }))}
+                onChange={(on) => patchNotifPrefs({ priceAlerts: on })}
                 activeColor="green"
                 size="sm"
                 label="Toggle price alerts"
@@ -1183,7 +1228,7 @@ export default function SettingsPage() {
             <SettingRow label="Limit Order Fills" description="Notification when a limit order executes">
               <Toggle
                 enabled={notifPrefs.limitOrderFills}
-                onChange={(on) => setNotifPrefs((p) => ({ ...p, limitOrderFills: on }))}
+                onChange={(on) => patchNotifPrefs({ limitOrderFills: on })}
                 activeColor="green"
                 size="sm"
                 label="Toggle limit order fill notifications"
@@ -1192,7 +1237,7 @@ export default function SettingsPage() {
             <SettingRow label="Auto TP/SL Triggers" description="Alert when take-profit or stop-loss fires">
               <Toggle
                 enabled={notifPrefs.autoTpSlTriggers}
-                onChange={(on) => setNotifPrefs((p) => ({ ...p, autoTpSlTriggers: on }))}
+                onChange={(on) => patchNotifPrefs({ autoTpSlTriggers: on })}
                 activeColor="green"
                 size="sm"
                 label="Toggle auto TP/SL notifications"
@@ -1201,7 +1246,7 @@ export default function SettingsPage() {
             <SettingRow label="Whale Alerts" description="Large trades and wallet movements">
               <Toggle
                 enabled={notifPrefs.whaleAlerts}
-                onChange={(on) => setNotifPrefs((p) => ({ ...p, whaleAlerts: on }))}
+                onChange={(on) => patchNotifPrefs({ whaleAlerts: on })}
                 activeColor="green"
                 size="sm"
                 label="Toggle whale alerts"
@@ -1211,7 +1256,7 @@ export default function SettingsPage() {
               <SettingRow label="Sound Effects" description="Play sounds for notifications and trade confirmations">
                 <Toggle
                   enabled={notifPrefs.soundEffects}
-                  onChange={(on) => setNotifPrefs((p) => ({ ...p, soundEffects: on }))}
+                  onChange={(on) => patchNotifPrefs({ soundEffects: on })}
                   activeColor="accent"
                   size="sm"
                   label="Toggle sound effects"
@@ -1249,7 +1294,7 @@ export default function SettingsPage() {
                     <button
                       key={mode}
                       type="button"
-                      onClick={() => setDisplayPrefs((p) => ({ ...p, defaultViewMode: mode }))}
+                      onClick={() => patchDisplayPrefs({ defaultViewMode: mode })}
                       style={{
                         flex: 1,
                         padding: "8px 4px",
@@ -1317,7 +1362,7 @@ export default function SettingsPage() {
                     <button
                       key={mode}
                       type="button"
-                      onClick={() => setDisplayPrefs((p) => ({ ...p, priceDisplay: mode }))}
+                      onClick={() => patchDisplayPrefs({ priceDisplay: mode })}
                       style={{
                         flex: 1,
                         padding: "8px 4px",

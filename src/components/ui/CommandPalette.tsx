@@ -567,12 +567,21 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
       key={key}
       data-index={idx}
       onClick={onClick}
-      onMouseEnter={() => setSelectedIndex(idx)}
-      className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
-        selectedIndex === idx
-          ? "bg-[#181c28] text-text-primary"
-          : "text-text-secondary hover:bg-[#181c28]"
-      }`}
+      onMouseEnter={(e) => {
+        setSelectedIndex(idx);
+        (e.currentTarget as HTMLElement).style.background = "#181c28";
+      }}
+      onMouseLeave={(e) => {
+        if (selectedIndex !== idx) {
+          (e.currentTarget as HTMLElement).style.background = "transparent";
+        }
+      }}
+      className="w-full flex items-center gap-3 px-4 py-2.5 text-left"
+      style={{
+        background: selectedIndex === idx ? "#181c28" : "transparent",
+        color: selectedIndex === idx ? "#eef0f6" : "#9ca3b8",
+        transition: "background 150ms, color 150ms",
+      }}
     >
       {content}
     </button>
@@ -580,7 +589,10 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
 
   const renderSectionHeader = (label: string) => (
     <div className="px-4 pt-3 pb-1.5" key={`section-${label}`}>
-      <span className="text-[10px] font-bold text-text-faint uppercase tracking-wider">
+      <span
+        className="text-[10px] font-bold uppercase tracking-wider"
+        style={{ color: "#363d54" }}
+      >
         {label}
       </span>
     </div>
@@ -623,10 +635,13 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search pages, tokens, actions...  Ctrl+K  /  /"
-            className="flex-1 bg-transparent text-sm text-text-primary placeholder:text-text-faint focus:outline-none font-mono"
-            style={{ caretColor: "#22c55e" }}
+            className="flex-1 bg-transparent text-sm placeholder:text-[#363d54] focus:outline-none font-mono"
+            style={{ caretColor: "#22c55e", color: "#eef0f6" }}
           />
-          <kbd className="text-[9px] text-text-faint px-1.5 py-0.5 rounded font-mono shrink-0 bg-[#1f2435] border border-[#1a1f2e]">
+          <kbd
+            className="text-[9px] px-1.5 py-0.5 rounded font-mono shrink-0"
+            style={{ color: "#363d54", background: "#1f2435", border: "1px solid #1a1f2e" }}
+          >
             Esc
           </kbd>
         </div>
@@ -640,7 +655,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
           {/* No results */}
           {noResults && !tokenSearchLoading && (
             <div className="px-4 py-10 text-center">
-              <p className="text-xs text-text-muted font-mono">
+              <p className="text-xs font-mono" style={{ color: "#5c6380" }}>
                 No results for &quot;{query.trim()}&quot;
               </p>
             </div>
@@ -655,7 +670,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                 const idx = globalIndex;
                 return renderItem(idx, `recent-${term}`, () => setQuery(term), (
                   <>
-                    <span className="shrink-0 text-text-muted">
+                    <span className="shrink-0" style={{ color: "#5c6380" }}>
                       <ClockIcon />
                     </span>
                     <span className="text-xs font-medium truncate font-mono">
@@ -680,18 +695,15 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                   () => executeCommand(cmd),
                   <>
                     <span
-                      className={`shrink-0 ${
-                        selectedIndex === idx
-                          ? "text-green"
-                          : "text-text-muted"
-                      }`}
+                      className="shrink-0"
+                      style={{ color: selectedIndex === idx ? "#00d672" : "#5c6380" }}
                     >
                       {cmd.icon}
                     </span>
                     <span className="text-xs font-medium truncate">
                       {cmd.label}
                     </span>
-                    <span className="ml-auto text-[10px] text-text-faint font-mono shrink-0">
+                    <span className="ml-auto text-[10px] font-mono shrink-0" style={{ color: "#363d54" }}>
                       Page
                     </span>
                   </>
@@ -713,18 +725,15 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                   () => executeCommand(cmd),
                   <>
                     <span
-                      className={`shrink-0 ${
-                        selectedIndex === idx
-                          ? "text-green"
-                          : "text-text-muted"
-                      }`}
+                      className="shrink-0"
+                      style={{ color: selectedIndex === idx ? "#00d672" : "#5c6380" }}
                     >
                       {cmd.icon}
                     </span>
                     <span className="text-xs font-medium truncate">
                       {cmd.label}
                     </span>
-                    <span className="ml-auto text-[10px] text-text-faint font-mono shrink-0">
+                    <span className="ml-auto text-[10px] font-mono shrink-0" style={{ color: "#363d54" }}>
                       Action
                     </span>
                   </>
@@ -740,8 +749,14 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
 
               {tokenSearchLoading && (
                 <div className="px-4 py-4 text-center">
-                  <div className="inline-block w-3 h-3 border-2 border-green/30 border-t-green rounded-full animate-spin" />
-                  <span className="text-[10px] text-text-muted ml-2 font-mono">
+                  <div
+                    className="inline-block w-3 h-3 rounded-full animate-spin"
+                    style={{
+                      border: "2px solid rgba(0, 214, 114, 0.3)",
+                      borderTopColor: "#00d672",
+                    }}
+                  />
+                  <span className="text-[10px] ml-2 font-mono" style={{ color: "#5c6380" }}>
                     Searching tokens...
                   </span>
                 </div>
@@ -751,7 +766,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                 tokenResults.length === 0 &&
                 query.trim().length >= 2 && (
                   <div className="px-4 py-4 text-center">
-                    <span className="text-[10px] text-text-muted font-mono">
+                    <span className="text-[10px] font-mono" style={{ color: "#5c6380" }}>
                       No tokens found
                     </span>
                   </div>
@@ -778,10 +793,10 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-medium text-text-primary truncate">
+                          <span className="text-xs font-medium truncate" style={{ color: "#eef0f6" }}>
                             {token.name}
                           </span>
-                          <span className="text-[10px] text-text-secondary font-mono shrink-0">
+                          <span className="text-[10px] font-mono shrink-0" style={{ color: "#9ca3b8" }}>
                             ${token.ticker}
                           </span>
                         </div>
@@ -790,7 +805,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                         {token.riskLevel && (
                           <RiskBadge level={token.riskLevel} />
                         )}
-                        <span className="text-[10px] text-text-faint font-mono">
+                        <span className="text-[10px] font-mono" style={{ color: "#363d54" }}>
                           MC {formatMarketCap(token.marketCapUsd)}
                         </span>
                       </div>
@@ -806,23 +821,23 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
           className="flex items-center justify-center gap-4 px-4 py-2.5"
           style={{ borderTop: "1px solid #1a1f2e" }}
         >
-          <span className="flex items-center gap-1 text-[10px] text-text-faint">
-            <kbd className="bg-[#1f2435] border border-[#1a1f2e] rounded px-1 py-0.5 font-mono text-[9px]">
+          <span className="flex items-center gap-1 text-[10px]" style={{ color: "#363d54" }}>
+            <kbd className="rounded px-1 py-0.5 font-mono text-[9px]" style={{ background: "#1f2435", border: "1px solid #1a1f2e" }}>
               &uarr;
             </kbd>
-            <kbd className="bg-[#1f2435] border border-[#1a1f2e] rounded px-1 py-0.5 font-mono text-[9px]">
+            <kbd className="rounded px-1 py-0.5 font-mono text-[9px]" style={{ background: "#1f2435", border: "1px solid #1a1f2e" }}>
               &darr;
             </kbd>
             navigate
           </span>
-          <span className="flex items-center gap-1 text-[10px] text-text-faint">
-            <kbd className="bg-[#1f2435] border border-[#1a1f2e] rounded px-1 py-0.5 font-mono text-[9px]">
+          <span className="flex items-center gap-1 text-[10px]" style={{ color: "#363d54" }}>
+            <kbd className="rounded px-1 py-0.5 font-mono text-[9px]" style={{ background: "#1f2435", border: "1px solid #1a1f2e" }}>
               Enter
             </kbd>
             select
           </span>
-          <span className="flex items-center gap-1 text-[10px] text-text-faint">
-            <kbd className="bg-[#1f2435] border border-[#1a1f2e] rounded px-1 py-0.5 font-mono text-[9px]">
+          <span className="flex items-center gap-1 text-[10px]" style={{ color: "#363d54" }}>
+            <kbd className="rounded px-1 py-0.5 font-mono text-[9px]" style={{ background: "#1f2435", border: "1px solid #1a1f2e" }}>
               Esc
             </kbd>
             close

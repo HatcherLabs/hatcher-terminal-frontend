@@ -49,12 +49,26 @@ function PositionPill({
   const isProfit = pnl >= 0;
   const duration = formatDuration(entryTimestamp);
 
+  const [pillHovered, setPillHovered] = useState(false);
+  const [closeBtnHovered, setCloseBtnHovered] = useState(false);
+  const [tickerHovered, setTickerHovered] = useState(false);
+
   return (
-    <div className="flex items-center gap-1.5 h-7 px-2 bg-bg-elevated border border-border rounded shrink-0 group hover:border-border-hover transition-colors">
+    <div
+      className="flex items-center gap-1.5 h-7 px-2 rounded shrink-0 group transition-colors"
+      style={{
+        backgroundColor: "#10131c",
+        border: `1px solid ${pillHovered ? "#1f2435" : "#1a1f2e"}`,
+      }}
+      onMouseEnter={() => setPillHovered(true)}
+      onMouseLeave={() => setPillHovered(false)}
+    >
       {/* Token avatar + ticker as link */}
       <Link
         href={`/token/${mint}`}
         className="flex items-center gap-1.5 min-w-0"
+        onMouseEnter={() => setTickerHovered(true)}
+        onMouseLeave={() => setTickerHovered(false)}
       >
         {imageUri ? (
           <Image
@@ -65,22 +79,34 @@ function PositionPill({
             className="w-5 h-5 rounded-full shrink-0"
           />
         ) : (
-          <div className="w-5 h-5 rounded-full bg-bg-hover shrink-0 flex items-center justify-center">
-            <span className="text-[8px] font-mono text-text-muted">
+          <div
+            className="w-5 h-5 rounded-full shrink-0 flex items-center justify-center"
+            style={{ backgroundColor: "#1f2435" }}
+          >
+            <span
+              className="text-[8px] font-mono"
+              style={{ color: "#5c6380" }}
+            >
               {ticker.charAt(0)}
             </span>
           </div>
         )}
-        <span className="text-[11px] font-mono font-medium text-text-secondary group-hover:text-text-primary transition-colors truncate max-w-[60px]">
+        <span
+          className="text-[11px] font-mono font-medium transition-colors truncate max-w-[60px]"
+          style={{ color: tickerHovered || pillHovered ? "#eef0f6" : "#9ca3b8" }}
+        >
           {ticker}
         </span>
       </Link>
 
       {/* Separator */}
-      <div className="w-px h-3.5 bg-border shrink-0" />
+      <div className="w-px h-3.5 shrink-0" style={{ backgroundColor: "#1a1f2e" }} />
 
       {/* Entry price */}
-      <span className="text-[10px] font-mono text-text-muted shrink-0">
+      <span
+        className="text-[10px] font-mono shrink-0"
+        style={{ color: "#5c6380" }}
+      >
         {entryPrice < 0.0001
           ? entryPrice.toExponential(1)
           : entryPrice < 1
@@ -90,9 +116,8 @@ function PositionPill({
 
       {/* P&L % */}
       <span
-        className={`text-[11px] font-mono font-semibold shrink-0 ${
-          isProfit ? "text-green" : "text-red"
-        }`}
+        className="text-[11px] font-mono font-semibold shrink-0"
+        style={{ color: isProfit ? "#00d672" : "#f23645" }}
       >
         {isProfit ? "+" : ""}
         {pnl.toFixed(1)}%
@@ -100,17 +125,18 @@ function PositionPill({
 
       {/* P&L in SOL */}
       <span
-        className={`text-[10px] font-mono shrink-0 ${
-          isProfit ? "text-green" : "text-red"
-        }`}
-        style={{ opacity: 0.7 }}
+        className="text-[10px] font-mono shrink-0"
+        style={{ color: isProfit ? "rgba(0,214,114,0.7)" : "rgba(242,54,69,0.7)" }}
       >
         {isProfit ? "+" : ""}
         {sol.toFixed(3)}
       </span>
 
       {/* Duration */}
-      <span className="text-[10px] font-mono text-text-faint shrink-0">
+      <span
+        className="text-[10px] font-mono shrink-0"
+        style={{ color: "#363d54" }}
+      >
         {duration}
       </span>
 
@@ -121,7 +147,13 @@ function PositionPill({
           onClose(id);
         }}
         disabled={closing}
-        className="w-4 h-4 flex items-center justify-center rounded text-text-faint hover:text-red hover:bg-red-dim transition-colors shrink-0 opacity-0 group-hover:opacity-100"
+        className="w-4 h-4 flex items-center justify-center rounded transition-colors shrink-0 opacity-0 group-hover:opacity-100"
+        style={{
+          color: closeBtnHovered ? "#f23645" : "#363d54",
+          backgroundColor: closeBtnHovered ? "rgba(242,54,69,0.1)" : "transparent",
+        }}
+        onMouseEnter={() => setCloseBtnHovered(true)}
+        onMouseLeave={() => setCloseBtnHovered(false)}
         aria-label={`Close ${ticker} position`}
       >
         {closing ? (
@@ -183,12 +215,18 @@ export function PositionsBar() {
   // Loading state
   if (loading) {
     return (
-      <div className="h-9 bg-[#0a0d14] border-t border-[#1a1f2e] flex items-center px-3 gap-2 shrink-0">
-        <span className="text-[10px] text-text-faint font-mono uppercase tracking-wider shrink-0">
+      <div className="h-9 flex items-center px-3 gap-2 shrink-0" style={{ backgroundColor: "#0a0d14", borderTop: "1px solid #1a1f2e" }}>
+        <span
+          className="text-[10px] font-mono uppercase tracking-wider shrink-0"
+          style={{ color: "#363d54" }}
+        >
           Positions
         </span>
-        <div className="w-px h-4 bg-[#1a1f2e] shrink-0" />
-        <span className="text-[10px] text-text-muted font-mono animate-pulse">
+        <div className="w-px h-4 shrink-0" style={{ backgroundColor: "#1a1f2e" }} />
+        <span
+          className="text-[10px] font-mono animate-pulse"
+          style={{ color: "#5c6380" }}
+        >
           Loading...
         </span>
       </div>
@@ -198,12 +236,18 @@ export function PositionsBar() {
   // Empty state
   if (positions.length === 0) {
     return (
-      <div className="h-9 bg-[#0a0d14] border-t border-[#1a1f2e] flex items-center px-3 gap-2 shrink-0">
-        <span className="text-[10px] text-text-faint font-mono uppercase tracking-wider shrink-0">
+      <div className="h-9 flex items-center px-3 gap-2 shrink-0" style={{ backgroundColor: "#0a0d14", borderTop: "1px solid #1a1f2e" }}>
+        <span
+          className="text-[10px] font-mono uppercase tracking-wider shrink-0"
+          style={{ color: "#363d54" }}
+        >
           Positions
         </span>
-        <div className="w-px h-4 bg-[#1a1f2e] shrink-0" />
-        <span className="text-[10px] text-text-muted font-mono">
+        <div className="w-px h-4 shrink-0" style={{ backgroundColor: "#1a1f2e" }} />
+        <span
+          className="text-[10px] font-mono"
+          style={{ color: "#5c6380" }}
+        >
           No open positions
         </span>
       </div>
@@ -211,7 +255,7 @@ export function PositionsBar() {
   }
 
   return (
-    <div className="bg-[#0a0d14] border-t border-[#1a1f2e] shrink-0 transition-all duration-200">
+    <div className="shrink-0 transition-all duration-200" style={{ backgroundColor: "#0a0d14", borderTop: "1px solid #1a1f2e" }}>
       {/* Collapsed strip — always visible */}
       <div className="h-9 flex items-center px-3 gap-2">
         {/* Summary on the left */}
@@ -219,22 +263,22 @@ export function PositionsBar() {
           onClick={toggleExpanded}
           className="flex items-center gap-2 shrink-0 group/summary"
         >
-          <span className="text-[10px] text-text-faint font-mono uppercase tracking-wider">
+          <span
+            className="text-[10px] font-mono uppercase tracking-wider"
+            style={{ color: "#363d54" }}
+          >
             {positions.length} Position{positions.length !== 1 ? "s" : ""}
           </span>
           <span
-            className={`text-[11px] font-mono font-semibold ${
-              isTotalProfit ? "text-green" : "text-red"
-            }`}
+            className="text-[11px] font-mono font-semibold"
+            style={{ color: isTotalProfit ? "#00d672" : "#f23645" }}
           >
             {isTotalProfit ? "+" : ""}
             {totalPnlSol.toFixed(3)} SOL
           </span>
           <span
-            className={`text-[10px] font-mono ${
-              isTotalProfit ? "text-green" : "text-red"
-            }`}
-            style={{ opacity: 0.6 }}
+            className="text-[10px] font-mono"
+            style={{ color: isTotalProfit ? "rgba(0,214,114,0.6)" : "rgba(242,54,69,0.6)" }}
           >
             ({isTotalProfit ? "+" : ""}
             {totalPnlPercent.toFixed(1)}%)
@@ -247,16 +291,17 @@ export function PositionsBar() {
             strokeWidth="1.5"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className={`w-3 h-3 text-text-faint transition-transform duration-200 ${
+            className={`w-3 h-3 transition-transform duration-200 ${
               expanded ? "rotate-180" : ""
             }`}
+            style={{ color: "#363d54" }}
           >
             <path d="M2 8l4-4 4 4" />
           </svg>
         </button>
 
         {/* Separator */}
-        <div className="w-px h-4 bg-[#1a1f2e] shrink-0" />
+        <div className="w-px h-4 shrink-0" style={{ backgroundColor: "#1a1f2e" }} />
 
         {/* Horizontal scrollable pills */}
         <div className="flex-1 min-w-0 overflow-x-auto scrollbar-hide">
@@ -282,120 +327,187 @@ export function PositionsBar() {
 
       {/* Expanded view */}
       {expanded && (
-        <div className="border-t border-[#1a1f2e] px-3 py-2 animate-fade-in">
-          <div className="grid gap-1">
-            {positions.map((pos) => {
-              const pnl = pos.pnlPercent ?? 0;
-              const sol = pos.pnlSol ?? 0;
-              const isProfit = pnl >= 0;
-              const duration = formatDuration(pos.entryTimestamp);
-
-              return (
-                <Link
-                  key={pos.id}
-                  href={`/token/${pos.mintAddress}`}
-                  className="flex items-center gap-3 px-2 py-1.5 rounded hover:bg-bg-hover transition-colors group/row"
-                >
-                  {/* Avatar + ticker */}
-                  <div className="flex items-center gap-2 w-28 shrink-0">
-                    {pos.token.imageUri ? (
-                      <Image
-                        src={pos.token.imageUri}
-                        alt={pos.token.ticker}
-                        width={20}
-                        height={20}
-                        className="w-5 h-5 rounded-full"
-                      />
-                    ) : (
-                      <div className="w-5 h-5 rounded-full bg-bg-hover flex items-center justify-center">
-                        <span className="text-[8px] font-mono text-text-muted">
-                          {pos.token.ticker.charAt(0)}
-                        </span>
-                      </div>
-                    )}
-                    <span className="text-[11px] font-mono font-medium text-text-secondary group-hover/row:text-text-primary transition-colors truncate">
-                      {pos.token.ticker}
-                    </span>
-                  </div>
-
-                  {/* Entry */}
-                  <div className="w-24 shrink-0">
-                    <span className="text-[10px] font-mono text-text-muted">
-                      Entry:{" "}
-                    </span>
-                    <span className="text-[10px] font-mono text-text-secondary">
-                      {pos.entryPricePerToken < 0.0001
-                        ? pos.entryPricePerToken.toExponential(1)
-                        : pos.entryPricePerToken < 1
-                          ? pos.entryPricePerToken.toFixed(4)
-                          : pos.entryPricePerToken.toFixed(2)}
-                    </span>
-                  </div>
-
-                  {/* Size */}
-                  <div className="w-20 shrink-0">
-                    <span className="text-[10px] font-mono text-text-muted">
-                      Size:{" "}
-                    </span>
-                    <span className="text-[10px] font-mono text-text-secondary">
-                      {pos.entrySol.toFixed(2)} SOL
-                    </span>
-                  </div>
-
-                  {/* P&L */}
-                  <div className="w-24 shrink-0">
-                    <span
-                      className={`text-[11px] font-mono font-semibold ${
-                        isProfit ? "text-green" : "text-red"
-                      }`}
-                    >
-                      {isProfit ? "+" : ""}
-                      {pnl.toFixed(1)}%
-                    </span>
-                    <span
-                      className={`text-[10px] font-mono ml-1.5 ${
-                        isProfit ? "text-green" : "text-red"
-                      }`}
-                      style={{ opacity: 0.7 }}
-                    >
-                      {isProfit ? "+" : ""}
-                      {sol.toFixed(3)}
-                    </span>
-                  </div>
-
-                  {/* Duration */}
-                  <span className="text-[10px] font-mono text-text-faint w-10 shrink-0">
-                    {duration}
-                  </span>
-
-                  {/* Close button */}
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleClose(pos.id);
-                    }}
-                    disabled={closingIds.has(pos.id)}
-                    className="w-5 h-5 flex items-center justify-center rounded text-text-faint hover:text-red hover:bg-red-dim transition-colors shrink-0 opacity-0 group-hover/row:opacity-100 ml-auto"
-                    aria-label={`Close ${pos.token.ticker} position`}
-                  >
-                    {closingIds.has(pos.id) ? (
-                      <svg className="w-3 h-3 animate-spin" viewBox="0 0 16 16" fill="none">
-                        <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" opacity="0.3" />
-                        <path d="M14 8a6 6 0 00-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                      </svg>
-                    ) : (
-                      <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="w-3 h-3">
-                        <path d="M2 2l8 8M10 2l-8 8" />
-                      </svg>
-                    )}
-                  </button>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
+        <ExpandedPositions
+          positions={positions}
+          closingIds={closingIds}
+          handleClose={handleClose}
+        />
       )}
     </div>
+  );
+}
+
+function ExpandedPositions({
+  positions,
+  closingIds,
+  handleClose,
+}: {
+  positions: ReturnType<typeof usePositions>["positions"];
+  closingIds: Set<string>;
+  handleClose: (id: string) => void;
+}) {
+  return (
+    <div className="px-3 py-2 animate-fade-in" style={{ borderTop: "1px solid #1a1f2e" }}>
+      <div className="grid gap-1">
+        {positions.map((pos) => (
+          <ExpandedRow
+            key={pos.id}
+            pos={pos}
+            closing={closingIds.has(pos.id)}
+            onClose={handleClose}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ExpandedRow({
+  pos,
+  closing,
+  onClose,
+}: {
+  pos: ReturnType<typeof usePositions>["positions"][number];
+  closing: boolean;
+  onClose: (id: string) => void;
+}) {
+  const pnl = pos.pnlPercent ?? 0;
+  const sol = pos.pnlSol ?? 0;
+  const isProfit = pnl >= 0;
+  const duration = formatDuration(pos.entryTimestamp);
+
+  const [rowHovered, setRowHovered] = useState(false);
+  const [closeBtnHovered, setCloseBtnHovered] = useState(false);
+
+  return (
+    <Link
+      href={`/token/${pos.mintAddress}`}
+      className="flex items-center gap-3 px-2 py-1.5 rounded transition-colors group/row"
+      style={{ backgroundColor: rowHovered ? "#1f2435" : "transparent" }}
+      onMouseEnter={() => setRowHovered(true)}
+      onMouseLeave={() => setRowHovered(false)}
+    >
+      {/* Avatar + ticker */}
+      <div className="flex items-center gap-2 w-28 shrink-0">
+        {pos.token.imageUri ? (
+          <Image
+            src={pos.token.imageUri}
+            alt={pos.token.ticker}
+            width={20}
+            height={20}
+            className="w-5 h-5 rounded-full"
+          />
+        ) : (
+          <div
+            className="w-5 h-5 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: "#1f2435" }}
+          >
+            <span
+              className="text-[8px] font-mono"
+              style={{ color: "#5c6380" }}
+            >
+              {pos.token.ticker.charAt(0)}
+            </span>
+          </div>
+        )}
+        <span
+          className="text-[11px] font-mono font-medium transition-colors truncate"
+          style={{ color: rowHovered ? "#eef0f6" : "#9ca3b8" }}
+        >
+          {pos.token.ticker}
+        </span>
+      </div>
+
+      {/* Entry */}
+      <div className="w-24 shrink-0">
+        <span
+          className="text-[10px] font-mono"
+          style={{ color: "#5c6380" }}
+        >
+          Entry:{" "}
+        </span>
+        <span
+          className="text-[10px] font-mono"
+          style={{ color: "#9ca3b8" }}
+        >
+          {pos.entryPricePerToken < 0.0001
+            ? pos.entryPricePerToken.toExponential(1)
+            : pos.entryPricePerToken < 1
+              ? pos.entryPricePerToken.toFixed(4)
+              : pos.entryPricePerToken.toFixed(2)}
+        </span>
+      </div>
+
+      {/* Size */}
+      <div className="w-20 shrink-0">
+        <span
+          className="text-[10px] font-mono"
+          style={{ color: "#5c6380" }}
+        >
+          Size:{" "}
+        </span>
+        <span
+          className="text-[10px] font-mono"
+          style={{ color: "#9ca3b8" }}
+        >
+          {pos.entrySol.toFixed(2)} SOL
+        </span>
+      </div>
+
+      {/* P&L */}
+      <div className="w-24 shrink-0">
+        <span
+          className="text-[11px] font-mono font-semibold"
+          style={{ color: isProfit ? "#00d672" : "#f23645" }}
+        >
+          {isProfit ? "+" : ""}
+          {pnl.toFixed(1)}%
+        </span>
+        <span
+          className="text-[10px] font-mono ml-1.5"
+          style={{ color: isProfit ? "rgba(0,214,114,0.7)" : "rgba(242,54,69,0.7)" }}
+        >
+          {isProfit ? "+" : ""}
+          {sol.toFixed(3)}
+        </span>
+      </div>
+
+      {/* Duration */}
+      <span
+        className="text-[10px] font-mono w-10 shrink-0"
+        style={{ color: "#363d54" }}
+      >
+        {duration}
+      </span>
+
+      {/* Close button */}
+      <button
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onClose(pos.id);
+        }}
+        disabled={closing}
+        className="w-5 h-5 flex items-center justify-center rounded transition-colors shrink-0 opacity-0 group-hover/row:opacity-100 ml-auto"
+        style={{
+          color: closeBtnHovered ? "#f23645" : "#363d54",
+          backgroundColor: closeBtnHovered ? "rgba(242,54,69,0.1)" : "transparent",
+        }}
+        onMouseEnter={() => setCloseBtnHovered(true)}
+        onMouseLeave={() => setCloseBtnHovered(false)}
+        aria-label={`Close ${pos.token.ticker} position`}
+      >
+        {closing ? (
+          <svg className="w-3 h-3 animate-spin" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" opacity="0.3" />
+            <path d="M14 8a6 6 0 00-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        ) : (
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="w-3 h-3">
+            <path d="M2 2l8 8M10 2l-8 8" />
+          </svg>
+        )}
+      </button>
+    </Link>
   );
 }

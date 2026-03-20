@@ -46,12 +46,13 @@ export function TokenAvatar({ mintAddress, imageUri, size = 48, ticker }: TokenA
 
   return (
     <div
-      className="rounded-full flex items-center justify-center font-bold text-bg-primary flex-shrink-0"
+      className="rounded-full flex items-center justify-center font-bold flex-shrink-0"
       style={{
         width: size,
         height: size,
         backgroundColor: color,
         fontSize: size * 0.35,
+        color: "#04060b",
       }}
       role="img"
       aria-label={`${ticker || "Token"} avatar`}

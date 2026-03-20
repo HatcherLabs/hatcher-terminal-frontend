@@ -2,11 +2,11 @@ interface RiskBadgeProps {
   level: "LOW" | "MED" | "HIGH" | "EXTREME" | null;
 }
 
-const riskColors = {
-  LOW: "bg-green-dim text-green border-green/20",
-  MED: "bg-amber-dim text-amber border-amber/20",
-  HIGH: "bg-red-dim text-red border-red/20",
-  EXTREME: "bg-red text-bg-primary border-red",
+const riskStyles: Record<string, React.CSSProperties> = {
+  LOW: { background: "rgba(0,214,114,0.08)", color: "#00d672", borderColor: "rgba(0,214,114,0.2)" },
+  MED: { background: "rgba(240,160,0,0.08)", color: "#f0a000", borderColor: "rgba(240,160,0,0.2)" },
+  HIGH: { background: "rgba(242,54,69,0.08)", color: "#f23645", borderColor: "rgba(242,54,69,0.2)" },
+  EXTREME: { background: "#f23645", color: "#04060b", borderColor: "#f23645" },
 };
 
 const riskLabels = {
@@ -21,7 +21,8 @@ export function RiskBadge({ level }: RiskBadgeProps) {
 
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${riskColors[level]}`}
+      className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
+      style={{ ...riskStyles[level], border: `1px solid ${riskStyles[level].borderColor}` }}
     >
       {riskLabels[level]}
     </span>

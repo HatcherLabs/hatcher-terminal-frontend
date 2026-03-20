@@ -10,6 +10,7 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { useTokenPrice } from "@/hooks/useTokenPrice";
 import { useToast } from "@/components/ui/Toast";
 import { api } from "@/lib/api";
+import { useTxTracker } from "@/components/trade/TxStatusTracker";
 
 // ---- constants ----
 
@@ -169,6 +170,8 @@ export function QuickTradePanel() {
   const { hasKey, signTransactionBase64 } = useKey();
   const { user } = useAuth();
   const addToast = useToast((s) => s.add);
+  const txTrackerAdd = useTxTracker((s) => s.add);
+  const txTrackerUpdate = useTxTracker((s) => s.update);
 
   const [activeTab, setActiveTab] = useState<"buy" | "sell">("buy");
   const [customAmount, setCustomAmount] = useState("");
@@ -305,6 +308,16 @@ export function QuickTradePanel() {
 
     setTxStatus("building");
     setLastTxHash(null);
+
+    const txId = `buy-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    txTrackerAdd({
+      id: txId,
+      type: "buy",
+      status: "signing",
+      mintAddress: selectedToken.mintAddress,
+      tokenTicker: selectedToken.ticker,
+    });
+
     try {
       const swipeRes = await api.post<{
         unsignedTx: string;
@@ -321,14 +334,17 @@ export function QuickTradePanel() {
 
       if (!swipeRes.unsignedTx) {
         setTxStatus("failed");
+        txTrackerUpdate(txId, { status: "failed", error: "Failed to build transaction" });
         addToast("Failed to create buy transaction", "error");
         return;
       }
 
       setTxStatus("signing");
+      txTrackerUpdate(txId, { status: "signing" });
       const signedTx = await signTransactionBase64(swipeRes.unsignedTx);
 
       setTxStatus("confirming");
+      txTrackerUpdate(txId, { status: "submitting" });
       const submitRes = await api.post<{
         txHash: string;
         status: string;
@@ -339,16 +355,19 @@ export function QuickTradePanel() {
       });
 
       setLastTxHash(submitRes.txHash);
+      txTrackerUpdate(txId, { status: "confirming", txHash: submitRes.txHash });
       setTxStatus("success");
       addToast(
         `Buy confirmed! TX: ${submitRes.txHash.slice(0, 8)}...`,
         "success"
       );
+      txTrackerUpdate(txId, { status: "confirmed", txHash: submitRes.txHash });
       refreshPositions();
     } catch (err) {
       setTxStatus("failed");
       const message =
         err instanceof Error ? err.message : "Buy transaction failed";
+      txTrackerUpdate(txId, { status: "failed", error: message });
       addToast(message, "error");
     }
   };
@@ -366,6 +385,16 @@ export function QuickTradePanel() {
 
     setTxStatus("building");
     setLastTxHash(null);
+
+    const txId = `sell-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    txTrackerAdd({
+      id: txId,
+      type: "sell",
+      status: "signing",
+      mintAddress: selectedToken.mintAddress,
+      tokenTicker: selectedToken.ticker,
+    });
+
     try {
       const closeRes = await api.post<{
         unsignedTx: string;
@@ -379,14 +408,17 @@ export function QuickTradePanel() {
 
       if (!closeRes.unsignedTx) {
         setTxStatus("failed");
+        txTrackerUpdate(txId, { status: "failed", error: "Failed to build transaction" });
         addToast("Failed to create sell transaction", "error");
         return;
       }
 
       setTxStatus("signing");
+      txTrackerUpdate(txId, { status: "signing" });
       const signedTx = await signTransactionBase64(closeRes.unsignedTx);
 
       setTxStatus("confirming");
+      txTrackerUpdate(txId, { status: "submitting" });
       const submitRes = await api.post<{
         txHash: string;
         status: string;
@@ -398,16 +430,19 @@ export function QuickTradePanel() {
       });
 
       setLastTxHash(submitRes.txHash);
+      txTrackerUpdate(txId, { status: "confirming", txHash: submitRes.txHash });
       setTxStatus("success");
       addToast(
         `Sold ${sellPercent}%! TX: ${submitRes.txHash.slice(0, 8)}...`,
         "success"
       );
+      txTrackerUpdate(txId, { status: "confirmed", txHash: submitRes.txHash });
       refreshPositions();
     } catch (err) {
       setTxStatus("failed");
       const message =
         err instanceof Error ? err.message : "Sell transaction failed";
+      txTrackerUpdate(txId, { status: "failed", error: message });
       addToast(message, "error");
     }
   };

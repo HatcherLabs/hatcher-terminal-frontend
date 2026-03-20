@@ -103,7 +103,8 @@ export function SwipeFilters({ filters, onChange }: SwipeFiltersProps) {
     <div className="w-full max-w-[360px] mx-auto px-4 sm:px-0">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-bg-elevated border border-border text-text-secondary text-xs font-medium hover:border-border-hover transition-colors"
+        className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+        style={{ color: "#9ca3b8", background: "#10131c", border: "1px solid #1a1f2e" }}
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <line x1="4" y1="6" x2="20" y2="6" />
@@ -114,7 +115,7 @@ export function SwipeFilters({ filters, onChange }: SwipeFiltersProps) {
         </svg>
         Filters
         {activeCount > 0 && (
-          <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-green text-bg-primary text-[9px] font-bold">
+          <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full text-[9px] font-bold" style={{ backgroundColor: "#00d672", color: "#04060b" }}>
             {activeCount}
           </span>
         )}
@@ -129,10 +130,10 @@ export function SwipeFilters({ filters, onChange }: SwipeFiltersProps) {
             transition={{ duration: 0.2, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div className="mt-2 p-3 rounded-lg bg-bg-elevated border border-border space-y-3">
+            <div className="mt-2 p-3 rounded-lg space-y-3" style={{ background: "#10131c", border: "1px solid #1a1f2e" }}>
               {/* Min Market Cap */}
               <div>
-                <label className="text-[10px] uppercase tracking-wider text-text-muted font-medium mb-1.5 block">
+                <label className="text-[10px] uppercase tracking-wider font-medium mb-1.5 block" style={{ color: "#5c6380" }}>
                   Min Market Cap (SOL)
                 </label>
                 <div className="flex flex-wrap gap-1.5">
@@ -140,11 +141,12 @@ export function SwipeFilters({ filters, onChange }: SwipeFiltersProps) {
                     <button
                       key={val}
                       onClick={() => onChange({ ...filters, minMarketCapSol: val })}
-                      className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${
+                      className="px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors"
+                      style={
                         filters.minMarketCapSol === val
-                          ? "bg-green text-bg-primary border-green"
-                          : "bg-bg-card border-border text-text-secondary hover:border-border-hover"
-                      }`}
+                          ? { backgroundColor: "#00d672", color: "#04060b", borderColor: "#00d672" }
+                          : { color: "#9ca3b8", background: "#0a0d14", borderColor: "#1a1f2e" }
+                      }
                     >
                       {val === 0 ? "Any" : `${val} SOL`}
                     </button>
@@ -154,7 +156,7 @@ export function SwipeFilters({ filters, onChange }: SwipeFiltersProps) {
 
               {/* Risk Levels */}
               <div>
-                <label className="text-[10px] uppercase tracking-wider text-text-muted font-medium mb-1.5 block">
+                <label className="text-[10px] uppercase tracking-wider font-medium mb-1.5 block" style={{ color: "#5c6380" }}>
                   Risk Levels
                 </label>
                 <div className="flex flex-wrap gap-1.5">
@@ -162,11 +164,12 @@ export function SwipeFilters({ filters, onChange }: SwipeFiltersProps) {
                     <button
                       key={level}
                       onClick={() => toggleRisk(level)}
-                      className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${
+                      className="px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors"
+                      style={
                         filters.maxRiskLevels.has(level)
-                          ? "bg-green text-bg-primary border-green"
-                          : "bg-bg-card border-border text-text-secondary hover:border-border-hover"
-                      }`}
+                          ? { backgroundColor: "#00d672", color: "#04060b", borderColor: "#00d672" }
+                          : { color: "#9ca3b8", background: "#0a0d14", borderColor: "#1a1f2e" }
+                      }
                     >
                       {level}
                     </button>
@@ -176,7 +179,7 @@ export function SwipeFilters({ filters, onChange }: SwipeFiltersProps) {
 
               {/* Min Holders */}
               <div>
-                <label className="text-[10px] uppercase tracking-wider text-text-muted font-medium mb-1.5 block">
+                <label className="text-[10px] uppercase tracking-wider font-medium mb-1.5 block" style={{ color: "#5c6380" }}>
                   Min Holders
                 </label>
                 <div className="flex flex-wrap gap-1.5">
@@ -184,11 +187,12 @@ export function SwipeFilters({ filters, onChange }: SwipeFiltersProps) {
                     <button
                       key={val}
                       onClick={() => onChange({ ...filters, minHolders: val })}
-                      className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${
+                      className="px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors"
+                      style={
                         filters.minHolders === val
-                          ? "bg-green text-bg-primary border-green"
-                          : "bg-bg-card border-border text-text-secondary hover:border-border-hover"
-                      }`}
+                          ? { backgroundColor: "#00d672", color: "#04060b", borderColor: "#00d672" }
+                          : { color: "#9ca3b8", background: "#0a0d14", borderColor: "#1a1f2e" }
+                      }
                     >
                       {val === 0 ? "Any" : `${val}+`}
                     </button>
@@ -198,14 +202,13 @@ export function SwipeFilters({ filters, onChange }: SwipeFiltersProps) {
 
               {/* Has Socials */}
               <div className="flex items-center justify-between">
-                <label className="text-[10px] uppercase tracking-wider text-text-muted font-medium">
+                <label className="text-[10px] uppercase tracking-wider font-medium" style={{ color: "#5c6380" }}>
                   Require Socials
                 </label>
                 <button
                   onClick={() => onChange({ ...filters, hasSocials: !filters.hasSocials })}
-                  className={`relative w-9 h-5 rounded-full transition-colors ${
-                    filters.hasSocials ? "bg-green" : "bg-bg-card border border-border"
-                  }`}
+                  className="relative w-9 h-5 rounded-full transition-colors"
+                  style={filters.hasSocials ? { backgroundColor: "#00d672" } : { background: "#0a0d14", border: "1px solid #1a1f2e" }}
                 >
                   <span
                     className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
@@ -219,7 +222,10 @@ export function SwipeFilters({ filters, onChange }: SwipeFiltersProps) {
               {activeCount > 0 && (
                 <button
                   onClick={() => onChange(DEFAULT_FILTERS)}
-                  className="text-[10px] text-text-muted hover:text-text-secondary underline"
+                  className="text-[10px] underline"
+                  style={{ color: "#5c6380" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "#9ca3b8"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "#5c6380"; }}
                 >
                   Reset all filters
                 </button>

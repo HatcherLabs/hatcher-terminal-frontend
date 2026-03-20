@@ -101,6 +101,9 @@ export function PositionCard({ position, onClose, takeProfitPct, stopLossPct }: 
     ? `rgba(0, 214, 114, ${0.15 + gradientIntensity * 0.45})`
     : `rgba(242, 54, 69, ${0.15 + gradientIntensity * 0.45})`;
 
+  const pnlColor = isPositive ? "#00d672" : "#f23645";
+  const pnlColorFaded = isPositive ? "rgba(0,214,114,0.7)" : "rgba(242,54,69,0.7)";
+
   const handleSell = async (percent: number) => {
     setSellingPercent(percent);
     try {
@@ -112,7 +115,8 @@ export function PositionCard({ position, onClose, takeProfitPct, stopLossPct }: 
 
   return (
     <div
-      className="group relative bg-bg-card border border-border rounded-xl overflow-hidden"
+      className="group relative rounded-xl overflow-hidden"
+      style={{ background: "#10131c", border: "1px solid #1a1f2e" }}
       onMouseEnter={() => setShowSellButtons(true)}
       onMouseLeave={() => {
         if (sellingPercent === null) setShowSellButtons(false);
@@ -139,34 +143,26 @@ export function PositionCard({ position, onClose, takeProfitPct, stopLossPct }: 
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-sm text-text-primary">
+              <span className="font-semibold text-sm" style={{ color: "#eef0f6" }}>
                 ${position.token.ticker}
               </span>
               {isPending && (
-                <span className="text-[10px] text-amber animate-pulse font-medium">
+                <span className="text-[10px] animate-pulse font-medium" style={{ color: "#f0a000" }}>
                   BUYING...
                 </span>
               )}
             </div>
-            <p className="text-xs text-text-muted truncate">
+            <p className="text-xs truncate" style={{ color: "#5c6380" }}>
               {position.token.name}
             </p>
           </div>
 
           <div className="text-right">
-            <p
-              className={`text-sm font-mono font-bold ${
-                isPositive ? "text-green" : "text-red"
-              }`}
-            >
+            <p className="text-sm font-mono font-bold" style={{ color: pnlColor }}>
               {isPositive ? "+" : ""}
               {pnl.toFixed(1)}%
             </p>
-            <p
-              className={`text-[10px] font-mono ${
-                isPositive ? "text-green/70" : "text-red/70"
-              }`}
-            >
+            <p className="text-[10px] font-mono" style={{ color: pnlColorFaded }}>
               {unrealizedSol >= 0 ? "+" : ""}
               {unrealizedSol.toFixed(4)} SOL
             </p>
@@ -175,16 +171,16 @@ export function PositionCard({ position, onClose, takeProfitPct, stopLossPct }: 
 
         <div className="grid grid-cols-3 gap-2 text-[11px] font-mono">
           <div>
-            <p className="text-text-muted">Entry</p>
-            <p className="text-text-secondary">{position.entrySol.toFixed(4)} SOL</p>
+            <p style={{ color: "#5c6380" }}>Entry</p>
+            <p style={{ color: "#9ca3b8" }}>{position.entrySol.toFixed(4)} SOL</p>
           </div>
           <div>
-            <p className="text-text-muted">Value</p>
-            <p className="text-text-secondary">{currentValueSol.toFixed(4)} SOL</p>
+            <p style={{ color: "#5c6380" }}>Value</p>
+            <p style={{ color: "#9ca3b8" }}>{currentValueSol.toFixed(4)} SOL</p>
           </div>
           <div>
-            <p className="text-text-muted">Held</p>
-            <p className="text-text-secondary">
+            <p style={{ color: "#5c6380" }}>Held</p>
+            <p style={{ color: "#9ca3b8" }}>
               {formatTimeHeld(position.entryTimestamp)}
             </p>
           </div>
@@ -207,7 +203,8 @@ export function PositionCard({ position, onClose, takeProfitPct, stopLossPct }: 
             {/* Mobile tap toggle */}
             <button
               onClick={() => setShowSellButtons((prev) => !prev)}
-              className="md:hidden w-full py-1.5 text-[11px] font-medium text-text-muted hover:text-text-secondary transition-colors"
+              className="md:hidden w-full py-1.5 text-[11px] font-medium transition-colors"
+              style={{ color: "#5c6380" }}
             >
               {showSellButtons ? "Hide sell options" : "Quick Sell..."}
             </button>
@@ -224,11 +221,12 @@ export function PositionCard({ position, onClose, takeProfitPct, stopLossPct }: 
                   key={pct}
                   disabled={sellingPercent !== null}
                   onClick={() => handleSell(pct)}
-                  className={`py-1.5 text-xs font-medium rounded-lg border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                    pct === 100
-                      ? "border-red/40 text-red hover:bg-red/10"
-                      : "border-border text-text-secondary hover:bg-bg-elevated hover:text-text-primary"
-                  }`}
+                  className="py-1.5 text-xs font-medium rounded-lg border transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    borderColor: pct === 100 ? "rgba(242,54,69,0.4)" : "#1a1f2e",
+                    color: pct === 100 ? "#f23645" : "#9ca3b8",
+                    background: "transparent",
+                  }}
                 >
                   {sellingPercent === pct ? (
                     <SellSpinner />

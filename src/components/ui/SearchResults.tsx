@@ -163,13 +163,14 @@ export function SearchResults({
   return (
     <div
       ref={containerRef}
-      className={`bg-bg-card rounded-lg shadow-xl border border-border max-h-80 overflow-y-auto terminal-scrollbar ${className}`}
+      className={`rounded-lg shadow-xl max-h-80 overflow-y-auto terminal-scrollbar ${className}`}
+      style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
     >
       <div ref={listRef}>
         {/* Hint when query is too short */}
         {trimmedQuery.length < 2 && (
           <div className="px-4 py-6 text-center">
-            <p className="text-xs text-text-muted font-mono">
+            <p className="text-xs font-mono" style={{ color: "#5c6380" }}>
               Type at least 2 characters to search
             </p>
           </div>
@@ -178,8 +179,11 @@ export function SearchResults({
         {/* Loading state */}
         {trimmedQuery.length >= 2 && loading && (
           <div className="px-4 py-6 text-center">
-            <div className="inline-block w-4 h-4 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
-            <p className="text-xs text-text-muted mt-2 font-mono">
+            <div
+              className="inline-block w-4 h-4 rounded-full animate-spin"
+              style={{ border: "2px solid rgba(139,92,246,0.3)", borderTopColor: "#8b5cf6" }}
+            />
+            <p className="text-xs mt-2 font-mono" style={{ color: "#5c6380" }}>
               Searching...
             </p>
           </div>
@@ -188,7 +192,7 @@ export function SearchResults({
         {/* No results */}
         {trimmedQuery.length >= 2 && !loading && results.length === 0 && (
           <div className="px-4 py-6 text-center">
-            <p className="text-xs text-text-muted font-mono">
+            <p className="text-xs font-mono" style={{ color: "#5c6380" }}>
               No tokens found for &ldquo;{trimmedQuery}&rdquo;
             </p>
           </div>
@@ -202,11 +206,10 @@ export function SearchResults({
               data-search-index={index}
               onClick={() => onSelect(token.mintAddress)}
               onMouseEnter={() => setSelectedIndex(index)}
-              className={`w-full flex items-center gap-3 py-2 px-3 text-left transition-colors ${
-                selectedIndex === index
-                  ? "bg-bg-elevated"
-                  : "hover:bg-bg-elevated"
-              }`}
+              className="w-full flex items-center gap-3 py-2 px-3 text-left transition-colors"
+              style={{
+                background: selectedIndex === index ? "#10131c" : "transparent",
+              }}
             >
               <TokenAvatar
                 mintAddress={token.mintAddress}
@@ -216,33 +219,30 @@ export function SearchResults({
               />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-text-primary truncate">
+                  <span className="text-xs font-medium truncate" style={{ color: "#eef0f6" }}>
                     {token.name}
                   </span>
-                  <span className="text-[10px] text-text-secondary font-mono shrink-0">
+                  <span className="text-[10px] font-mono shrink-0" style={{ color: "#9ca3b8" }}>
                     ${token.ticker}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 mt-0.5">
                   {token.priceUsd != null && (
-                    <span className="text-[10px] text-text-secondary font-mono">
+                    <span className="text-[10px] font-mono" style={{ color: "#9ca3b8" }}>
                       {formatPrice(token.priceUsd)}
                     </span>
                   )}
                   {token.priceChange24h != null && (
                     <span
-                      className={`text-[10px] font-mono ${
-                        token.priceChange24h >= 0
-                          ? "text-green"
-                          : "text-red"
-                      }`}
+                      className="text-[10px] font-mono"
+                      style={{ color: token.priceChange24h >= 0 ? "#00d672" : "#f23645" }}
                     >
                       {token.priceChange24h >= 0 ? "+" : ""}
                       {token.priceChange24h.toFixed(1)}%
                     </span>
                   )}
                   {token.marketCapUsd != null && (
-                    <span className="text-[10px] text-text-faint font-mono">
+                    <span className="text-[10px] font-mono" style={{ color: "#363d54" }}>
                       MC {formatMarketCap(token.marketCapUsd)}
                     </span>
                   )}

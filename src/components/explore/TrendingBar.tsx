@@ -1,31 +1,19 @@
 "use client";
 
-import { useRef, useState, useEffect, useMemo } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { api } from "@/lib/api";
+import { useSolPriceContext } from "@/components/providers/SolPriceProvider";
 
 interface TrendingToken {
-  id: string;
   mintAddress: string;
   name: string;
   ticker: string;
   imageUri: string | null;
+  priceSol: number | null;
+  priceChangePercent24h: number | null;
   marketCapSol: number | null;
-  marketCapUsd: number | null;
-  holders: number | null;
-  buyCount: number | null;
-  sellCount: number | null;
-  volume1h?: number | null;
-  priceChange5m?: number | null;
-  priceChange1h?: number | null;
-  bondingProgress?: number | null;
-  heatScore?: number | null;
-}
-
-function computeTrendingHeat(t: TrendingToken): number {
-  const buys = t.buyCount ?? 0;
-  const holders = t.holders ?? 0;
-  const volume = t.volume1h ?? 0;
-  return buys * 2 + holders * 1.5 + volume * 0.001;
+  heatScore: number;
 }
 
 function formatMcap(n: number | null | undefined): string {
@@ -36,20 +24,29 @@ function formatMcap(n: number | null | undefined): string {
   return `$${n.toFixed(0)}`;
 }
 
-const SOL_PRICE_USD = Number(process.env.NEXT_PUBLIC_SOL_PRICE_USD || 150);
-
-export function TrendingBar({ tokens }: { tokens: TrendingToken[] }) {
+export function TrendingBar() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [paused, setPaused] = useState(false);
   const animRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
+  const [trending, setTrending] = useState<TrendingToken[]>([]);
+  const { solPrice } = useSolPriceContext();
 
-  const trending = useMemo(() => {
-    if (tokens.length === 0) return [];
-    return [...tokens]
-      .sort((a, b) => computeTrendingHeat(b) - computeTrendingHeat(a))
-      .slice(0, 8);
-  }, [tokens]);
+  const fetchTrending = useCallback(async () => {
+    try {
+      const res = await api.raw("/api/tokens/trending?limit=8");
+      if (res.ok) {
+        const { data } = await res.json();
+        setTrending(data);
+      }
+    } catch { /* silent */ }
+  }, []);
+
+  useEffect(() => {
+    fetchTrending();
+    const interval = setInterval(fetchTrending, 30_000);
+    return () => clearInterval(interval);
+  }, [fetchTrending]);
 
   // Marquee auto-scroll
   useEffect(() => {
@@ -139,19 +136,19 @@ export function TrendingBar({ tokens }: { tokens: TrendingToken[] }) {
           style={{ width: "max-content" }}
         >
           {items.map((token, i) => {
-            const change = token.priceChange5m ?? token.priceChange1h ?? null;
+            const change = token.priceChangePercent24h;
             const changeColor = change !== null && change >= 0 ? "#00d672" : "#f23645";
             const changeText =
               change !== null
                 ? `${change >= 0 ? "+" : ""}${change.toFixed(1)}%`
                 : "\u2014";
             const mcapUsd =
-              token.marketCapUsd ?? (token.marketCapSol != null ? token.marketCapSol * SOL_PRICE_USD : null);
+              token.marketCapSol != null ? token.marketCapSol * solPrice : null;
             const letter = (token.ticker || token.name || "?")[0].toUpperCase();
 
             return (
               <Link
-                key={`${token.id}-${i}`}
+                key={`${token.mintAddress}-${i}`}
                 href={`/token/${token.mintAddress}`}
                 className="flex items-center gap-2 shrink-0 px-3 transition-colors"
                 style={{

@@ -117,6 +117,7 @@ function AlertBanner({
   const startTimeRef = useRef(Date.now());
 
   const isTakeProfit = alert.reason === "take-profit";
+  const accentColor = isTakeProfit ? "#00d672" : "#f23645";
 
   // Play sound on mount
   useEffect(() => {
@@ -214,8 +215,9 @@ function AlertBanner({
       transitionDuration: `${SLIDE_DURATION_MS}ms`,
       transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)",
       zIndex: 120 - index,
+      border: `1px solid ${isTakeProfit ? "rgba(0,214,114,0.4)" : "rgba(242,54,69,0.4)"}`,
     }),
-    [index]
+    [index, isTakeProfit]
   );
 
   const pnlFormatted = `${alert.pnlPercent >= 0 ? "+" : ""}${alert.pnlPercent.toFixed(1)}%`;
@@ -223,23 +225,20 @@ function AlertBanner({
   return (
     <div
       style={bannerStyle}
-      className={`pointer-events-auto w-full max-w-[460px] rounded-xl border shadow-2xl overflow-hidden transition-all ${
+      className={`pointer-events-auto w-full max-w-[460px] rounded-xl shadow-2xl overflow-hidden transition-all ${
         phase === "entering"
           ? "-translate-y-full opacity-0"
           : phase === "exiting"
             ? "-translate-y-full opacity-0"
             : "translate-y-0 opacity-100"
-      } ${
-        isTakeProfit ? "border-green/40" : "border-red/40"
       }`}
     >
       {/* Glass background */}
-      <div className="relative bg-[#10131cee] backdrop-blur-md">
+      <div className="relative backdrop-blur-md" style={{ background: "rgba(16,19,28,0.93)" }}>
         {/* Accent glow at top */}
         <div
-          className={`absolute inset-x-0 top-0 h-[1px] ${
-            isTakeProfit ? "bg-green" : "bg-red"
-          }`}
+          className="absolute inset-x-0 top-0 h-[1px]"
+          style={{ background: accentColor }}
         />
 
         {/* Content */}
@@ -254,22 +253,22 @@ function AlertBanner({
               />
             ) : (
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center text-base font-bold ${
-                  isTakeProfit
-                    ? "bg-green/15 text-green"
-                    : "bg-red/15 text-red"
-                }`}
+                className="w-10 h-10 rounded-full flex items-center justify-center text-base font-bold"
+                style={{
+                  background: isTakeProfit ? "rgba(0,214,114,0.15)" : "rgba(242,54,69,0.15)",
+                  color: accentColor,
+                }}
               >
                 {alert.tokenTicker?.charAt(0) ?? "?"}
               </div>
             )}
             {/* Reason badge */}
             <div
-              className={`absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
-                isTakeProfit
-                  ? "bg-green text-bg-primary"
-                  : "bg-red text-white"
-              }`}
+              className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px]"
+              style={{
+                background: accentColor,
+                color: isTakeProfit ? "#04060b" : "#ffffff",
+              }}
             >
               {isTakeProfit ? (
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -286,21 +285,17 @@ function AlertBanner({
           {/* Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span
-                className={`text-sm font-bold ${
-                  isTakeProfit ? "text-green" : "text-red"
-                }`}
-              >
+              <span className="text-sm font-bold" style={{ color: accentColor }}>
                 {isTakeProfit ? "Take Profit Hit!" : "Stop Loss Hit!"}
               </span>
-              <span className="text-xs text-text-muted font-medium truncate">
+              <span className="text-xs font-medium truncate" style={{ color: "#5c6380" }}>
                 ${alert.tokenTicker}
               </span>
             </div>
 
             {/* Price row */}
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="font-mono text-[11px] text-text-secondary">
+              <span className="font-mono text-[11px]" style={{ color: "#9ca3b8" }}>
                 {formatPrice(alert.entryPricePerToken)}
               </span>
               <svg
@@ -308,20 +303,19 @@ function AlertBanner({
                 height="10"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="currentColor"
+                stroke="#363d54"
                 strokeWidth="2"
                 strokeLinecap="round"
-                className="text-text-faint flex-shrink-0"
+                className="flex-shrink-0"
               >
                 <path d="M5 12h14M13 6l6 6-6 6" />
               </svg>
-              <span className="font-mono text-[11px] text-text-secondary">
+              <span className="font-mono text-[11px]" style={{ color: "#9ca3b8" }}>
                 {formatPrice(alert.currentPriceSol)}
               </span>
               <span
-                className={`font-mono text-[11px] font-bold ml-1 ${
-                  alert.pnlPercent >= 0 ? "text-green" : "text-red"
-                }`}
+                className="font-mono text-[11px] font-bold ml-1"
+                style={{ color: alert.pnlPercent >= 0 ? "#00d672" : "#f23645" }}
               >
                 {pnlFormatted}
               </span>
@@ -333,15 +327,18 @@ function AlertBanner({
             <button
               onClick={handleSell}
               disabled={selling}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-[0.96] disabled:opacity-40 ${
-                isTakeProfit
-                  ? "bg-green text-bg-primary hover:brightness-110"
-                  : "bg-red text-white hover:brightness-110"
-              }`}
+              className="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-[0.96] disabled:opacity-40"
+              style={{
+                background: accentColor,
+                color: isTakeProfit ? "#04060b" : "#ffffff",
+              }}
             >
               {selling ? (
                 <span className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 border-2 border-current/30 border-t-current rounded-full animate-spin" />
+                  <span
+                    className="w-3 h-3 rounded-full animate-spin"
+                    style={{ border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "currentColor" }}
+                  />
                   Selling
                 </span>
               ) : (
@@ -350,7 +347,8 @@ function AlertBanner({
             </button>
             <button
               onClick={handleDismiss}
-              className="w-7 h-7 flex items-center justify-center rounded-lg bg-bg-elevated/60 text-text-muted hover:text-text-primary transition-colors"
+              className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors"
+              style={{ background: "rgba(16,19,28,0.6)", color: "#5c6380" }}
               aria-label="Dismiss alert"
             >
               <svg
@@ -370,12 +368,13 @@ function AlertBanner({
         </div>
 
         {/* Progress bar — auto-dismiss countdown */}
-        <div className="h-[2px] w-full bg-bg-elevated/40">
+        <div className="h-[2px] w-full" style={{ background: "rgba(16,19,28,0.4)" }}>
           <div
-            className={`h-full transition-none ${
-              isTakeProfit ? "bg-green/60" : "bg-red/60"
-            }`}
-            style={{ width: `${progress}%` }}
+            className="h-full"
+            style={{
+              width: `${progress}%`,
+              background: isTakeProfit ? "rgba(0,214,114,0.6)" : "rgba(242,54,69,0.6)",
+            }}
           />
         </div>
       </div>

@@ -13,6 +13,10 @@ import { VirtualizedTable } from "@/components/ui/VirtualizedTable";
 import { MarketOverview } from "@/components/explore/MarketOverview";
 import { TokenScanner } from "@/components/explore/TokenScanner";
 import { TrendingBar } from "@/components/explore/TrendingBar";
+import { BubbleMap } from "@/components/explore/BubbleMap";
+import { NewTokenBanner } from "@/components/explore/NewTokenBanner";
+import { LiveAge } from "@/components/ui/LiveAge";
+import { useNewTokenAlert } from "@/hooks/useNewTokenAlert";
 import { api } from "@/lib/api";
 
 type ExploreCategory = "new" | "graduating" | "migrated";
@@ -390,13 +394,16 @@ export default function TrenchesPage() {
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // View mode
-  const [viewMode, setViewMode] = useState<"table" | "cards">("table");
+  const [viewMode, setViewMode] = useState<"table" | "cards" | "bubbles">("table");
 
   // Quick filters
   const [ageFilter, setAgeFilter] = useState<AgeFilter>("all");
   const [minMcap, setMinMcap] = useState("");
   const [minHolders, setMinHolders] = useState("");
   const [hasSocials, setHasSocials] = useState(false);
+
+  // Real-time new token detection via WebSocket
+  const { newTokens, dismiss: dismissNewToken, dismissAll: dismissAllNewTokens } = useNewTokenAlert();
 
   // Token count for header
   const tokenCount = tokens.length;
@@ -706,6 +713,18 @@ export default function TrenchesPage() {
                 <rect x="14" y="14" width="7" height="7" rx="1" />
               </svg>
             </button>
+            <button
+              onClick={() => setViewMode("bubbles")}
+              className="p-1.5 rounded transition-colors"
+              style={viewMode === "bubbles" ? { background: "#181c28", color: "#eef0f6" } : { color: "#5c6380" }}
+              aria-label="Bubble map view"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <circle cx="8" cy="8" r="5" />
+                <circle cx="17" cy="15" r="4" />
+                <circle cx="7" cy="18" r="3" />
+              </svg>
+            </button>
           </div>
         </div>
       </div>
@@ -749,7 +768,18 @@ export default function TrenchesPage() {
       </div>
 
       {/* Trending bar */}
-      <TrendingBar tokens={tokens} />
+      <TrendingBar />
+
+      {/* New token alerts via WebSocket */}
+      {newTokens.length > 0 && (
+        <div className="mb-2">
+          <NewTokenBanner
+            tokens={newTokens}
+            onDismiss={dismissNewToken}
+            onDismissAll={dismissAllNewTokens}
+          />
+        </div>
+      )}
 
       {/* Tab bar */}
       <nav
@@ -982,6 +1012,9 @@ export default function TrenchesPage() {
             )}
           />
         </div>
+      ) : viewMode === "bubbles" ? (
+        /* Bubble map view */
+        <BubbleMap tokens={displayTokens} height={420} />
       ) : (
         /* Card view */
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 px-1">
@@ -1101,9 +1134,7 @@ function TableRow({
 
       case "age":
         return (
-          <span className="font-mono text-[11px]" style={{ color: "#9ca3b8" }}>
-            {relativeTime(token.detectedAt)}
-          </span>
+          <LiveAge createdAt={token.detectedAt} className="text-[11px]" />
         );
 
       case "mcap":

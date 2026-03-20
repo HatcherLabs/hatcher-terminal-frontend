@@ -53,27 +53,29 @@ export function AnimatedPrice({ value, format, className = "", showArrow = false
 
   const flashBg =
     flash === "up"
-      ? "bg-green/10"
+      ? "rgba(0,214,114,0.1)"
       : flash === "down"
-        ? "bg-red/10"
-        : "bg-transparent";
+        ? "rgba(242,54,69,0.1)"
+        : "transparent";
 
-  const flashText =
+  const flashTextColor =
     flash === "up"
-      ? "text-green"
+      ? "#00d672"
       : flash === "down"
-        ? "text-red"
-        : "";
+        ? "#f23645"
+        : undefined;
 
   // For percent format, color is always based on value sign
   const percentColor =
     format === "percent" && value !== null
       ? value > 0
-        ? "text-green"
+        ? "#00d672"
         : value < 0
-          ? "text-red"
-          : "text-text-muted"
-      : "";
+          ? "#f23645"
+          : "#5c6380"
+      : undefined;
+
+  const textColor = flashTextColor || percentColor;
 
   const arrow =
     showArrow && flash === "up"
@@ -84,10 +86,11 @@ export function AnimatedPrice({ value, format, className = "", showArrow = false
 
   return (
     <span
-      className={`
-        inline-flex items-center font-mono transition-colors duration-600 rounded px-0.5
-        ${flashBg} ${flashText || percentColor} ${className}
-      `.trim()}
+      className={`inline-flex items-center font-mono transition-colors duration-600 rounded px-0.5 ${className}`.trim()}
+      style={{
+        backgroundColor: flashBg,
+        ...(textColor ? { color: textColor } : {}),
+      }}
     >
       {arrow && (
         <span className="text-[8px] mr-0.5">{arrow.trim()}</span>

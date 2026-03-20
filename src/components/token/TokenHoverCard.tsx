@@ -172,13 +172,13 @@ export function TokenHoverCard({
               />
               <div className="flex flex-col min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-sm font-semibold text-text-primary truncate">
+                  <span className="text-sm font-semibold truncate" style={{ color: "#eef0f6" }}>
                     {ticker ?? mintAddress.slice(0, 6)}
                   </span>
                   {riskLevel && <RiskBadge level={riskLevel} />}
                 </div>
                 {name && (
-                  <span className="text-[11px] text-text-secondary truncate leading-tight">
+                  <span className="text-[11px] truncate leading-tight" style={{ color: "#9ca3b8" }}>
                     {name}
                   </span>
                 )}
@@ -234,7 +234,7 @@ function StatRow({
 }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-[10px] text-text-faint uppercase tracking-wider">
+      <span className="text-[10px] uppercase tracking-wider" style={{ color: "#363d54" }}>
         {label}
       </span>
       <span

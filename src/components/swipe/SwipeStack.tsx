@@ -389,7 +389,7 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
     return (
       <div className="flex flex-col items-center gap-4 mt-8 px-4">
         <Skeleton className="w-full max-w-[360px] aspect-[3/4] rounded-card" />
-        <p className="text-text-muted text-sm">Connecting to feed...</p>
+        <p className="text-sm" style={{ color: "#5c6380" }}>Connecting to feed...</p>
       </div>
     );
   }
@@ -399,10 +399,10 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
     return (
       <div className="flex flex-col items-center justify-center gap-3 mt-16 px-4 text-center">
         <p className="text-4xl">&#127769;</p>
-        <p className="text-text-secondary text-sm">
+        <p className="text-sm" style={{ color: "#9ca3b8" }}>
           No tokens in this category right now.
         </p>
-        <p className="text-text-muted text-xs">New tokens will appear automatically.</p>
+        <p className="text-xs" style={{ color: "#5c6380" }}>New tokens will appear automatically.</p>
       </div>
     );
   }
@@ -413,7 +413,7 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
     <>
       <div className="relative flex flex-col items-center swipe-stack-safe-area">
         {!hasKey && (
-          <div className="mb-3 px-4 py-2 rounded-lg bg-amber-dim border border-amber/20 text-amber text-xs text-center">
+          <div className="mb-3 px-4 py-2 rounded-lg text-xs text-center" style={{ backgroundColor: "rgba(240,160,0,0.08)", border: "1px solid rgba(240,160,0,0.2)", color: "#f0a000" }}>
             Import your key to trade -- you can still browse
           </div>
         )}
@@ -463,9 +463,9 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
                 <SwipeCard token={currentToken} onInfoTap={handleInfoTap} />
 
                 {buyLoading && (
-                  <div className="absolute inset-0 z-20 flex flex-col items-center justify-center rounded-card bg-bg-primary/80 backdrop-blur-sm">
-                    <div className="w-8 h-8 border-2 border-green/30 border-t-green rounded-full animate-spin" />
-                    <p className="text-green text-sm font-medium mt-3">
+                  <div className="absolute inset-0 z-20 flex flex-col items-center justify-center rounded-card backdrop-blur-sm" style={{ backgroundColor: "rgba(4,6,11,0.8)" }}>
+                    <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: "rgba(0,214,114,0.3)", borderTopColor: "#00d672" }} />
+                    <p className="text-sm font-medium mt-3" style={{ color: "#00d672" }}>
                       Building transaction...
                     </p>
                   </div>
@@ -478,17 +478,18 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
         {/* Swipe hints — shown for the first few swipes */}
         {showSwipeHints && (
           <motion.p
-            className="mt-3 text-xs font-mono text-text-muted select-none text-center tracking-wide"
+            className="mt-3 text-xs font-mono select-none text-center tracking-wide"
+            style={{ color: "#5c6380" }}
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 0.6, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
-            <span className="text-red/50">&larr; NOPE</span>
-            <span className="mx-4 text-text-faint">|</span>
-            <span className="text-amber/50">&uarr; WATCH</span>
-            <span className="mx-4 text-text-faint">|</span>
-            <span className="text-green/50">APE IN &rarr;</span>
+            <span style={{ color: "rgba(242,54,69,0.5)" }}>&larr; NOPE</span>
+            <span className="mx-4" style={{ color: "#363d54" }}>|</span>
+            <span style={{ color: "rgba(240,160,0,0.5)" }}>&uarr; WATCH</span>
+            <span className="mx-4" style={{ color: "#363d54" }}>|</span>
+            <span style={{ color: "rgba(0,214,114,0.5)" }}>APE IN &rarr;</span>
           </motion.p>
         )}
 

@@ -77,48 +77,57 @@ export function TokenLinks({ mintAddress }: TokenLinksProps) {
   const solscanUrl = `https://solscan.io/token/${mintAddress}`;
   const dexscreenerUrl = `https://dexscreener.com/solana/${mintAddress}`;
 
-  const linkClass =
-    "flex items-center gap-1 text-[10px] text-text-muted hover:text-text-secondary transition-colors px-1.5 py-1 rounded hover:bg-bg-hover";
-
   return (
     <div className="flex items-center justify-center gap-1 pt-1">
       <a
         href={pumpUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className={linkClass}
+        className="flex items-center gap-1 text-[10px] transition-colors px-1.5 py-1 rounded"
+        style={{ color: "#5c6380" }}
+        onMouseEnter={(e) => { e.currentTarget.style.color = "#9ca3b8"; e.currentTarget.style.background = "#181c28"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.color = "#5c6380"; e.currentTarget.style.background = "transparent"; }}
         aria-label="View on Pump.fun"
       >
         <ExternalLinkIcon />
         <span>Pump</span>
       </a>
-      <span className="text-text-faint" aria-hidden="true">|</span>
+      <span style={{ color: "#363d54" }} aria-hidden="true">|</span>
       <a
         href={solscanUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className={linkClass}
+        className="flex items-center gap-1 text-[10px] transition-colors px-1.5 py-1 rounded"
+        style={{ color: "#5c6380" }}
+        onMouseEnter={(e) => { e.currentTarget.style.color = "#9ca3b8"; e.currentTarget.style.background = "#181c28"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.color = "#5c6380"; e.currentTarget.style.background = "transparent"; }}
         aria-label="View on Solscan"
       >
         <ExternalLinkIcon />
         <span>Solscan</span>
       </a>
-      <span className="text-text-faint" aria-hidden="true">|</span>
+      <span style={{ color: "#363d54" }} aria-hidden="true">|</span>
       <a
         href={dexscreenerUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className={linkClass}
+        className="flex items-center gap-1 text-[10px] transition-colors px-1.5 py-1 rounded"
+        style={{ color: "#5c6380" }}
+        onMouseEnter={(e) => { e.currentTarget.style.color = "#9ca3b8"; e.currentTarget.style.background = "#181c28"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.color = "#5c6380"; e.currentTarget.style.background = "transparent"; }}
         aria-label="View on DexScreener"
       >
         <ExternalLinkIcon />
         <span>DexS</span>
       </a>
-      <span className="text-text-faint" aria-hidden="true">|</span>
+      <span style={{ color: "#363d54" }} aria-hidden="true">|</span>
       <button
         type="button"
         onClick={handleCopy}
-        className={`${linkClass} ${copied ? "text-green" : ""}`}
+        className="flex items-center gap-1 text-[10px] transition-colors px-1.5 py-1 rounded"
+        style={{ color: copied ? "#00d672" : "#5c6380" }}
+        onMouseEnter={(e) => { if (!copied) { e.currentTarget.style.color = "#9ca3b8"; } e.currentTarget.style.background = "#181c28"; }}
+        onMouseLeave={(e) => { if (!copied) { e.currentTarget.style.color = "#5c6380"; } e.currentTarget.style.background = "transparent"; }}
         aria-label={copied ? "Copied" : "Copy contract address"}
       >
         {copied ? <CheckIcon /> : <CopyIcon />}

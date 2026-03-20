@@ -30,13 +30,14 @@ export function DepositQR({ publicKey }: DepositQRProps) {
       {qrUrl && (
         <img src={qrUrl} alt="Deposit QR Code" className="rounded-lg" width={200} height={200} />
       )}
-      <div className="flex items-center gap-2 bg-bg-primary border border-border rounded-lg px-3 py-2 max-w-full">
-        <p className="font-mono text-xs text-text-secondary truncate">
+      <div className="flex items-center gap-2 rounded-lg px-3 py-2 max-w-full" style={{ background: "#04060b", border: "1px solid #1a1f2e" }}>
+        <p className="font-mono text-xs truncate" style={{ color: "#9ca3b8" }}>
           {publicKey}
         </p>
         <button
           onClick={copyAddress}
-          className="shrink-0 text-xs text-green hover:brightness-110 transition-colors"
+          className="shrink-0 text-xs hover:brightness-110 transition-colors"
+          style={{ color: "#00d672" }}
         >
           {copied ? "\u2713" : "COPY"}
         </button>

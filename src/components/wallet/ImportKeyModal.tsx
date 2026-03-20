@@ -132,9 +132,9 @@ export function ImportKeyModal({ onClose, onSuccess, encryptPassword }: ImportKe
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-      <div className="bg-bg-card border border-border rounded-card max-w-sm w-full p-6 space-y-4">
-        <h2 className="text-lg font-bold text-text-primary">Import Private Key</h2>
-        <p className="text-xs text-text-secondary">
+      <div className="max-w-sm w-full p-6 space-y-4 rounded-xl" style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}>
+        <h2 className="text-lg font-bold" style={{ color: "#eef0f6" }}>Import Private Key</h2>
+        <p className="text-xs" style={{ color: "#9ca3b8" }}>
           Paste your Solana private key to enable trading. Supports base58 format
           or JSON byte array (Solana CLI format).
         </p>
@@ -147,31 +147,36 @@ export function ImportKeyModal({ onClose, onSuccess, encryptPassword }: ImportKe
           }}
           placeholder="Paste base58 key or JSON byte array [1,2,3,...]"
           rows={4}
-          className="w-full bg-bg-primary border border-border rounded-lg p-3 text-sm font-mono text-text-primary placeholder:text-text-faint focus:border-green focus:outline-none resize-none"
+          className="w-full rounded-lg p-3 text-sm font-mono focus:outline-none resize-none"
+          style={{ color: "#eef0f6", background: "#04060b", border: "1px solid #1a1f2e" }}
+          onFocus={(e) => { e.currentTarget.style.borderColor = "#00d672"; }}
+          onBlur={(e) => { e.currentTarget.style.borderColor = ""; }}
         />
 
         {key.trim().length > 0 && (
-          <p className="text-[11px] text-text-muted">
-            Detected format: <span className="text-text-secondary font-medium">{detectedFormat}</span>
+          <p className="text-[11px]" style={{ color: "#5c6380" }}>
+            Detected format: <span className="font-medium" style={{ color: "#9ca3b8" }}>{detectedFormat}</span>
           </p>
         )}
 
         {error && (
-          <p className="text-xs text-red">{error}</p>
+          <p className="text-xs" style={{ color: "#f23645" }}>{error}</p>
         )}
 
         <div className="flex gap-3">
           <button
             onClick={onClose}
             disabled={loading}
-            className="flex-1 py-2.5 rounded-lg text-sm font-medium border border-border text-text-secondary hover:bg-bg-hover transition-colors disabled:opacity-50"
+            className="flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+            style={{ color: "#9ca3b8", borderColor: "#1a1f2e", borderWidth: "1px", borderStyle: "solid" }}
           >
             Cancel
           </button>
           <button
             onClick={handleImport}
             disabled={!key.trim() || loading}
-            className="flex-1 py-2.5 rounded-lg text-sm font-semibold bg-green text-bg-primary disabled:opacity-30 hover:brightness-110 transition-all flex items-center justify-center gap-2"
+            className="flex-1 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-30 hover:brightness-110 transition-all flex items-center justify-center gap-2"
+            style={{ backgroundColor: "#00d672", color: "#04060b" }}
           >
             {loading ? (
               <>

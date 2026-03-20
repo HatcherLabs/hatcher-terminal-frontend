@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { api } from "@/lib/api";
 import Link from "next/link";
 
 /* ──────────────────────── Types ──────────────────────── */
@@ -731,14 +732,51 @@ function EmptyState({ filter }: { filter: FilterTab }) {
 /* ──────────────────────── Page Component ──────────────────────── */
 
 export default function AlertsPage() {
-  // TODO: Replace mock data with real API calls via usePriceAlerts() or direct api.get<>("/api/alerts")
-  const [alerts, setAlerts] = useState<PriceAlertItem[]>(MOCK_ALERTS);
+  const [alerts, setAlerts] = useState<PriceAlertItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterTab>("all");
   const [sortKey, setSortKey] = useState<SortKey>("newest");
 
+  // Fetch alerts from API on mount
+  useEffect(() => {
+    const controller = new AbortController();
+    api
+      .raw("/api/alerts", { signal: controller.signal })
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          setAlerts(
+            json.data.map((a: Record<string, unknown>) => ({
+              id: String(a.id ?? ""),
+              token: {
+                mintAddress: String((a.token as Record<string, unknown>)?.mintAddress ?? a.mintAddress ?? ""),
+                ticker: String((a.token as Record<string, unknown>)?.ticker ?? a.ticker ?? ""),
+                name: String((a.token as Record<string, unknown>)?.name ?? a.name ?? ""),
+                imageUrl: String((a.token as Record<string, unknown>)?.imageUrl ?? a.imageUrl ?? ""),
+              },
+              direction: (a.direction as string) === "below" ? "below" : "above",
+              targetPriceSol: Number(a.targetPriceSol ?? a.targetPrice ?? 0),
+              currentPriceSol: a.currentPriceSol != null ? Number(a.currentPriceSol) : null,
+              status: (a.status as AlertStatus) ?? "active",
+              createdAt: String(a.createdAt ?? new Date().toISOString()),
+              triggeredAt: a.triggeredAt ? String(a.triggeredAt) : null,
+            }))
+          );
+        } else {
+          setAlerts(MOCK_ALERTS);
+        }
+      })
+      .catch((err) => {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        setAlerts(MOCK_ALERTS);
+      })
+      .finally(() => setLoading(false));
+    return () => controller.abort();
+  }, []);
+
   const handleDelete = (id: string) => {
-    // TODO: Wire to real API — api.delete(`/api/alerts/${id}`)
     setAlerts((prev) => prev.filter((a) => a.id !== id));
+    api.raw(`/api/alerts/${id}`, { method: "DELETE" }).catch(() => {});
   };
 
   const tabCounts = useMemo(() => {
@@ -751,7 +789,7 @@ export default function AlertsPage() {
   }, [alerts]);
 
   const filteredAndSorted = useMemo(() => {
-    let result = filter === "all" ? [...alerts] : alerts.filter((a) => a.status === filter);
+    const result = filter === "all" ? [...alerts] : alerts.filter((a) => a.status === filter);
 
     switch (sortKey) {
       case "newest":

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { api } from "@/lib/api";
 
 /* ──────────────────────── Palette ──────────────────────── */
 
@@ -589,7 +590,79 @@ function RecentTradesTab({ trades }: { trades: RecentTrade[] }) {
 export default function SmartMoneyPage() {
   const [activeTab, setActiveTab] = useState<MainTab>("wallets");
   const [search, setSearch] = useState("");
-  const [wallets, setWallets] = useState<SmartWallet[]>(MOCK_WALLETS);
+  const [wallets, setWallets] = useState<SmartWallet[]>([]);
+  const [trades, setTrades] = useState<RecentTrade[]>([]);
+  const [walletsLoading, setWalletsLoading] = useState(true);
+  const [tradesLoading, setTradesLoading] = useState(false);
+
+  // Fetch wallets from API on mount
+  useEffect(() => {
+    const controller = new AbortController();
+    api
+      .raw("/api/smart-money/wallets", { signal: controller.signal })
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          setWallets(
+            json.data.map((w: Record<string, unknown>, i: number) => ({
+              rank: Number(w.rank ?? i + 1),
+              address: String(w.address ?? w.wallet ?? ""),
+              label: (w.label as WalletLabel) ?? "Sniper",
+              pnl30d: Number(w.pnl30d ?? w.pnl ?? 0),
+              winRate: Number(w.winRate ?? 0),
+              totalTrades: Number(w.totalTrades ?? w.trades ?? 0),
+              volume30d: Number(w.volume30d ?? w.volume ?? 0),
+              avgHoldTime: String(w.avgHoldTime ?? "—"),
+              lastActive: String(w.lastActive ?? "—"),
+              followed: Boolean(w.followed ?? false),
+            }))
+          );
+        } else {
+          setWallets(MOCK_WALLETS);
+        }
+      })
+      .catch((err) => {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        setWallets(MOCK_WALLETS);
+      })
+      .finally(() => setWalletsLoading(false));
+    return () => controller.abort();
+  }, []);
+
+  // Fetch trades when trades tab is activated
+  useEffect(() => {
+    if (activeTab !== "trades" || trades.length > 0) return;
+    setTradesLoading(true);
+    const controller = new AbortController();
+    api
+      .raw("/api/smart-money/trades?limit=20", { signal: controller.signal })
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          setTrades(
+            json.data.map((t: Record<string, unknown>, i: number) => ({
+              id: String(t.id ?? `t${i}`),
+              walletAddress: String(t.walletAddress ?? t.wallet ?? ""),
+              walletLabel: (t.walletLabel as WalletLabel) ?? "Sniper",
+              side: (t.side as string)?.toUpperCase() === "SELL" ? "SELL" : "BUY",
+              tokenTicker: String(t.tokenTicker ?? t.ticker ?? ""),
+              tokenAvatar: String(t.tokenAvatar ?? (t.ticker as string)?.[0] ?? "?"),
+              amountSol: Number(t.amountSol ?? t.amount ?? 0),
+              timeAgo: String(t.timeAgo ?? "—"),
+              tokenSlug: String(t.tokenSlug ?? t.mintAddress ?? ""),
+            }))
+          );
+        } else {
+          setTrades(MOCK_TRADES);
+        }
+      })
+      .catch((err) => {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        setTrades(MOCK_TRADES);
+      })
+      .finally(() => setTradesLoading(false));
+    return () => controller.abort();
+  }, [activeTab, trades.length]);
 
   const handleToggleFollow = useCallback((address: string) => {
     setWallets((prev) =>
@@ -597,6 +670,8 @@ export default function SmartMoneyPage() {
         w.address === address ? { ...w, followed: !w.followed } : w,
       ),
     );
+    // Persist follow state to backend
+    api.post("/api/smart-money/follow", { address }).catch(() => {});
   }, []);
 
   const tabs: { key: MainTab; label: string }[] = [
@@ -706,13 +781,27 @@ export default function SmartMoneyPage() {
 
         {/* Tab Content */}
         {activeTab === "wallets" && (
-          <TopWalletsTab
-            wallets={wallets}
-            search={search}
-            onToggleFollow={handleToggleFollow}
-          />
+          walletsLoading ? (
+            <div style={{ textAlign: "center", padding: 40, color: C.t2, fontFamily: "Lexend, sans-serif", fontSize: 13 }}>
+              Loading wallets...
+            </div>
+          ) : (
+            <TopWalletsTab
+              wallets={wallets}
+              search={search}
+              onToggleFollow={handleToggleFollow}
+            />
+          )
         )}
-        {activeTab === "trades" && <RecentTradesTab trades={MOCK_TRADES} />}
+        {activeTab === "trades" && (
+          tradesLoading ? (
+            <div style={{ textAlign: "center", padding: 40, color: C.t2, fontFamily: "Lexend, sans-serif", fontSize: 13 }}>
+              Loading trades...
+            </div>
+          ) : (
+            <RecentTradesTab trades={trades} />
+          )
+        )}
       </div>
     </ErrorBoundary>
   );

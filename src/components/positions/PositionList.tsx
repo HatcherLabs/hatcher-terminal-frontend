@@ -77,51 +77,45 @@ function computeStats(positions: Position[]): PortfolioStats {
 
 function PortfolioSummary({ stats }: { stats: PortfolioStats }) {
   const isPositive = stats.totalPnlSol >= 0;
+  const pnlColor = isPositive ? "#00d672" : "#f23645";
+  const pnlColorFaded = isPositive ? "rgba(0,214,114,0.7)" : "rgba(242,54,69,0.7)";
 
   return (
-    <div className="bg-bg-card border border-border rounded-xl p-4 mb-4">
+    <div className="rounded-xl p-4 mb-4" style={{ background: "#10131c", border: "1px solid #1a1f2e" }}>
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-xs font-semibold text-text-muted uppercase tracking-wider">
+        <h2 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#5c6380" }}>
           Portfolio
         </h2>
-        <div className="flex items-center gap-3 text-[11px] font-mono text-text-muted">
+        <div className="flex items-center gap-3 text-[11px] font-mono" style={{ color: "#5c6380" }}>
           <span>
-            <span className="text-green">{stats.wins}W</span>
+            <span style={{ color: "#00d672" }}>{stats.wins}W</span>
             {" / "}
-            <span className="text-red">{stats.losses}L</span>
+            <span style={{ color: "#f23645" }}>{stats.losses}L</span>
           </span>
         </div>
       </div>
       <div className="grid grid-cols-3 gap-3">
         <div>
-          <p className="text-[10px] text-text-muted uppercase">Value</p>
-          <p className="text-sm font-mono font-bold text-text-primary">
+          <p className="text-[10px] uppercase" style={{ color: "#5c6380" }}>Value</p>
+          <p className="text-sm font-mono font-bold" style={{ color: "#eef0f6" }}>
             {stats.totalValue.toFixed(4)}
           </p>
-          <p className="text-[10px] font-mono text-text-muted">SOL</p>
+          <p className="text-[10px] font-mono" style={{ color: "#5c6380" }}>SOL</p>
         </div>
         <div>
-          <p className="text-[10px] text-text-muted uppercase">Invested</p>
-          <p className="text-sm font-mono font-bold text-text-secondary">
+          <p className="text-[10px] uppercase" style={{ color: "#5c6380" }}>Invested</p>
+          <p className="text-sm font-mono font-bold" style={{ color: "#9ca3b8" }}>
             {stats.totalInvested.toFixed(4)}
           </p>
-          <p className="text-[10px] font-mono text-text-muted">SOL</p>
+          <p className="text-[10px] font-mono" style={{ color: "#5c6380" }}>SOL</p>
         </div>
         <div>
-          <p className="text-[10px] text-text-muted uppercase">P&amp;L</p>
-          <p
-            className={`text-sm font-mono font-bold ${
-              isPositive ? "text-green" : "text-red"
-            }`}
-          >
+          <p className="text-[10px] uppercase" style={{ color: "#5c6380" }}>P&amp;L</p>
+          <p className="text-sm font-mono font-bold" style={{ color: pnlColor }}>
             {isPositive ? "+" : ""}
             {stats.totalPnlSol.toFixed(4)}
           </p>
-          <p
-            className={`text-[10px] font-mono ${
-              isPositive ? "text-green/70" : "text-red/70"
-            }`}
-          >
+          <p className="text-[10px] font-mono" style={{ color: pnlColorFaded }}>
             {isPositive ? "+" : ""}
             {stats.totalPnlPercent.toFixed(1)}%
           </p>
@@ -306,23 +300,28 @@ export function PositionList() {
   return (
     <div className="space-y-3">
       {/* Position count + total unrealized P&L bar */}
-      <div className="flex items-center justify-between bg-bg-card border border-border rounded-xl px-4 py-2.5">
+      <div
+        className="flex items-center justify-between rounded-xl px-4 py-2.5"
+        style={{ background: "#10131c", border: "1px solid #1a1f2e" }}
+      >
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">
+          <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#5c6380" }}>
             Open Positions
           </span>
-          <span className="text-xs font-mono font-bold text-text-primary bg-bg-elevated px-2 py-0.5 rounded-md">
+          <span
+            className="text-xs font-mono font-bold px-2 py-0.5 rounded-md"
+            style={{ color: "#eef0f6", background: "#1f2435" }}
+          >
             {positions.length}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-[10px] text-text-muted uppercase">
+          <span className="text-[10px] uppercase" style={{ color: "#5c6380" }}>
             Unrealized P&amp;L
           </span>
           <span
-            className={`text-sm font-mono font-bold ${
-              pnlIsPositive ? "text-green" : "text-red"
-            }`}
+            className="text-sm font-mono font-bold"
+            style={{ color: pnlIsPositive ? "#00d672" : "#f23645" }}
           >
             {pnlIsPositive ? "+" : ""}
             {totalUnrealizedPnlSol.toFixed(4)} SOL

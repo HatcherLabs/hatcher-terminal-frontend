@@ -57,7 +57,9 @@ export function CompareButton({ mintAddress, size = 24, className = "" }: Compar
         strokeWidth="1.8"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className={active ? "text-accent" : "text-text-muted hover:text-text-secondary"}
+        style={{ color: active ? "#8b5cf6" : "#5c6380" }}
+        onMouseEnter={(e) => { if (!active) e.currentTarget.style.color = "#9ca3b8"; }}
+        onMouseLeave={(e) => { if (!active) e.currentTarget.style.color = "#5c6380"; }}
       >
         {active ? (
           <>
@@ -67,7 +69,7 @@ export function CompareButton({ mintAddress, size = 24, className = "" }: Compar
             <rect x="14" y="3" width="7" height="18" rx="1" fill="currentColor" opacity="0.15" />
             <rect x="14" y="3" width="7" height="18" rx="1" />
             <circle cx="18" cy="6" r="4" fill="currentColor" stroke="none" />
-            <path d="M16.5 6L17.5 7L19.5 5" stroke="var(--bg-card, #0a0a1a)" strokeWidth="1.5" fill="none" />
+            <path d="M16.5 6L17.5 7L19.5 5" stroke="#0a0d14" strokeWidth="1.5" fill="none" />
           </>
         ) : (
           <>

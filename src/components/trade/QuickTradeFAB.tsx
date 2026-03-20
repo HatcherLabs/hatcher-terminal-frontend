@@ -16,14 +16,14 @@ export function QuickTradeFAB() {
         bottom-20 right-4
         md:bottom-6 md:right-6
         w-14 h-14 rounded-full
-        bg-accent text-white
-        shadow-lg shadow-accent/25
+        shadow-lg
         flex items-center justify-center
         transition-all duration-200
-        hover:scale-105 hover:shadow-xl hover:shadow-accent/30
+        hover:scale-105 hover:shadow-xl
         active:scale-95
         animate-pulse-fab
       "
+      style={{ background: "#8b5cf6", color: "#ffffff", boxShadow: "0 10px 15px rgba(139,92,246,0.25)" }}
       aria-label={`Quick trade ${selectedToken.ticker}`}
       title={`Quick trade ${selectedToken.ticker}`}
     >
@@ -39,7 +39,7 @@ export function QuickTradeFAB() {
       </svg>
 
       {/* Ticker badge */}
-      <span className="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full bg-bg-card border border-border text-[9px] font-bold font-mono text-text-primary leading-none shadow-sm">
+      <span className="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold font-mono leading-none shadow-sm" style={{ background: "#0a0d14", border: "1px solid #1a1f2e", color: "#eef0f6" }}>
         ${selectedToken.ticker}
       </span>
     </button>

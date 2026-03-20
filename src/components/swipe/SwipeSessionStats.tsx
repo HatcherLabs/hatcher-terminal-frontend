@@ -15,21 +15,21 @@ export function SwipeSessionStats({ seen, bought, passed, totalMarketCapSol }: S
 
   return (
     <div className="w-full max-w-[360px] mx-auto px-4 sm:px-0 mb-2">
-      <div className="flex items-center justify-center gap-3 px-3 py-1.5 rounded-lg bg-bg-card/50 backdrop-blur text-[10px] text-text-muted font-mono">
+      <div className="flex items-center justify-center gap-3 px-3 py-1.5 rounded-lg backdrop-blur text-[10px] font-mono" style={{ background: "rgba(10,13,20,0.5)", color: "#5c6380" }}>
         <span>
-          Seen: <span className="text-text-secondary font-medium">{seen}</span>
+          Seen: <span className="font-medium" style={{ color: "#9ca3b8" }}>{seen}</span>
         </span>
-        <span className="text-border">|</span>
+        <span style={{ color: "#1a1f2e" }}>|</span>
         <span>
-          Bought: <span className="text-green font-medium">{bought}</span>
+          Bought: <span className="font-medium" style={{ color: "#00d672" }}>{bought}</span>
         </span>
-        <span className="text-border">|</span>
+        <span style={{ color: "#1a1f2e" }}>|</span>
         <span>
-          Pass: <span className="text-text-secondary font-medium">{passRate}%</span>
+          Pass: <span className="font-medium" style={{ color: "#9ca3b8" }}>{passRate}%</span>
         </span>
-        <span className="text-border">|</span>
+        <span style={{ color: "#1a1f2e" }}>|</span>
         <span>
-          Avg MCap: <span className="text-text-secondary font-medium">{avgMCap} SOL</span>
+          Avg MCap: <span className="font-medium" style={{ color: "#9ca3b8" }}>{avgMCap} SOL</span>
         </span>
       </div>
     </div>

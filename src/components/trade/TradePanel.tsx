@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { api } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
+import { useTxTracker } from "@/components/trade/TxStatusTracker";
 
 /* ── Color palette ─────────────────────────────────────────────── */
 const C = {
@@ -126,6 +127,8 @@ export function TradePanel({
   const [recentTrades, setRecentTrades] = useState<RecentTrade[]>([]);
 
   const toast = useToast();
+  const txTrackerAdd = useTxTracker((s) => s.add);
+  const txTrackerUpdate = useTxTracker((s) => s.update);
   const isBuy = side === "BUY";
 
   /* Derived colors */
@@ -192,6 +195,16 @@ export function TradePanel({
     }
 
     setSubmitting(true);
+
+    const txId = `${side.toLowerCase()}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    txTrackerAdd({
+      id: txId,
+      mintAddress,
+      tokenTicker: ticker,
+      type: side === "BUY" ? "buy" : "sell",
+      status: "signing",
+    });
+
     try {
       const payload = {
         mintAddress,
@@ -210,7 +223,11 @@ export function TradePanel({
         ...(slEnabled && slPct && { stopLossPct: parseFloat(slPct) }),
       };
 
-      await api.post("/api/trade/execute", payload);
+      txTrackerUpdate(txId, { status: "submitting" });
+      const result = await api.post("/api/trade/execute", payload);
+
+      const txHash = (result as Record<string, unknown>)?.txHash as string | undefined;
+      txTrackerUpdate(txId, { status: "confirming", txHash });
 
       const tradeRecord: RecentTrade = {
         id: Math.random().toString(36).slice(2),
@@ -233,6 +250,7 @@ export function TradePanel({
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Trade execution failed";
       setError(message);
+      txTrackerUpdate(txId, { status: "failed", error: message });
       toast.add(message, "error");
     } finally {
       setSubmitting(false);
@@ -256,6 +274,8 @@ export function TradePanel({
     slPct,
     currentPriceSol,
     toast,
+    txTrackerAdd,
+    txTrackerUpdate,
   ]);
 
   /* ── Shared micro-styles ─────────────────────────────────────── */

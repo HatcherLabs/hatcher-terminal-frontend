@@ -46,10 +46,10 @@ export function BalanceDisplay() {
 
   return (
     <div className="text-center">
-      <p className="text-3xl font-bold font-mono text-text-primary">
+      <p className="text-3xl font-bold font-mono" style={{ color: "#eef0f6" }}>
         {balance !== null ? balance.toFixed(4) : "\u2014"}
       </p>
-      <p className="text-xs text-text-muted mt-1">SOL</p>
+      <p className="text-xs mt-1" style={{ color: "#5c6380" }}>SOL</p>
     </div>
   );
 }

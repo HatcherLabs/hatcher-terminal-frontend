@@ -3,8 +3,6 @@
 import {
   Skeleton,
   SkeletonAvatar,
-  SkeletonText,
-  SkeletonTable,
 } from "@/components/ui/Skeleton";
 
 /* ═══════════════════════════════════════════════════════

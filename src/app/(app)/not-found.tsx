@@ -7,19 +7,20 @@ export default function AppNotFound() {
         404
       </div>
 
-      <h1 className="text-lg font-bold text-text-primary mb-2">
+      <h1 className="text-lg font-bold mb-2" style={{ color: "#eef0f6" }}>
         Page not found
       </h1>
-      <p className="text-sm text-text-muted mb-1 max-w-[300px] leading-relaxed">
+      <p className="text-sm mb-1 max-w-[300px] leading-relaxed" style={{ color: "#5c6380" }}>
         Looks like this token rugged before we could load the page.
       </p>
-      <p className="text-xs text-text-faint mb-6">
+      <p className="text-xs mb-6" style={{ color: "#363d54" }}>
         The page you are looking for does not exist.
       </p>
 
       <Link
         href="/swipe"
-        className="px-5 py-2.5 rounded-lg bg-green text-bg-primary text-sm font-semibold hover:brightness-110 transition-all"
+        className="px-5 py-2.5 rounded-lg text-sm font-semibold hover:brightness-110 transition-all"
+        style={{ background: "#00d672", color: "#04060b" }}
       >
         Back to Swipe
       </Link>

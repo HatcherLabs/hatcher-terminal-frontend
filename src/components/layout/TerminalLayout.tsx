@@ -11,7 +11,9 @@ import { ShortcutsModal } from "@/components/ui/ShortcutsModal";
 import { CommandPalette } from "@/components/ui/CommandPalette";
 import { MobileSearch } from "@/components/ui/MobileSearch";
 import { WelcomeModal } from "@/components/onboarding/WelcomeModal";
+import { TxStatusTracker } from "@/components/trade/TxStatusTracker";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useWatchlistAlerts } from "@/hooks/useWatchlistAlerts";
 
 interface TerminalLayoutProps {
   children: ReactNode;
@@ -40,19 +42,25 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
     isShortcutsModalOpen: shortcutsOpen,
   });
 
+  // Fire notifications when watchlisted tokens have large price moves
+  useWatchlistAlerts();
+
   return (
     <>
       {/* Mobile layout: unchanged, shows below 1024px */}
       <div className="terminal:hidden w-full max-w-[480px] mx-auto min-h-screen pb-16">
         {/* Mobile header with notification bell */}
         <div className="flex items-center justify-between px-4 py-2">
-          <span className="text-accent font-bold text-sm tracking-widest font-mono">
+          <span className="font-bold text-sm tracking-widest font-mono" style={{ color: "#8b5cf6" }}>
             HATCHER
           </span>
           <div className="flex items-center gap-2">
             <button
               onClick={openMobileSearch}
-              className="w-8 h-8 flex items-center justify-center text-text-muted hover:text-text-secondary transition-colors"
+              className="w-8 h-8 flex items-center justify-center transition-colors"
+              style={{ color: "#5c6380" }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = "#9ca3b8"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = "#5c6380"; }}
               aria-label="Search tokens"
             >
               <svg
@@ -105,6 +113,9 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
         {/* Bottom Positions Bar */}
         <PositionsBar />
       </div>
+
+      {/* Global floating panels */}
+      <TxStatusTracker />
 
       {/* Global modals */}
       <WelcomeModal />

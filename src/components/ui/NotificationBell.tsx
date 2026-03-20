@@ -32,7 +32,9 @@ export function NotificationBell() {
     <div ref={containerRef} className="relative">
       <button
         onClick={handleToggle}
-        className="relative flex items-center justify-center w-8 h-8 rounded hover:bg-bg-hover transition-colors"
+        className="relative flex items-center justify-center w-8 h-8 rounded transition-colors"
+        onMouseEnter={(e) => { e.currentTarget.style.background = "#181c28"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
         aria-label="Notifications"
       >
         {/* Bell icon */}

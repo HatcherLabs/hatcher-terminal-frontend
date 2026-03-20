@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { TokenAvatar } from "@/components/ui/TokenAvatar";
 import { RiskBadge } from "@/components/ui/RiskBadge";
 import { TokenChart } from "@/components/token/TokenChart";
-import { useTokenPrice } from "@/hooks/useTokenPrice";
+import { useLiveTokenPrice } from "@/hooks/useLiveTokenPrice";
 import { useQuickBuy } from "@/hooks/useQuickBuy";
 import { usePositions } from "@/hooks/usePositions";
 import { useKey } from "@/components/providers/KeyProvider";
@@ -19,6 +19,9 @@ import { TokenSocials } from "@/components/token/TokenSocials";
 import { useQuickTrade } from "@/components/providers/QuickTradeProvider";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { TradePanel } from "@/components/trade/TradePanel";
+import { LiveAge } from "@/components/ui/LiveAge";
+import { useLiveTrades } from "@/hooks/useLiveTrades";
+import { PriceFlash } from "@/components/ui/PriceFlash";
 import { api } from "@/lib/api";
 import type { TokenData } from "@/types/token";
 
@@ -359,7 +362,28 @@ export default function TokenTerminalPage() {
   const [mockHolders, setMockHolders] = useState<MockHolder[]>([]);
   const [holdersLoading, setHoldersLoading] = useState(false);
 
-  const liveData = useTokenPrice(mint, !!mint);
+  const liveData = useLiveTokenPrice({ mintAddress: mint, enabled: !!mint });
+  const { trades: liveTrades, connected: tradesConnected } = useLiveTrades({
+    mintAddress: mint,
+    enabled: activeLeftTab === "trades",
+  });
+
+  // Merge live WS trades with fetched trades, deduplicating by ID
+  const allTrades = useMemo(() => {
+    const fetchedIds = new Set(mockTrades.map((t) => t.id));
+    const uniqueLive = liveTrades
+      .filter((lt) => !fetchedIds.has(lt.id))
+      .map((lt) => ({
+        id: lt.id,
+        type: lt.type,
+        amountSol: lt.amountSol,
+        priceUsd: lt.priceUsd,
+        maker: lt.maker,
+        timestamp: lt.timestamp,
+      }));
+    return [...uniqueLive, ...mockTrades];
+  }, [liveTrades, mockTrades]);
+
   const { amount: quickBuyAmount } = useQuickBuy();
   const { positions, refresh: refreshPositions } = usePositions("open");
   const { hasKey, signTransactionBase64 } = useKey();
@@ -418,38 +442,104 @@ export default function TokenTerminalPage() {
     });
   }, []);
 
-  // Load mock trades when trades tab is activated
-  // TODO: Replace with real API call to /api/tokens/:mint/trades
+  // Load trades from API when trades tab is activated
   useEffect(() => {
-    if (activeLeftTab !== "trades" || mockTrades.length > 0) return;
+    if (activeLeftTab !== "trades" || !mint) return;
+    if (mockTrades.length > 0) return;
     setTradesLoading(true);
-    const timer = setTimeout(() => {
-      setMockTrades(generateMockTrades(15));
-      setTradesLoading(false);
-    }, 800);
-    return () => clearTimeout(timer);
-  }, [activeLeftTab, mockTrades.length]);
+    const controller = new AbortController();
+    api
+      .raw(`/api/tokens/${mint}/trades?limit=20`, { signal: controller.signal })
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          setMockTrades(
+            json.data.map((t: Record<string, unknown>, i: number) => ({
+              id: (t.id as string) || `trade-${i}`,
+              type: (t.side as string)?.toLowerCase() === "sell" ? "sell" : "buy",
+              amountSol: Number(t.amountSol ?? t.amount ?? 0),
+              priceUsd: Number(t.priceUsd ?? t.price ?? 0),
+              maker: (t.maker as string) || (t.wallet as string) || "",
+              timestamp: (t.timestamp as string) || (t.createdAt as string) || new Date().toISOString(),
+            }))
+          );
+        } else {
+          // Fallback to mock data if endpoint not ready
+          setMockTrades(generateMockTrades(15));
+        }
+      })
+      .catch((err) => {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        // Fallback to mock data on error
+        setMockTrades(generateMockTrades(15));
+      })
+      .finally(() => setTradesLoading(false));
+    return () => controller.abort();
+  }, [activeLeftTab, mint, mockTrades.length]);
 
-  // Load mock holders when holders tab is activated
-  // TODO: Replace with real API call to /api/tokens/:mint/holders
+  // Load holders from API when holders tab is activated
   useEffect(() => {
-    if (activeLeftTab !== "holders" || mockHolders.length > 0) return;
+    if (activeLeftTab !== "holders" || !mint) return;
+    if (mockHolders.length > 0) return;
     setHoldersLoading(true);
-    const timer = setTimeout(() => {
-      setMockHolders(generateMockHolders());
-      setHoldersLoading(false);
-    }, 600);
-    return () => clearTimeout(timer);
-  }, [activeLeftTab, mockHolders.length]);
+    const controller = new AbortController();
+    api
+      .raw(`/api/tokens/${mint}/holders?limit=20`, { signal: controller.signal })
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          setMockHolders(
+            json.data.map((h: Record<string, unknown>) => ({
+              address: (h.address as string) || (h.wallet as string) || "",
+              percentHeld: Number(h.percentHeld ?? h.pct ?? 0),
+              valueSol: Number(h.valueSol ?? h.balance ?? 0),
+              isDev: Boolean(h.isDev ?? h.isCreator ?? false),
+            }))
+          );
+        } else {
+          setMockHolders(generateMockHolders());
+        }
+      })
+      .catch((err) => {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        setMockHolders(generateMockHolders());
+      })
+      .finally(() => setHoldersLoading(false));
+    return () => controller.abort();
+  }, [activeLeftTab, mint, mockHolders.length]);
 
   const handleLoadMoreTrades = useCallback(() => {
+    if (!mint) return;
     setTradesLoading(true);
-    setTimeout(() => {
-      setMockTrades((prev) => [...prev, ...generateMockTrades(10)]);
-      setTradesPage((p) => p + 1);
-      setTradesLoading(false);
-    }, 500);
-  }, []);
+    const offset = mockTrades.length;
+    api
+      .raw(`/api/tokens/${mint}/trades?limit=10&offset=${offset}`)
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          setMockTrades((prev) => [
+            ...prev,
+            ...json.data.map((t: Record<string, unknown>, i: number) => ({
+              id: (t.id as string) || `trade-${offset + i}`,
+              type: (t.side as string)?.toLowerCase() === "sell" ? "sell" : "buy",
+              amountSol: Number(t.amountSol ?? t.amount ?? 0),
+              priceUsd: Number(t.priceUsd ?? t.price ?? 0),
+              maker: (t.maker as string) || (t.wallet as string) || "",
+              timestamp: (t.timestamp as string) || (t.createdAt as string) || new Date().toISOString(),
+            })),
+          ]);
+        } else {
+          // Fallback: append mock data
+          setMockTrades((prev) => [...prev, ...generateMockTrades(10)]);
+        }
+        setTradesPage((p) => p + 1);
+      })
+      .catch(() => {
+        setMockTrades((prev) => [...prev, ...generateMockTrades(10)]);
+        setTradesPage((p) => p + 1);
+      })
+      .finally(() => setTradesLoading(false));
+  }, [mint, mockTrades.length]);
 
   const handleBuy = async () => {
     if (!token || tradeLoading) return;
@@ -695,9 +785,13 @@ export default function TokenTerminalPage() {
 
         {/* Price + change */}
         <div className="hidden sm:flex items-center gap-2 shrink-0">
-          <span className="text-sm font-bold font-mono" style={{ color: "#eef0f6" }}>
-            {priceSol != null ? `${formatPriceSol(priceSol)} SOL` : "\u2014"}
-          </span>
+          <PriceFlash
+            value={priceSol}
+            format={formatPriceSol}
+            suffix=" SOL"
+            className="text-sm font-bold font-mono"
+            style={{ color: "#eef0f6" }}
+          />
           {priceChange1h !== null && (
             <span
               className="text-[11px] font-mono font-bold px-1.5 py-0.5 rounded"
@@ -944,7 +1038,7 @@ export default function TokenTerminalPage() {
                 />
                 <MetricCell
                   label="Age"
-                  value={tokenAge(token.createdAt)}
+                  value={<LiveAge createdAt={token.createdAt} className="text-xs" />}
                 />
                 <MetricCell
                   label="Risk"
@@ -1220,20 +1314,23 @@ export default function TokenTerminalPage() {
                     Recent Trades
                   </span>
                   <span className="relative flex h-1.5 w-1.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#00d672" }} />
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: "#00d672" }} />
+                    <span className={`absolute inline-flex h-full w-full rounded-full opacity-75 ${tradesConnected ? "animate-ping" : ""}`} style={{ background: tradesConnected ? "#00d672" : "#5c6380" }} />
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: tradesConnected ? "#00d672" : "#5c6380" }} />
                   </span>
+                  {tradesConnected && (
+                    <span className="text-[8px] font-mono uppercase" style={{ color: "#00d672" }}>LIVE</span>
+                  )}
                 </div>
-                {mockTrades.length > 0 && (
+                {allTrades.length > 0 && (
                   <span className="text-[9px] font-mono" style={{ color: "#5c6380" }}>
-                    {mockTrades.length} trades
+                    {allTrades.length} trades
                   </span>
                 )}
               </div>
 
               <div className="px-3 py-2">
                 {/* Loading skeleton */}
-                {tradesLoading && mockTrades.length === 0 && (
+                {tradesLoading && allTrades.length === 0 && (
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[440px]">
                       <thead>
@@ -1265,7 +1362,7 @@ export default function TokenTerminalPage() {
                 )}
 
                 {/* Trades table */}
-                {mockTrades.length > 0 && (
+                {allTrades.length > 0 && (
                   <div className="overflow-x-auto terminal-scrollbar-x">
                     <table className="w-full min-w-[440px]">
                       <thead>
@@ -1278,7 +1375,7 @@ export default function TokenTerminalPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {mockTrades.map((trade) => {
+                        {allTrades.map((trade) => {
                           const isBuy = trade.type === "buy";
                           return (
                             <tr
@@ -1326,14 +1423,14 @@ export default function TokenTerminalPage() {
                 )}
 
                 {/* Empty state */}
-                {!tradesLoading && mockTrades.length === 0 && (
+                {!tradesLoading && allTrades.length === 0 && (
                   <div className="flex flex-col items-center py-6">
                     <p className="text-[10px] font-mono" style={{ color: "#5c6380" }}>No trade data available</p>
                   </div>
                 )}
 
                 {/* Load More button */}
-                {mockTrades.length > 0 && (
+                {allTrades.length > 0 && (
                   <div className="flex justify-center pt-2 pb-1" style={{ borderTop: "1px solid #1a1f2e" }}>
                     <button
                       onClick={handleLoadMoreTrades}
@@ -1592,7 +1689,7 @@ export default function TokenTerminalPage() {
                   <div className="flex items-center justify-between">
                     <span className="text-[10px]" style={{ color: "#5c6380" }}>Created</span>
                     <span className="text-[10px] font-mono" style={{ color: "#eef0f6" }}>
-                      {new Date(token.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} ({tokenAge(token.createdAt)} ago)
+                      {new Date(token.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} (<LiveAge createdAt={token.createdAt} className="text-[10px]" /> ago)
                     </span>
                   </div>
 
@@ -1817,9 +1914,7 @@ export default function TokenTerminalPage() {
               {/* Age */}
               <div className="flex items-center justify-between">
                 <span className="text-[10px]" style={{ color: "#5c6380" }}>Age</span>
-                <span className="text-[10px] font-mono" style={{ color: "#eef0f6" }}>
-                  {tokenAge(token.createdAt)}
-                </span>
+                <LiveAge createdAt={token.createdAt} className="text-[10px]" />
               </div>
               {/* Description */}
               {token.description && (

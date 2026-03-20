@@ -113,18 +113,18 @@ export function WithdrawModal({ onClose, balanceSol }: WithdrawModalProps) {
   if (step === "success") {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-        <div className="bg-bg-card border border-border rounded-card max-w-sm w-full p-6 space-y-4">
+        <div className="rounded-xl max-w-sm w-full p-6 space-y-4" style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}>
           <div className="text-center space-y-2">
-            <div className="w-12 h-12 rounded-full bg-green/10 border border-green/20 flex items-center justify-center mx-auto">
-              <svg viewBox="0 0 24 24" width={24} height={24} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green">
+            <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto" style={{ backgroundColor: "rgba(0,214,114,0.1)", borderWidth: 1, borderStyle: "solid", borderColor: "rgba(0,214,114,0.2)" }}>
+              <svg viewBox="0 0 24 24" width={24} height={24} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "#00d672" }}>
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
-            <h2 className="text-lg font-bold text-text-primary">Withdrawal Submitted</h2>
-            <p className="text-sm text-text-secondary">
+            <h2 className="text-lg font-bold" style={{ color: "#eef0f6" }}>Withdrawal Submitted</h2>
+            <p className="text-sm" style={{ color: "#9ca3b8" }}>
               <span className="font-mono">{amountSol.toFixed(4)} SOL</span> sent to
             </p>
-            <p className="text-xs font-mono text-text-muted break-all">
+            <p className="text-xs font-mono break-all" style={{ color: "#5c6380" }}>
               {recipientAddress}
             </p>
             {txHash && (
@@ -132,7 +132,8 @@ export function WithdrawModal({ onClose, balanceSol }: WithdrawModalProps) {
                 href={`https://solscan.io/tx/${txHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-green hover:underline inline-block mt-1"
+                className="text-xs hover:underline inline-block mt-1"
+                style={{ color: "#00d672" }}
               >
                 View on Solscan
               </a>
@@ -140,7 +141,8 @@ export function WithdrawModal({ onClose, balanceSol }: WithdrawModalProps) {
           </div>
           <button
             onClick={onClose}
-            className="w-full py-2.5 rounded-lg text-sm font-medium border border-border text-text-secondary hover:bg-bg-hover transition-colors"
+            className="w-full py-2.5 rounded-lg text-sm font-medium transition-colors"
+            style={{ color: "#9ca3b8", borderColor: "#1a1f2e", borderWidth: 1, borderStyle: "solid" }}
           >
             Close
           </button>
@@ -151,36 +153,40 @@ export function WithdrawModal({ onClose, balanceSol }: WithdrawModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-      <div className="bg-bg-card border border-border rounded-card max-w-sm w-full p-6 space-y-4">
-        <h2 className="text-lg font-bold text-text-primary">Withdraw SOL</h2>
-        <p className="text-xs text-text-secondary">
+      <div className="rounded-xl max-w-sm w-full p-6 space-y-4" style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}>
+        <h2 className="text-lg font-bold" style={{ color: "#eef0f6" }}>Withdraw SOL</h2>
+        <p className="text-xs" style={{ color: "#9ca3b8" }}>
           Send SOL to an external wallet address.
         </p>
 
         {/* Recipient address */}
         <div className="space-y-1.5">
-          <label className="text-xs text-text-muted">Recipient Address</label>
+          <label className="text-xs" style={{ color: "#5c6380" }}>Recipient Address</label>
           <input
             type="text"
             value={recipientAddress}
             onChange={(e) => setRecipientAddress(e.target.value)}
             placeholder="Solana wallet address"
             disabled={isLoading}
-            className="w-full bg-bg-primary border border-border rounded-lg px-3 py-2.5 text-sm font-mono text-text-primary placeholder:text-text-faint focus:border-green focus:outline-none disabled:opacity-50"
+            className="w-full rounded-lg px-3 py-2.5 text-sm font-mono focus:outline-none disabled:opacity-50"
+            style={{ color: "#eef0f6", background: "#04060b", border: "1px solid #1a1f2e" }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = "#00d672"; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = "#1a1f2e"; }}
           />
           {addressError && (
-            <p className="text-xs text-red">{addressError}</p>
+            <p className="text-xs" style={{ color: "#f23645" }}>{addressError}</p>
           )}
         </div>
 
         {/* Amount */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <label className="text-xs text-text-muted">Amount (SOL)</label>
+            <label className="text-xs" style={{ color: "#5c6380" }}>Amount (SOL)</label>
             <button
               onClick={handleMax}
               disabled={isLoading}
-              className="text-xs text-green hover:underline disabled:opacity-50"
+              className="text-xs hover:underline disabled:opacity-50"
+              style={{ color: "#00d672" }}
             >
               Max
             </button>
@@ -197,26 +203,29 @@ export function WithdrawModal({ onClose, balanceSol }: WithdrawModalProps) {
             }}
             placeholder="0.0"
             disabled={isLoading}
-            className="w-full bg-bg-primary border border-border rounded-lg px-3 py-2.5 text-sm font-mono text-text-primary placeholder:text-text-faint focus:border-green focus:outline-none disabled:opacity-50"
+            className="w-full rounded-lg px-3 py-2.5 text-sm font-mono focus:outline-none disabled:opacity-50"
+            style={{ color: "#eef0f6", background: "#04060b", border: "1px solid #1a1f2e" }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = "#00d672"; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = "#1a1f2e"; }}
           />
           {amountError && (
-            <p className="text-xs text-red">{amountError}</p>
+            <p className="text-xs" style={{ color: "#f23645" }}>{amountError}</p>
           )}
         </div>
 
         {/* Fee / remaining summary */}
-        <div className="bg-bg-elevated border border-border rounded-lg p-3 space-y-1.5">
+        <div className="rounded-lg p-3 space-y-1.5" style={{ background: "#10131c", border: "1px solid #1a1f2e" }}>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-text-muted">Available balance</span>
-            <span className="font-mono text-text-secondary">{balanceSol.toFixed(4)} SOL</span>
+            <span style={{ color: "#5c6380" }}>Available balance</span>
+            <span className="font-mono" style={{ color: "#9ca3b8" }}>{balanceSol.toFixed(4)} SOL</span>
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-text-muted">Estimated fee</span>
-            <span className="font-mono text-text-secondary">~{ESTIMATED_FEE_SOL} SOL</span>
+            <span style={{ color: "#5c6380" }}>Estimated fee</span>
+            <span className="font-mono" style={{ color: "#9ca3b8" }}>~{ESTIMATED_FEE_SOL} SOL</span>
           </div>
-          <div className="border-t border-border pt-1.5 flex items-center justify-between text-xs">
-            <span className="text-text-muted">Remaining balance</span>
-            <span className={`font-mono ${remainingBalance < 0 ? "text-red" : "text-text-primary"}`}>
+          <div className="pt-1.5 flex items-center justify-between text-xs" style={{ borderTop: "1px solid #1a1f2e" }}>
+            <span style={{ color: "#5c6380" }}>Remaining balance</span>
+            <span className="font-mono" style={{ color: remainingBalance < 0 ? "#f23645" : "#eef0f6" }}>
               {amountSol > 0 ? remainingBalance.toFixed(4) : "--"} SOL
             </span>
           </div>
@@ -224,16 +233,16 @@ export function WithdrawModal({ onClose, balanceSol }: WithdrawModalProps) {
 
         {/* Error state */}
         {(step === "error" && error) && (
-          <div className="bg-red/5 border border-red/20 rounded-lg p-3">
-            <p className="text-xs text-red">{error}</p>
+          <div className="rounded-lg p-3" style={{ backgroundColor: "rgba(242,54,69,0.05)", borderWidth: 1, borderStyle: "solid", borderColor: "rgba(242,54,69,0.2)" }}>
+            <p className="text-xs" style={{ color: "#f23645" }}>{error}</p>
           </div>
         )}
 
         {/* Loading status */}
         {isLoading && (
           <div className="flex items-center gap-2 justify-center py-1">
-            <div className="w-3 h-3 border-2 border-green border-t-transparent rounded-full animate-spin" />
-            <p className="text-xs text-text-secondary">
+            <div className="w-3 h-3 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: "#00d672", borderTopColor: "transparent" }} />
+            <p className="text-xs" style={{ color: "#9ca3b8" }}>
               {step === "signing" ? "Preparing & signing transaction..." : "Submitting transaction..."}
             </p>
           </div>
@@ -244,14 +253,16 @@ export function WithdrawModal({ onClose, balanceSol }: WithdrawModalProps) {
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="flex-1 py-2.5 rounded-lg text-sm font-medium border border-border text-text-secondary hover:bg-bg-hover transition-colors disabled:opacity-50"
+            className="flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+            style={{ color: "#9ca3b8", borderColor: "#1a1f2e", borderWidth: 1, borderStyle: "solid" }}
           >
             Cancel
           </button>
           <button
             onClick={handleConfirm}
             disabled={(!canSubmit && step !== "error") || isLoading}
-            className="flex-1 py-2.5 rounded-lg text-sm font-semibold bg-red text-white disabled:opacity-30 hover:brightness-110 transition-all"
+            className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-30 hover:brightness-110 transition-all"
+            style={{ backgroundColor: "#f23645" }}
           >
             {step === "error" ? "Retry" : "Confirm Withdraw"}
           </button>
