@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { api } from "@/lib/api";
+
+type TimeRange = "1D" | "7D" | "30D" | "ALL";
 
 interface HistoryPosition {
   id: string;
@@ -20,7 +22,6 @@ interface ChartDataPoint {
 }
 
 function buildChartData(positions: HistoryPosition[]): ChartDataPoint[] {
-  // Filter to closed positions with valid timestamps and P&L
   const closed = positions
     .filter(
       (p) =>
@@ -39,7 +40,6 @@ function buildChartData(positions: HistoryPosition[]): ChartDataPoint[] {
   let cumPnl = 0;
   const points: ChartDataPoint[] = [];
 
-  // Start at zero before first trade
   const firstTime = Math.floor(
     new Date(closed[0].exitTimestamp!).getTime() / 1000
   );
@@ -53,12 +53,10 @@ function buildChartData(positions: HistoryPosition[]): ChartDataPoint[] {
     points.push({ time, value: parseFloat(cumPnl.toFixed(6)) });
   }
 
-  // Deduplicate timestamps (lightweight-charts requires unique times)
   const deduped: ChartDataPoint[] = [];
   for (const point of points) {
     const last = deduped[deduped.length - 1];
     if (last && last.time >= point.time) {
-      // Same or earlier timestamp - replace with latest value
       last.value = point.value;
     } else {
       deduped.push(point);
@@ -66,6 +64,33 @@ function buildChartData(positions: HistoryPosition[]): ChartDataPoint[] {
   }
 
   return deduped;
+}
+
+function filterByRange(data: ChartDataPoint[], range: TimeRange): ChartDataPoint[] {
+  if (range === "ALL" || data.length === 0) return data;
+
+  const now = Math.floor(Date.now() / 1000);
+  const rangeSecs: Record<Exclude<TimeRange, "ALL">, number> = {
+    "1D": 86400,
+    "7D": 7 * 86400,
+    "30D": 30 * 86400,
+  };
+
+  const cutoff = now - rangeSecs[range];
+  const filtered = data.filter((d) => d.time >= cutoff);
+
+  // If we filtered everything out, show at least 2 points
+  if (filtered.length < 2) {
+    // Find value just before cutoff for baseline
+    let baseValue = 0;
+    for (const d of data) {
+      if (d.time < cutoff) baseValue = d.value;
+      else break;
+    }
+    return [{ time: cutoff, value: baseValue }, ...data.filter((d) => d.time >= cutoff)];
+  }
+
+  return filtered;
 }
 
 function AreaChartRenderer({
@@ -191,14 +216,17 @@ function AreaChartRenderer({
   return (
     <div
       ref={containerRef}
-      className="w-full h-[200px] md:h-[250px]"
+      className="w-full h-[180px] md:h-[220px]"
     />
   );
 }
 
+const TIME_RANGES: TimeRange[] = ["1D", "7D", "30D", "ALL"];
+
 export function PortfolioChart() {
-  const [data, setData] = useState<ChartDataPoint[] | null>(null);
+  const [allData, setAllData] = useState<ChartDataPoint[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const [range, setRange] = useState<TimeRange>("ALL");
 
   useEffect(() => {
     let cancelled = false;
@@ -210,7 +238,7 @@ export function PortfolioChart() {
           const json = await res.json();
           const positions: HistoryPosition[] = json.data ?? json;
           if (!cancelled) {
-            setData(buildChartData(positions));
+            setAllData(buildChartData(positions));
           }
         }
       } catch {
@@ -226,19 +254,31 @@ export function PortfolioChart() {
     };
   }, []);
 
+  const filteredData = useMemo(() => {
+    if (!allData) return null;
+    return filterByRange(allData, range);
+  }, [allData, range]);
+
   if (loading) {
-    return <Skeleton className="h-[200px] md:h-[250px] rounded-xl" />;
+    return <Skeleton className="h-[240px] md:h-[280px] rounded-lg" />;
   }
 
-  if (!data || data.length < 2) {
+  if (!allData || allData.length < 2) {
     return (
-      <div className="w-full h-[200px] md:h-[250px] rounded-xl bg-bg-card border border-border flex flex-col items-center justify-center gap-1.5">
+      <div
+        className="w-full h-[180px] md:h-[220px] flex flex-col items-center justify-center gap-1.5"
+        style={{
+          background: "#0a0d14",
+          border: "1px solid #1a1f2e",
+          borderRadius: 8,
+        }}
+      >
         <svg
           width="24"
           height="24"
           viewBox="0 0 24 24"
           fill="none"
-          className="text-text-faint"
+          style={{ color: "#363d54" }}
         >
           <path
             d="M3 17L9 11L13 15L21 7"
@@ -255,33 +295,80 @@ export function PortfolioChart() {
             strokeLinejoin="round"
           />
         </svg>
-        <p className="text-xs text-text-muted">No trade history yet</p>
-        <p className="text-[10px] text-text-faint">
-          Close some positions to see your P&L chart
+        <p className="text-xs" style={{ color: "#5c6380" }}>No trade history yet</p>
+        <p className="text-[10px]" style={{ color: "#363d54" }}>
+          Close some positions to see your P&amp;L chart
         </p>
       </div>
     );
   }
 
-  const lastValue = data[data.length - 1].value;
+  const displayData = filteredData && filteredData.length >= 2 ? filteredData : allData;
+  const lastValue = displayData[displayData.length - 1].value;
+  const firstValue = displayData[0].value;
+  const periodChange = lastValue - firstValue;
   const isPositive = lastValue >= 0;
+  const periodPositive = periodChange >= 0;
 
   return (
-    <div className="bg-bg-card border border-border rounded-xl p-3">
-      <div className="flex items-center justify-between mb-1">
-        <p className="text-xs font-semibold text-text-muted uppercase tracking-wider">
-          Cumulative P&L
-        </p>
-        <p
-          className={`text-sm font-mono font-bold ${
-            isPositive ? "text-green" : "text-red"
-          }`}
-        >
-          {isPositive ? "+" : ""}
-          {lastValue.toFixed(4)} SOL
-        </p>
+    <div
+      style={{
+        background: "#0a0d14",
+        border: "1px solid #1a1f2e",
+        borderRadius: 8,
+      }}
+      className="p-3"
+    >
+      {/* Header with title, value, and range selector */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-3">
+          <p
+            className="text-[10px] font-medium uppercase tracking-wider"
+            style={{ color: "#5c6380" }}
+          >
+            Cumulative P&amp;L
+          </p>
+          <p
+            className="font-mono text-sm font-bold"
+            style={{ color: isPositive ? "#00d672" : "#f23645" }}
+          >
+            {isPositive ? "+" : ""}
+            {lastValue.toFixed(4)} SOL
+          </p>
+          {range !== "ALL" && (
+            <span
+              className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded"
+              style={{
+                background: periodPositive
+                  ? "rgba(0, 214, 114, 0.12)"
+                  : "rgba(242, 54, 69, 0.12)",
+                color: periodPositive ? "#00d672" : "#f23645",
+              }}
+            >
+              {periodPositive ? "+" : ""}{periodChange.toFixed(4)}
+            </span>
+          )}
+        </div>
+
+        {/* Time range selector */}
+        <div className="flex items-center gap-0.5" style={{ background: "#10131c", borderRadius: 6, padding: 2 }}>
+          {TIME_RANGES.map((r) => (
+            <button
+              key={r}
+              onClick={() => setRange(r)}
+              className="px-2 py-1 text-[10px] font-mono font-medium rounded transition-colors"
+              style={{
+                background: range === r ? "#1a1f2e" : "transparent",
+                color: range === r ? "#eef0f6" : "#5c6380",
+              }}
+            >
+              {r}
+            </button>
+          ))}
+        </div>
       </div>
-      <AreaChartRenderer data={data} isPositive={isPositive} />
+
+      <AreaChartRenderer data={displayData} isPositive={isPositive} />
     </div>
   );
 }
