@@ -33,11 +33,11 @@ function StatCard({
   color?: string;
 }) {
   return (
-    <div className="rounded-lg p-2.5" style={{ background: "#10131c", border: "1px solid #1a1f2e" }}>
+    <div className="rounded-lg p-2.5" style={{ background: "#141820", border: "1px solid #1c2030" }}>
       <p className="text-[10px] uppercase tracking-wider mb-0.5" style={{ color: "#5c6380" }}>
         {label}
       </p>
-      <p className="text-sm font-mono font-bold" style={{ color: color ?? "#eef0f6" }}>{value}</p>
+      <p className="text-sm font-mono font-bold" style={{ color: color ?? "#f0f2f7" }}>{value}</p>
     </div>
   );
 }
@@ -86,8 +86,8 @@ export function PortfolioStats() {
     return null;
   }
 
-  const pnlColor = analytics.totalPnlSol >= 0 ? "#00d672" : "#f23645";
-  const bestColor = analytics.bestTradeSol >= 0 ? "#00d672" : "#f23645";
+  const pnlColor = analytics.totalPnlSol >= 0 ? "#22c55e" : "#ef4444";
+  const bestColor = analytics.bestTradeSol >= 0 ? "#22c55e" : "#ef4444";
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
@@ -99,7 +99,7 @@ export function PortfolioStats() {
       <StatCard
         label="Win Rate"
         value={`${analytics.winRate.toFixed(1)}%`}
-        color={analytics.winRate >= 50 ? "#00d672" : "#f23645"}
+        color={analytics.winRate >= 50 ? "#22c55e" : "#ef4444"}
       />
       <StatCard
         label="Total Trades"

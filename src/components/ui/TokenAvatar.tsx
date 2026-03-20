@@ -52,7 +52,7 @@ export function TokenAvatar({ mintAddress, imageUri, size = 48, ticker }: TokenA
         height: size,
         backgroundColor: color,
         fontSize: size * 0.35,
-        color: "#04060b",
+        color: "#06080e",
       }}
       role="img"
       aria-label={`${ticker || "Token"} avatar`}

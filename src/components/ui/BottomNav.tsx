@@ -37,8 +37,8 @@ export function BottomNav() {
     <nav
       className="fixed bottom-0 left-0 right-0 z-50 terminal:hidden"
       style={{
-        background: "#0a0d14",
-        borderTop: "1px solid #1a1f2e",
+        background: "#0d1017",
+        borderTop: "1px solid #1c2030",
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
       }}
     >
@@ -52,22 +52,22 @@ export function BottomNav() {
               href={item.href}
               className="relative flex flex-col items-center gap-0.5 px-3 py-1 rounded-md transition-colors duration-150"
               style={{
-                color: active ? "#00d672" : "#5c6380",
+                color: active ? "#22c55e" : "#5c6380",
               }}
             >
               {active && (
                 <span
                   className="absolute -top-[1px] left-2 right-2 h-[2px] rounded-b"
                   style={{
-                    background: "#00d672",
-                    boxShadow: "0 0 6px rgba(0,214,114,0.4)",
+                    background: "#22c55e",
+                    boxShadow: "0 0 6px rgba(34,197,94,0.4)",
                   }}
                 />
               )}
               <span
                 style={
                   active
-                    ? { filter: "drop-shadow(0 0 3px rgba(0,214,114,0.3))" }
+                    ? { filter: "drop-shadow(0 0 3px rgba(34,197,94,0.3))" }
                     : undefined
                 }
               >
@@ -75,7 +75,7 @@ export function BottomNav() {
               </span>
               <span
                 className="text-[9px] font-medium font-mono tracking-wide"
-                style={{ color: active ? "#00d672" : "#5c6380" }}
+                style={{ color: active ? "#22c55e" : "#5c6380" }}
               >
                 {item.label}
               </span>

@@ -22,8 +22,8 @@ function injectShimmer() {
 
 /* ─── Shared shimmer style ─── */
 
-const BASE = "#10131c";
-const HIGHLIGHT = "#181c28";
+const BASE = "#141820";
+const HIGHLIGHT = "#1a1f2a";
 
 function shimmerStyle(extra?: CSSProperties): CSSProperties {
   injectShimmer();
@@ -120,8 +120,8 @@ export interface SkeletonCardProps {
 export function SkeletonCard({ className = "" }: SkeletonCardProps) {
   return (
     <div
-      className={`rounded-xl border border-[#1a1f2e] p-4 ${className}`}
-      style={{ backgroundColor: "#0a0d14" }}
+      className={`rounded-xl border border-[#1c2030] p-4 ${className}`}
+      style={{ backgroundColor: "#0d1017" }}
     >
       <div className="flex items-center gap-3 mb-3">
         <SkeletonAvatar size={36} />
@@ -153,13 +153,13 @@ export function SkeletonTable({
 }: SkeletonTableProps) {
   return (
     <div
-      className={`rounded-lg border border-[#1a1f2e] overflow-hidden ${className}`}
-      style={{ backgroundColor: "#0a0d14" }}
+      className={`rounded-lg border border-[#1c2030] overflow-hidden ${className}`}
+      style={{ backgroundColor: "#0d1017" }}
     >
       {/* Header */}
       <div
         className="flex items-center gap-4 px-4 py-3"
-        style={{ borderBottom: "1px solid #1a1f2e" }}
+        style={{ borderBottom: "1px solid #1c2030" }}
       >
         {Array.from({ length: columns }).map((_, i) => (
           <Skeleton
@@ -177,7 +177,7 @@ export function SkeletonTable({
           key={r}
           className="flex items-center gap-4 px-4 py-2.5"
           style={{
-            borderBottom: r < rows - 1 ? "1px solid #1a1f2e20" : undefined,
+            borderBottom: r < rows - 1 ? "1px solid #1c203020" : undefined,
           }}
         >
           {/* Avatar + name col */}

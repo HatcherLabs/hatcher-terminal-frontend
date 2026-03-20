@@ -108,12 +108,12 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen overflow-x-hidden" style={{ backgroundColor: "#04060b" }}>
+    <div className="min-h-screen overflow-x-hidden" style={{ backgroundColor: "#06080e" }}>
       {/* ========== NAVBAR ========== */}
       <nav
         className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl"
         style={{
-          backgroundColor: "rgba(4,6,11,0.85)",
+          backgroundColor: "rgba(6,8,14,0.85)",
           borderBottom: "1px solid rgba(26,31,46,0.6)",
         }}
       >
@@ -122,13 +122,13 @@ export default function LandingPage() {
             <div
               className="w-7 h-7 rounded-lg flex items-center justify-center"
               style={{
-                background: "linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(0,214,114,0.1) 100%)",
+                background: "linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(34,197,94,0.1) 100%)",
                 border: "1px solid rgba(139,92,246,0.2)",
               }}
             >
               <span className="text-xs font-black" style={{ color: "#8b5cf6" }}>H</span>
             </div>
-            <span className="text-sm font-bold tracking-tight" style={{ color: "#eef0f6" }}>
+            <span className="text-sm font-bold tracking-tight" style={{ color: "#f0f2f7" }}>
               Hatcher<span style={{ color: "#8b5cf6" }}>Labs</span>
             </span>
           </div>
@@ -137,8 +137,8 @@ export default function LandingPage() {
               href="/swipe"
               className="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all hover:brightness-110"
               style={{
-                background: "linear-gradient(135deg, #00d672 0%, #00cc6a 100%)",
-                color: "#04060b",
+                background: "linear-gradient(135deg, #22c55e 0%, #00cc6a 100%)",
+                color: "#06080e",
               }}
             >
               Launch App
@@ -152,7 +152,7 @@ export default function LandingPage() {
         {/* Background glows */}
         <div
           className="absolute top-20 left-1/2 -translate-x-1/2 w-[min(800px,100vw)] h-[600px] rounded-full blur-[160px] pointer-events-none"
-          style={{ background: "radial-gradient(circle, rgba(0,214,114,0.08) 0%, rgba(139,92,246,0.04) 50%, transparent 80%)" }}
+          style={{ background: "radial-gradient(circle, rgba(34,197,94,0.08) 0%, rgba(139,92,246,0.04) 50%, transparent 80%)" }}
         />
         <div
           className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full blur-[120px] pointer-events-none"
@@ -163,23 +163,23 @@ export default function LandingPage() {
           <div
             className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-medium tracking-wider uppercase mb-8"
             style={{
-              border: "1px solid rgba(0,214,114,0.2)",
-              backgroundColor: "rgba(0,214,114,0.05)",
-              color: "#00d672",
+              border: "1px solid rgba(34,197,94,0.2)",
+              backgroundColor: "rgba(34,197,94,0.05)",
+              color: "#22c55e",
             }}
           >
-            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: "#00d672" }} />
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: "#22c55e" }} />
             Live on Solana
           </div>
 
           <h1
             className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-[1.1] mb-6"
-            style={{ color: "#eef0f6" }}
+            style={{ color: "#f0f2f7" }}
           >
             Swipe. Trade.{" "}
             <span
               style={{
-                background: "linear-gradient(135deg, #00d672 0%, #00cc6a 40%, #8b5cf6 100%)",
+                background: "linear-gradient(135deg, #22c55e 0%, #00cc6a 40%, #8b5cf6 100%)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
@@ -189,7 +189,7 @@ export default function LandingPage() {
             </span>
           </h1>
 
-          <p className="text-base sm:text-lg font-light leading-relaxed mb-10 max-w-lg mx-auto" style={{ color: "#9ca3b8" }}>
+          <p className="text-base sm:text-lg font-light leading-relaxed mb-10 max-w-lg mx-auto" style={{ color: "#8890a4" }}>
             The Solana memecoin trading terminal with a swipe-to-trade UX.
             Discover Pump.fun tokens the moment they launch. Swipe right to ape in.
           </p>
@@ -199,9 +199,9 @@ export default function LandingPage() {
               href="/swipe"
               className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-semibold text-sm transition-all hover:brightness-110 hover:shadow-lg text-center"
               style={{
-                background: "linear-gradient(135deg, #00d672 0%, #00cc6a 100%)",
-                color: "#04060b",
-                boxShadow: "0 0 30px rgba(0,214,114,0.2), 0 0 60px rgba(0,214,114,0.1)",
+                background: "linear-gradient(135deg, #22c55e 0%, #00cc6a 100%)",
+                color: "#06080e",
+                boxShadow: "0 0 30px rgba(34,197,94,0.2), 0 0 60px rgba(34,197,94,0.1)",
               }}
             >
               Launch App
@@ -222,7 +222,7 @@ export default function LandingPage() {
         >
           {STATS.map((stat) => (
             <div key={stat.label} className="text-center">
-              <p className="text-2xl font-bold font-mono" style={{ color: "#00d672" }}>
+              <p className="text-2xl font-bold font-mono" style={{ color: "#22c55e" }}>
                 {stat.value}
               </p>
               <p className="text-xs mt-1" style={{ color: "#5c6380" }}>
@@ -237,7 +237,7 @@ export default function LandingPage() {
       <section className="px-4 sm:px-6 pb-16 sm:pb-24">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3" style={{ color: "#eef0f6" }}>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3" style={{ color: "#f0f2f7" }}>
               Everything You Need to Trade
             </h2>
             <p className="text-sm max-w-md mx-auto" style={{ color: "#5c6380" }}>
@@ -258,13 +258,13 @@ export default function LandingPage() {
                 <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
                   style={{
-                    backgroundColor: "rgba(0,214,114,0.08)",
-                    color: "#00d672",
+                    backgroundColor: "rgba(34,197,94,0.08)",
+                    color: "#22c55e",
                   }}
                 >
                   {feature.icon}
                 </div>
-                <h3 className="text-sm font-semibold mb-2" style={{ color: "#eef0f6" }}>
+                <h3 className="text-sm font-semibold mb-2" style={{ color: "#f0f2f7" }}>
                   {feature.title}
                 </h3>
                 <p className="text-xs leading-relaxed" style={{ color: "#5c6380" }}>
@@ -280,7 +280,7 @@ export default function LandingPage() {
       <section className="px-4 sm:px-6 pb-16 sm:pb-24">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3" style={{ color: "#eef0f6" }}>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3" style={{ color: "#f0f2f7" }}>
               Start Trading in 3 Steps
             </h2>
             <p className="text-sm" style={{ color: "#5c6380" }}>
@@ -302,14 +302,14 @@ export default function LandingPage() {
                   <div
                     className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center mb-4 text-xl font-bold font-mono"
                     style={{
-                      background: "linear-gradient(135deg, rgba(0,214,114,0.1) 0%, rgba(139,92,246,0.1) 100%)",
-                      border: "1px solid rgba(0,214,114,0.15)",
-                      color: "#00d672",
+                      background: "linear-gradient(135deg, rgba(34,197,94,0.1) 0%, rgba(139,92,246,0.1) 100%)",
+                      border: "1px solid rgba(34,197,94,0.15)",
+                      color: "#22c55e",
                     }}
                   >
                     {s.step}
                   </div>
-                  <h3 className="text-sm font-semibold mb-2" style={{ color: "#eef0f6" }}>
+                  <h3 className="text-sm font-semibold mb-2" style={{ color: "#f0f2f7" }}>
                     {s.title}
                   </h3>
                   <p className="text-xs leading-relaxed" style={{ color: "#5c6380" }}>
@@ -327,16 +327,16 @@ export default function LandingPage() {
         <div
           className="max-w-3xl mx-auto rounded-2xl p-6 sm:p-10 text-center relative overflow-hidden"
           style={{
-            background: "linear-gradient(135deg, rgba(0,214,114,0.06) 0%, rgba(139,92,246,0.06) 100%)",
-            border: "1px solid rgba(0,214,114,0.12)",
+            background: "linear-gradient(135deg, rgba(34,197,94,0.06) 0%, rgba(139,92,246,0.06) 100%)",
+            border: "1px solid rgba(34,197,94,0.12)",
           }}
         >
           <div
             className="absolute top-0 right-0 w-[300px] h-[300px] rounded-full blur-[100px] pointer-events-none"
-            style={{ background: "radial-gradient(circle, rgba(0,214,114,0.08), transparent 70%)" }}
+            style={{ background: "radial-gradient(circle, rgba(34,197,94,0.08), transparent 70%)" }}
           />
           <div className="relative z-10">
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3" style={{ color: "#eef0f6" }}>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3" style={{ color: "#f0f2f7" }}>
               Ready to Find the Next 100x?
             </h2>
             <p className="text-sm mb-8 max-w-md mx-auto" style={{ color: "#5c6380" }}>
@@ -346,9 +346,9 @@ export default function LandingPage() {
               href="/swipe"
               className="inline-block px-10 py-3.5 rounded-xl font-semibold text-sm transition-all hover:brightness-110"
               style={{
-                background: "linear-gradient(135deg, #00d672 0%, #00cc6a 100%)",
-                color: "#04060b",
-                boxShadow: "0 0 30px rgba(0,214,114,0.25)",
+                background: "linear-gradient(135deg, #22c55e 0%, #00cc6a 100%)",
+                color: "#06080e",
+                boxShadow: "0 0 30px rgba(34,197,94,0.25)",
               }}
             >
               Launch App — It&apos;s Free
@@ -368,12 +368,12 @@ export default function LandingPage() {
             <span className="text-xs font-bold tracking-tight" style={{ color: "#5c6380" }}>
               Hatcher<span style={{ color: "#8b5cf6" }}>Labs</span>
             </span>
-            <span className="text-[10px]" style={{ color: "#363d54" }}>|</span>
-            <span className="text-[10px] font-mono" style={{ color: "#363d54" }}>
+            <span className="text-[10px]" style={{ color: "#444c60" }}>|</span>
+            <span className="text-[10px] font-mono" style={{ color: "#444c60" }}>
               hatcher.trade
             </span>
           </div>
-          <p className="text-[10px] text-center sm:text-right leading-relaxed" style={{ color: "#363d54" }}>
+          <p className="text-[10px] text-center sm:text-right leading-relaxed" style={{ color: "#444c60" }}>
             Trading memecoins is extremely risky. You will probably lose money. This is not financial advice. DYOR.
           </p>
         </div>

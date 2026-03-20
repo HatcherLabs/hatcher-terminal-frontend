@@ -104,7 +104,7 @@ export function SwipeFilters({ filters, onChange }: SwipeFiltersProps) {
       <button
         onClick={() => setOpen((v) => !v)}
         className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
-        style={{ color: "#9ca3b8", background: "#10131c", border: "1px solid #1a1f2e" }}
+        style={{ color: "#8890a4", background: "#141820", border: "1px solid #1c2030" }}
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <line x1="4" y1="6" x2="20" y2="6" />
@@ -115,7 +115,7 @@ export function SwipeFilters({ filters, onChange }: SwipeFiltersProps) {
         </svg>
         Filters
         {activeCount > 0 && (
-          <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full text-[9px] font-bold" style={{ backgroundColor: "#00d672", color: "#04060b" }}>
+          <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full text-[9px] font-bold" style={{ backgroundColor: "#22c55e", color: "#06080e" }}>
             {activeCount}
           </span>
         )}
@@ -130,7 +130,7 @@ export function SwipeFilters({ filters, onChange }: SwipeFiltersProps) {
             transition={{ duration: 0.2, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div className="mt-2 p-3 rounded-lg space-y-3" style={{ background: "#10131c", border: "1px solid #1a1f2e" }}>
+            <div className="mt-2 p-3 rounded-lg space-y-3" style={{ background: "#141820", border: "1px solid #1c2030" }}>
               {/* Min Market Cap */}
               <div>
                 <label className="text-[10px] uppercase tracking-wider font-medium mb-1.5 block" style={{ color: "#5c6380" }}>
@@ -144,8 +144,8 @@ export function SwipeFilters({ filters, onChange }: SwipeFiltersProps) {
                       className="px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors"
                       style={
                         filters.minMarketCapSol === val
-                          ? { backgroundColor: "#00d672", color: "#04060b", borderColor: "#00d672" }
-                          : { color: "#9ca3b8", background: "#0a0d14", borderColor: "#1a1f2e" }
+                          ? { backgroundColor: "#22c55e", color: "#06080e", borderColor: "#22c55e" }
+                          : { color: "#8890a4", background: "#0d1017", borderColor: "#1c2030" }
                       }
                     >
                       {val === 0 ? "Any" : `${val} SOL`}
@@ -167,8 +167,8 @@ export function SwipeFilters({ filters, onChange }: SwipeFiltersProps) {
                       className="px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors"
                       style={
                         filters.maxRiskLevels.has(level)
-                          ? { backgroundColor: "#00d672", color: "#04060b", borderColor: "#00d672" }
-                          : { color: "#9ca3b8", background: "#0a0d14", borderColor: "#1a1f2e" }
+                          ? { backgroundColor: "#22c55e", color: "#06080e", borderColor: "#22c55e" }
+                          : { color: "#8890a4", background: "#0d1017", borderColor: "#1c2030" }
                       }
                     >
                       {level}
@@ -190,8 +190,8 @@ export function SwipeFilters({ filters, onChange }: SwipeFiltersProps) {
                       className="px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors"
                       style={
                         filters.minHolders === val
-                          ? { backgroundColor: "#00d672", color: "#04060b", borderColor: "#00d672" }
-                          : { color: "#9ca3b8", background: "#0a0d14", borderColor: "#1a1f2e" }
+                          ? { backgroundColor: "#22c55e", color: "#06080e", borderColor: "#22c55e" }
+                          : { color: "#8890a4", background: "#0d1017", borderColor: "#1c2030" }
                       }
                     >
                       {val === 0 ? "Any" : `${val}+`}
@@ -208,7 +208,7 @@ export function SwipeFilters({ filters, onChange }: SwipeFiltersProps) {
                 <button
                   onClick={() => onChange({ ...filters, hasSocials: !filters.hasSocials })}
                   className="relative w-9 h-5 rounded-full transition-colors"
-                  style={filters.hasSocials ? { backgroundColor: "#00d672" } : { background: "#0a0d14", border: "1px solid #1a1f2e" }}
+                  style={filters.hasSocials ? { backgroundColor: "#22c55e" } : { background: "#0d1017", border: "1px solid #1c2030" }}
                 >
                   <span
                     className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
@@ -224,7 +224,7 @@ export function SwipeFilters({ filters, onChange }: SwipeFiltersProps) {
                   onClick={() => onChange(DEFAULT_FILTERS)}
                   className="text-[10px] underline"
                   style={{ color: "#5c6380" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "#9ca3b8"; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "#8890a4"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.color = "#5c6380"; }}
                 >
                   Reset all filters

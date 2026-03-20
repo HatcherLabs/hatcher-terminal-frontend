@@ -38,7 +38,7 @@ function CheckIcon() {
     >
       <path
         d="M2.5 6L5 8.5L9.5 3.5"
-        stroke="#00d672"
+        stroke="#22c55e"
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -58,7 +58,7 @@ function XIcon() {
     >
       <path
         d="M3 3L9 9M9 3L3 9"
-        stroke="#f23645"
+        stroke="#ef4444"
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -78,14 +78,14 @@ function WarnIcon() {
     >
       <path
         d="M6 3.5V6.5M6 8.5V8"
-        stroke="#f0a000"
+        stroke="#f59e0b"
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
         d="M5.13 1.87L1.13 8.87C0.87 9.34 1.2 9.92 1.74 9.92H10.26C10.8 9.92 11.13 9.34 10.87 8.87L6.87 1.87C6.62 1.42 5.38 1.42 5.13 1.87Z"
-        stroke="#f0a000"
+        stroke="#f59e0b"
         strokeWidth="1"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -162,9 +162,9 @@ function deriveSignals(data: SecurityData): Signal[] {
 }
 
 const statusColor: Record<SignalStatus, string> = {
-  pass: "#00d672",
-  fail: "#f23645",
-  warn: "#f0a000",
+  pass: "#22c55e",
+  fail: "#ef4444",
+  warn: "#f59e0b",
 };
 
 function SkeletonRow({ index }: { index: number }) {
@@ -172,18 +172,18 @@ function SkeletonRow({ index }: { index: number }) {
     <div
       className="flex items-center justify-between py-1.5 px-3"
       style={{
-        borderBottom: "1px solid #1a1f2e",
+        borderBottom: "1px solid #1c2030",
       }}
     >
       <div className="flex items-center gap-2">
         <span
           className="inline-block w-3 h-3 rounded animate-pulse"
-          style={{ background: "#10131c" }}
+          style={{ background: "#141820" }}
         />
         <span
           className="inline-block rounded animate-pulse"
           style={{
-            background: "#10131c",
+            background: "#141820",
             width: `${70 + (index % 3) * 16}px`,
             height: "10px",
           }}
@@ -191,7 +191,7 @@ function SkeletonRow({ index }: { index: number }) {
       </div>
       <span
         className="inline-block w-12 h-3 rounded animate-pulse"
-        style={{ background: "#10131c" }}
+        style={{ background: "#141820" }}
       />
     </div>
   );
@@ -232,12 +232,12 @@ export function SecuritySignals({ mintAddress }: SecuritySignalsProps) {
   return (
     <div
       className="rounded overflow-hidden"
-      style={{ background: "#181c28", border: "1px solid #1a1f2e" }}
+      style={{ background: "#1a1f2a", border: "1px solid #1c2030" }}
     >
       {/* Header */}
       <div
         className="flex items-center justify-between h-8 px-3"
-        style={{ borderBottom: "1px solid #1a1f2e" }}
+        style={{ borderBottom: "1px solid #1c2030" }}
       >
         <span
           className="text-[9px] font-mono uppercase tracking-widest"
@@ -249,14 +249,14 @@ export function SecuritySignals({ mintAddress }: SecuritySignalsProps) {
           <div className="flex items-center gap-2">
             <span
               className="text-[9px] font-mono"
-              style={{ color: "#00d672" }}
+              style={{ color: "#22c55e" }}
             >
               {passCount} pass
             </span>
             {failCount > 0 && (
               <span
                 className="text-[9px] font-mono"
-                style={{ color: "#f23645" }}
+                style={{ color: "#ef4444" }}
               >
                 {failCount} fail
               </span>
@@ -284,9 +284,9 @@ export function SecuritySignals({ mintAddress }: SecuritySignalsProps) {
             onClick={fetchSecurity}
             className="text-[10px] font-mono px-2 py-1 rounded transition-colors"
             style={{
-              background: "#10131c",
-              border: "1px solid #1a1f2e",
-              color: "#9ca3b8",
+              background: "#141820",
+              border: "1px solid #1c2030",
+              color: "#8890a4",
             }}
           >
             Retry
@@ -302,7 +302,7 @@ export function SecuritySignals({ mintAddress }: SecuritySignalsProps) {
           </p>
           <p
             className="text-[9px] font-mono mt-1"
-            style={{ color: "#363d54" }}
+            style={{ color: "#444c60" }}
           >
             Security analysis coming soon
           </p>
@@ -316,13 +316,13 @@ export function SecuritySignals({ mintAddress }: SecuritySignalsProps) {
             <div
               key={signal.label}
               className="flex items-center justify-between py-1.5 px-3"
-              style={{ borderBottom: "1px solid #1a1f2e" }}
+              style={{ borderBottom: "1px solid #1c2030" }}
             >
               <div className="flex items-center gap-2">
                 <StatusIcon status={signal.status} />
                 <span
                   className="text-[10px] font-mono"
-                  style={{ color: "#9ca3b8" }}
+                  style={{ color: "#8890a4" }}
                 >
                   {signal.label}
                 </span>

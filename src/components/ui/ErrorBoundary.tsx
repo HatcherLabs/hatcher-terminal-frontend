@@ -35,21 +35,21 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         <div
           className="flex flex-col items-center justify-center py-16 px-4 text-center rounded-lg mx-auto max-w-md"
           style={{
-            backgroundColor: "#0a0d14",
-            border: "1px solid #f23645",
+            backgroundColor: "#0d1017",
+            border: "1px solid #ef4444",
           }}
         >
           {/* Terminal-style error icon */}
           <div
             className="w-12 h-12 rounded-full flex items-center justify-center mb-4"
-            style={{ backgroundColor: "rgba(242, 54, 69, 0.1)" }}
+            style={{ backgroundColor: "rgba(239, 68, 68, 0.1)" }}
           >
             <svg
               viewBox="0 0 24 24"
               width={24}
               height={24}
               fill="none"
-              stroke="#f23645"
+              stroke="#ef4444"
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -63,7 +63,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           {/* Terminal prompt style title */}
           <h2
             className="text-sm font-bold font-mono tracking-wider uppercase mb-1"
-            style={{ color: "#f23645" }}
+            style={{ color: "#ef4444" }}
           >
             {this.props.fallbackTitle || "Something went wrong"}
           </h2>
@@ -80,19 +80,19 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             <div
               className="w-full max-w-sm rounded-lg p-3 text-left mb-6"
               style={{
-                backgroundColor: "#04060b",
-                border: "1px solid #1a1f2e",
+                backgroundColor: "#06080e",
+                border: "1px solid #1c2030",
               }}
             >
               <p
                 className="text-[9px] font-bold uppercase tracking-widest mb-1.5"
-                style={{ color: "#f23645" }}
+                style={{ color: "#ef4444" }}
               >
                 DEV ERROR
               </p>
               <p
                 className="text-[11px] font-mono break-all leading-relaxed"
-                style={{ color: "#9ca3b8" }}
+                style={{ color: "#8890a4" }}
               >
                 {this.state.error.message}
               </p>
@@ -105,8 +105,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               onClick={this.handleRetry}
               className="px-5 py-2 rounded-lg text-sm font-bold font-mono uppercase tracking-wider transition-all hover:brightness-110"
               style={{
-                backgroundColor: "#00d672",
-                color: "#04060b",
+                backgroundColor: "#22c55e",
+                color: "#06080e",
               }}
             >
               Try Again
@@ -116,9 +116,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               href="/"
               className="px-5 py-2 rounded-lg text-sm font-medium font-mono uppercase tracking-wider transition-all hover:brightness-110"
               style={{
-                backgroundColor: "#10131c",
-                color: "#9ca3b8",
-                border: "1px solid #1a1f2e",
+                backgroundColor: "#141820",
+                color: "#8890a4",
+                border: "1px solid #1c2030",
               }}
             >
               Go Home

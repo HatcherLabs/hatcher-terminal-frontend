@@ -12,30 +12,30 @@
   --breakpoint-xl: 1280px;
   --breakpoint-2xl: 1536px;
 
-  /* Colors — aligned with ui-demo.jsx C palette */
-  --color-bg-primary: #04060b;
-  --color-bg-card: #0a0d14;
-  --color-bg-elevated: #10131c;
-  --color-bg-hover: #181c28;
+  /* Colors — HATCHER.MARKETS spec palette */
+  --color-bg-primary: #06080e;
+  --color-bg-card: #0d1017;
+  --color-bg-elevated: #141820;
+  --color-bg-hover: #1a1f2a;
   --color-bg-input: #1f2435;
 
-  --color-border: #1a1f2e;
+  --color-border: #1c2030;
   --color-border-hover: #2a3048;
   --color-border-active: #3a4468;
 
-  --color-text-primary: #eef0f6;
-  --color-text-secondary: #9ca3b8;
+  --color-text-primary: #f0f2f7;
+  --color-text-secondary: #8890a4;
   --color-text-muted: #5c6380;
-  --color-text-faint: #363d54;
+  --color-text-faint: #444c60;
 
-  --color-green: #00d672;
-  --color-green-dim: #00d67218;
+  --color-green: #22c55e;
+  --color-green-dim: #22c55e18;
 
-  --color-red: #f23645;
-  --color-red-dim: #f2364518;
+  --color-red: #ef4444;
+  --color-red-dim: #ef444418;
 
-  --color-amber: #f0a000;
-  --color-amber-dim: #f0a00018;
+  --color-amber: #f59e0b;
+  --color-amber-dim: #f59e0b18;
 
   --color-blue: #3b82f6;
 
@@ -44,7 +44,7 @@
   --color-accent-bg: #8b5cf618;
 
   /* Font families */
-  --font-sans: var(--font-lexend), system-ui, sans-serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), monospace;
 
   /* Max widths */
@@ -60,9 +60,9 @@
   --animate-pulse-new: pulse-new 2s ease-out forwards;
 
   @keyframes pulse-new {
-    0% { background-color: rgba(0, 255, 136, 0.08); }
-    50% { background-color: rgba(0, 255, 136, 0.03); }
-    100% { background-color: rgba(0, 255, 136, 0); }
+    0% { background-color: rgba(34, 197, 94, 0.08); }
+    50% { background-color: rgba(34, 197, 94, 0.03); }
+    100% { background-color: rgba(34, 197, 94, 0); }
   }
 }
 
@@ -84,14 +84,14 @@
 }
 
 :root {
-  --bg-primary: #04060b;
-  --bg-card: #0a0d14;
-  --bg-elevated: #10131c;
-  --bg-hover: #181c28;
-  --border: #1a1f2e;
+  --bg-primary: #06080e;
+  --bg-card: #0d1017;
+  --bg-elevated: #141820;
+  --bg-hover: #1a1f2a;
+  --border: #1c2030;
   --border-hover: #2a3048;
-  --green: #00d672;
-  --red: #f23645;
+  --green: #22c55e;
+  --red: #ef4444;
   --accent: #8b5cf6;
   --accent-hover: #7c3aed;
   --accent-bg: #8b5cf618;
@@ -147,7 +147,7 @@ body::before {
 }
 
 .form-input:focus {
-  box-shadow: 0 0 0 2px rgba(0, 255, 136, 0.08), 0 0 20px rgba(0, 255, 136, 0.04);
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.08), 0 0 20px rgba(34, 197, 94, 0.04);
 }
 
 /* Page enter animation */
@@ -189,11 +189,11 @@ form {
 
 /* Glow effects */
 .glow-green {
-  box-shadow: 0 0 20px rgba(0, 255, 136, 0.15), 0 0 60px rgba(0, 255, 136, 0.05);
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.15), 0 0 60px rgba(34, 197, 94, 0.05);
 }
 
 .glow-green-sm {
-  box-shadow: 0 0 10px rgba(0, 255, 136, 0.1);
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.1);
 }
 
 /* Card depth */
@@ -203,7 +203,7 @@ form {
 
 /* Gradient text */
 .text-gradient-green {
-  background: linear-gradient(135deg, #00d672, #00b060);
+  background: linear-gradient(135deg, #22c55e, #16a34a);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -264,12 +264,12 @@ form {
 
 /* ===== Price Flash Animations ===== */
 @keyframes priceFlashUp {
-  0% { background-color: rgba(0, 255, 136, 0.12); }
+  0% { background-color: rgba(34, 197, 94, 0.12); }
   100% { background-color: transparent; }
 }
 
 @keyframes priceFlashDown {
-  0% { background-color: rgba(255, 59, 92, 0.12); }
+  0% { background-color: rgba(239, 68, 68, 0.12); }
   100% { background-color: transparent; }
 }
 
@@ -393,7 +393,7 @@ form {
 /* New token row highlight */
 @keyframes pulseNew {
   0%, 100% { background-color: transparent; }
-  50% { background-color: rgba(0, 255, 136, 0.04); }
+  50% { background-color: rgba(34, 197, 94, 0.04); }
 }
 
 .animate-pulse-new {
@@ -414,11 +414,11 @@ form {
 
 /* ===== Token Row Flash Animations ===== */
 @keyframes flashGreen {
-  0% { background-color: rgba(0, 214, 114, 0.15); }
+  0% { background-color: rgba(34, 197, 94, 0.15); }
   100% { background-color: transparent; }
 }
 @keyframes flashRed {
-  0% { background-color: rgba(242, 54, 69, 0.15); }
+  0% { background-color: rgba(239, 68, 68, 0.15); }
   100% { background-color: transparent; }
 }
 .flash-green { animation: flashGreen 0.8s ease-out; }
@@ -426,8 +426,8 @@ form {
 
 /* ===== Graduating Token Glow ===== */
 @keyframes graduatingGlow {
-  0%, 100% { box-shadow: 0 0 8px rgba(240, 160, 0, 0.2); }
-  50% { box-shadow: 0 0 16px rgba(240, 160, 0, 0.35); }
+  0%, 100% { box-shadow: 0 0 8px rgba(245, 158, 11, 0.2); }
+  50% { box-shadow: 0 0 16px rgba(245, 158, 11, 0.35); }
 }
 .graduating-glow { animation: graduatingGlow 2s ease-in-out infinite; }
 
@@ -464,15 +464,15 @@ form {
 /* ===== Focus Ring Utility ===== */
 .focus-ring:focus {
   outline: none;
-  border-color: #00d672;
-  box-shadow: 0 0 0 2px rgba(0, 214, 114, 0.15);
+  border-color: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.15);
 }
 
 /* ===== Glassmorphism Panel ===== */
 .glass-panel {
-  background: rgba(10, 13, 20, 0.85);
+  background: rgba(13, 16, 23, 0.85);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(26, 31, 46, 0.6);
+  border: 1px solid rgba(28, 32, 48, 0.6);
 }
 
 /* ===== Live Indicator Pulse ===== */
@@ -552,7 +552,7 @@ form {
   position: absolute;
   inset: -1px;
   border-radius: inherit;
-  background: linear-gradient(135deg, #8b5cf6, #00d672);
+  background: linear-gradient(135deg, #8b5cf6, #22c55e);
   z-index: -1;
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
@@ -564,8 +564,8 @@ form {
 /* ===== Focus Visible Ring (Accessibility) ===== */
 .focus-ring:focus-visible {
   outline: none;
-  border-color: #00d672;
-  box-shadow: 0 0 0 2px rgba(0, 214, 114, 0.25);
+  border-color: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25);
 }
 
 /* ===== Print Styles ===== */

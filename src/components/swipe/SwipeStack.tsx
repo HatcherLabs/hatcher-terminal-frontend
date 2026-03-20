@@ -22,14 +22,11 @@ import { api } from "@/lib/api";
 import type { TokenData } from "@/types/token";
 
 /** Minimum drag distance (px) to count as a swipe at low velocity */
-const SWIPE_THRESHOLD = 100;
-/** Minimum vertical drag distance for watchlist swipe */
-const SWIPE_UP_THRESHOLD = 80;
+const SWIPE_THRESHOLD = 120;
 /** Minimum velocity (px/s) for a flick to count regardless of distance */
 const VELOCITY_THRESHOLD = 500;
 /** Distance the card should exit off-screen */
 const EXIT_X = 600;
-const EXIT_Y = -600;
 /** Max history for undo */
 const MAX_UNDO_HISTORY = 5;
 
@@ -45,6 +42,8 @@ interface SwipeStackProps {
   tokens?: TokenData[];
   /** Callback to report session stats */
   onSessionUpdate?: (stats: SwipeSessionData) => void;
+  /** Open settings bottom sheet */
+  onSettingsOpen?: () => void;
 }
 
 const SWIPE_HINT_LIMIT = 3;
@@ -56,7 +55,7 @@ function getStoredSwipeCount(): number {
   return val ? parseInt(val, 10) || 0 : 0;
 }
 
-export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackProps) {
+export function SwipeStack({ tokens: tokensProp, onSessionUpdate, onSettingsOpen }: SwipeStackProps) {
   const feed = useFeed();
   const router = useRouter();
   const { connected } = useWallet();
@@ -120,13 +119,13 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
     prevFirstMintRef.current = firstMint;
   }, [tokens, useLocalIndex]);
 
-  const [exitDirection, setExitDirection] = useState<"left" | "right" | "up" | null>(null);
+  const [exitDirection, setExitDirection] = useState<"left" | "right" | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
   const x = useMotionValue(0);
   const y = useMotionValue(0);
-  const rotate = useTransform(x, [-200, 200], [-15, 15]);
+  const rotate = useTransform(x, [-200, 200], [-8, 8]);
   // 3D perspective tilt during drag
   const rotateY = useTransform(x, [-200, 200], [-8, 8]);
   // Elevation shadow increases during drag
@@ -140,14 +139,9 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
   ]);
 
   const overlayOpacity = useTransform(
-    [x, y],
-    ([latestX, latestY]: number[]) => {
+    x,
+    (latestX: number) => {
       const absX = Math.abs(latestX);
-      const absY = Math.abs(latestY);
-      // Upward swipe takes priority when y is strongly negative
-      if (latestY < -30 && absY > absX) {
-        return Math.min(1, absY / 150);
-      }
       if (absX > 50) {
         return Math.min(1, absX / 150);
       }
@@ -156,18 +150,15 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
   );
 
   const overlayDirection = useTransform(
-    [x, y],
-    ([latestX, latestY]: number[]): "left" | "right" | "up" | null => {
-      const absX = Math.abs(latestX);
-      const absY = Math.abs(latestY);
-      if (latestY < -30 && absY > absX) return "up";
+    x,
+    (latestX: number): "left" | "right" | null => {
       if (latestX < -50) return "left";
       if (latestX > 50) return "right";
       return null;
     }
   );
 
-  const [currentOverlayDir, setCurrentOverlayDir] = useState<"left" | "right" | "up" | null>(null);
+  const [currentOverlayDir, setCurrentOverlayDir] = useState<"left" | "right" | null>(null);
   const [currentOverlayOp, setCurrentOverlayOp] = useState(0);
 
   useEffect(() => {
@@ -184,7 +175,7 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
     onSessionUpdate?.(session);
   }, [session, onSessionUpdate]);
 
-  const updateSession = useCallback((direction: "left" | "right" | "up", token: TokenData) => {
+  const updateSession = useCallback((direction: "left" | "right", token: TokenData) => {
     setSession((prev) => ({
       seen: prev.seen + 1,
       bought: prev.bought + (direction === "right" ? 1 : 0),
@@ -267,6 +258,7 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
         }
 
         updateSession(direction, token);
+        navigator.vibrate?.(50);
         advanceToken();
         requestAnimationFrame(() => {
           x.set(0);
@@ -356,7 +348,7 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
     return (
       <div className="flex flex-col items-center justify-center gap-3 mt-16 px-4 text-center">
         <p className="text-4xl">&#127769;</p>
-        <p className="text-sm" style={{ color: "#9ca3b8" }}>
+        <p className="text-sm" style={{ color: "#8890a4" }}>
           No tokens in this category right now.
         </p>
         <p className="text-xs" style={{ color: "#5c6380" }}>New tokens will appear automatically.</p>
@@ -370,7 +362,7 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
     <>
       <div className="relative flex flex-col items-center swipe-stack-safe-area">
         {!connected && (
-          <div className="mb-3 px-4 py-2 rounded-lg text-xs text-center" style={{ backgroundColor: "rgba(240,160,0,0.08)", border: "1px solid rgba(240,160,0,0.2)", color: "#f0a000" }}>
+          <div className="mb-3 px-4 py-2 rounded-lg text-xs text-center" style={{ backgroundColor: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", color: "#f59e0b" }}>
             Connect your wallet to trade -- you can still browse
           </div>
         )}
@@ -407,10 +399,10 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
               initial={{ scale: 0.95, opacity: 0, x: 0, y: 0 }}
               animate={{ scale: 1, opacity: 1, x: 0, y: 0 }}
               exit={{
-                x: exitDirection === "up" ? 0 : exitDirection === "right" ? EXIT_X : -EXIT_X,
-                y: exitDirection === "up" ? EXIT_Y : 0,
+                x: exitDirection === "right" ? EXIT_X : -EXIT_X,
+                y: 0,
                 opacity: 0,
-                rotate: exitDirection === "up" ? 0 : exitDirection === "right" ? 20 : -20,
+                rotate: exitDirection === "right" ? 20 : -20,
                 transition: { duration: 0.3, ease: "easeIn" },
               }}
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
@@ -420,9 +412,9 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
                 <SwipeCard token={currentToken} onInfoTap={handleInfoTap} />
 
                 {buyLoading && (
-                  <div className="absolute inset-0 z-20 flex flex-col items-center justify-center rounded-card backdrop-blur-sm" style={{ backgroundColor: "rgba(4,6,11,0.8)" }}>
-                    <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: "rgba(0,214,114,0.3)", borderTopColor: "#00d672" }} />
-                    <p className="text-sm font-medium mt-3" style={{ color: "#00d672" }}>
+                  <div className="absolute inset-0 z-20 flex flex-col items-center justify-center rounded-card backdrop-blur-sm" style={{ backgroundColor: "rgba(6,8,14,0.8)" }}>
+                    <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: "rgba(34,197,94,0.3)", borderTopColor: "#22c55e" }} />
+                    <p className="text-sm font-medium mt-3" style={{ color: "#22c55e" }}>
                       Building transaction...
                     </p>
                   </div>
@@ -442,9 +434,9 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
-            <span style={{ color: "rgba(242,54,69,0.5)" }}>&larr; NOPE</span>
-            <span className="mx-6" style={{ color: "#363d54" }}>|</span>
-            <span style={{ color: "rgba(0,214,114,0.5)" }}>APE IN &rarr;</span>
+            <span style={{ color: "rgba(239,68,68,0.5)" }}>&larr; SKIP</span>
+            <span className="mx-6" style={{ color: "#444c60" }}>|</span>
+            <span style={{ color: "rgba(34,197,94,0.5)" }}>BUY &rarr;</span>
           </motion.p>
         )}
 
@@ -456,10 +448,10 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
             disabled={swiping}
             className="w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-full text-2xl sm:text-3xl flex items-center justify-center transition-all duration-200 disabled:opacity-30 hover:scale-110 active:scale-90"
             style={{
-              background: "rgba(242,54,69,0.12)",
-              border: "2.5px solid #f23645",
-              color: "#f23645",
-              boxShadow: "0 0 24px rgba(242,54,69,0.25), 0 0 48px rgba(242,54,69,0.1), inset 0 0 12px rgba(242,54,69,0.06)",
+              background: "rgba(239,68,68,0.12)",
+              border: "2.5px solid #ef4444",
+              color: "#ef4444",
+              boxShadow: "0 0 24px rgba(239,68,68,0.25), 0 0 48px rgba(239,68,68,0.1), inset 0 0 12px rgba(239,68,68,0.06)",
             }}
             aria-label="Pass on token"
           >
@@ -476,8 +468,8 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
                 className="w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 disabled:opacity-15 disabled:cursor-not-allowed hover:scale-110"
                 style={{
                   background: undoHistory.length > 0 ? "rgba(139,92,246,0.1)" : "rgba(31,36,53,0.5)",
-                  border: `1.5px solid ${undoHistory.length > 0 ? "#8b5cf6" : "#1a1f2e"}`,
-                  color: undoHistory.length > 0 ? "#8b5cf6" : "#363d54",
+                  border: `1.5px solid ${undoHistory.length > 0 ? "#8b5cf6" : "#1c2030"}`,
+                  color: undoHistory.length > 0 ? "#8b5cf6" : "#444c60",
                   boxShadow: undoHistory.length > 0 ? "0 0 10px rgba(139,92,246,0.15)" : "none",
                 }}
                 aria-label="Undo last pass"
@@ -488,7 +480,13 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
                   <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
                 </svg>
               </button>
-              <span className="text-[10px] font-mono" style={{ color: "#5c6380" }}>{quickBuyAmount} SOL</span>
+              <button
+                onClick={() => onSettingsOpen?.()}
+                className="text-[10px] font-mono hover:opacity-80 transition-opacity"
+                style={{ color: "#5c6380", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+              >
+                {quickBuyAmount} SOL &#9881;
+              </button>
             </div>
           </div>
 
@@ -498,10 +496,10 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate }: SwipeStackPr
             disabled={swiping}
             className="w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-full text-2xl sm:text-3xl flex items-center justify-center transition-all duration-200 disabled:opacity-30 hover:scale-110 active:scale-90"
             style={{
-              background: "rgba(0,214,114,0.12)",
-              border: "2.5px solid #00d672",
-              color: "#00d672",
-              boxShadow: "0 0 24px rgba(0,214,114,0.25), 0 0 48px rgba(0,214,114,0.1), inset 0 0 12px rgba(0,214,114,0.06)",
+              background: "rgba(34,197,94,0.12)",
+              border: "2.5px solid #22c55e",
+              color: "#22c55e",
+              boxShadow: "0 0 24px rgba(34,197,94,0.25), 0 0 48px rgba(34,197,94,0.1), inset 0 0 12px rgba(34,197,94,0.06)",
             }}
             aria-label="Buy token"
           >

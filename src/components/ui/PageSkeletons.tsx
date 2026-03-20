@@ -31,15 +31,15 @@ export function ExplorePageSkeleton() {
 
       {/* Table */}
       <div
-        className="rounded-lg border border-[#1a1f2e] overflow-hidden"
-        style={{ backgroundColor: "#0a0d14" }}
+        className="rounded-lg border border-[#1c2030] overflow-hidden"
+        style={{ backgroundColor: "#0d1017" }}
       >
         {/* Table header */}
         <div
           className="grid items-center gap-2 px-4 py-2.5"
           style={{
             gridTemplateColumns: "minmax(140px,1.5fr) repeat(7, 1fr)",
-            borderBottom: "1px solid #1a1f2e",
+            borderBottom: "1px solid #1c2030",
           }}
         >
           <Skeleton height={10} width={60} rounded="rounded" />
@@ -59,7 +59,7 @@ export function ExplorePageSkeleton() {
             className="grid items-center gap-2 px-4 py-2.5"
             style={{
               gridTemplateColumns: "minmax(140px,1.5fr) repeat(7, 1fr)",
-              borderBottom: r < 9 ? "1px solid #1a1f2e20" : undefined,
+              borderBottom: r < 9 ? "1px solid #1c203020" : undefined,
             }}
           >
             {/* Token cell */}
@@ -104,15 +104,15 @@ export function WatchlistSkeleton() {
 
       {/* Desktop table */}
       <div
-        className="rounded-lg border border-[#1a1f2e] overflow-hidden"
-        style={{ backgroundColor: "#0a0d14" }}
+        className="rounded-lg border border-[#1c2030] overflow-hidden"
+        style={{ backgroundColor: "#0d1017" }}
       >
         {/* Header row */}
         <div
           className="grid items-center gap-2 px-4 py-2.5"
           style={{
             gridTemplateColumns: "32px minmax(130px,1.5fr) repeat(8, 1fr) 40px",
-            borderBottom: "1px solid #1a1f2e",
+            borderBottom: "1px solid #1c2030",
           }}
         >
           <Skeleton height={12} width={12} rounded="rounded-sm" />
@@ -135,7 +135,7 @@ export function WatchlistSkeleton() {
             className="grid items-center gap-2 px-4 py-2.5"
             style={{
               gridTemplateColumns: "32px minmax(130px,1.5fr) repeat(8, 1fr) 40px",
-              borderBottom: r < 7 ? "1px solid #1a1f2e20" : undefined,
+              borderBottom: r < 7 ? "1px solid #1c203020" : undefined,
             }}
           >
             <Skeleton height={12} width={12} rounded="rounded-sm" />
@@ -189,8 +189,8 @@ export function PortfolioSkeleton() {
         {Array.from({ length: 5 }).map((_, i) => (
           <div
             key={i}
-            className="rounded-lg border border-[#1a1f2e] p-2.5"
-            style={{ backgroundColor: "#0a0d14" }}
+            className="rounded-lg border border-[#1c2030] p-2.5"
+            style={{ backgroundColor: "#0d1017" }}
           >
             <Skeleton height={9} width={64} rounded="rounded" className="mb-2" />
             <Skeleton height={16} width={80} rounded="rounded" />
@@ -200,8 +200,8 @@ export function PortfolioSkeleton() {
 
       {/* Chart area */}
       <div
-        className="rounded-lg border border-[#1a1f2e] p-4"
-        style={{ backgroundColor: "#0a0d14" }}
+        className="rounded-lg border border-[#1c2030] p-4"
+        style={{ backgroundColor: "#0d1017" }}
       >
         <div className="flex items-center justify-between mb-4">
           <Skeleton height={12} width={100} rounded="rounded" />
@@ -223,15 +223,15 @@ export function PortfolioSkeleton() {
 
       {/* Positions table */}
       <div
-        className="rounded-lg border border-[#1a1f2e] overflow-hidden"
-        style={{ backgroundColor: "#0a0d14" }}
+        className="rounded-lg border border-[#1c2030] overflow-hidden"
+        style={{ backgroundColor: "#0d1017" }}
       >
         {/* Header */}
         <div
           className="grid items-center gap-2 px-4 py-2.5"
           style={{
             gridTemplateColumns: "minmax(120px,1.5fr) repeat(5, 1fr) 60px",
-            borderBottom: "1px solid #1a1f2e",
+            borderBottom: "1px solid #1c2030",
           }}
         >
           <Skeleton height={10} width={48} rounded="rounded" />
@@ -250,7 +250,7 @@ export function PortfolioSkeleton() {
             className="grid items-center gap-2 px-4 py-3"
             style={{
               gridTemplateColumns: "minmax(120px,1.5fr) repeat(5, 1fr) 60px",
-              borderBottom: r < 4 ? "1px solid #1a1f2e20" : undefined,
+              borderBottom: r < 4 ? "1px solid #1c203020" : undefined,
             }}
           >
             <div className="flex items-center gap-2.5">
@@ -309,8 +309,8 @@ export function TokenDetailSkeleton() {
         <div className="lg:col-span-2 flex flex-col gap-4">
           {/* Chart */}
           <div
-            className="rounded-lg border border-[#1a1f2e] p-4"
-            style={{ backgroundColor: "#0a0d14" }}
+            className="rounded-lg border border-[#1c2030] p-4"
+            style={{ backgroundColor: "#0d1017" }}
           >
             {/* Timeframe tabs */}
             <div className="flex items-center gap-1 mb-4">
@@ -327,8 +327,8 @@ export function TokenDetailSkeleton() {
             {Array.from({ length: 8 }).map((_, i) => (
               <div
                 key={i}
-                className="rounded-lg border border-[#1a1f2e] p-3"
-                style={{ backgroundColor: "#0a0d14" }}
+                className="rounded-lg border border-[#1c2030] p-3"
+                style={{ backgroundColor: "#0d1017" }}
               >
                 <Skeleton height={9} width={56} rounded="rounded" className="mb-2" />
                 <Skeleton height={14} width={72} rounded="rounded" />
@@ -344,15 +344,15 @@ export function TokenDetailSkeleton() {
 
           {/* Holders table skeleton */}
           <div
-            className="rounded-lg border border-[#1a1f2e] overflow-hidden"
-            style={{ backgroundColor: "#0a0d14" }}
+            className="rounded-lg border border-[#1c2030] overflow-hidden"
+            style={{ backgroundColor: "#0d1017" }}
           >
             {Array.from({ length: 5 }).map((_, r) => (
               <div
                 key={r}
                 className="flex items-center gap-3 px-4 py-2.5"
                 style={{
-                  borderBottom: r < 4 ? "1px solid #1a1f2e20" : undefined,
+                  borderBottom: r < 4 ? "1px solid #1c203020" : undefined,
                 }}
               >
                 <Skeleton height={10} width={20} rounded="rounded" />
@@ -367,11 +367,11 @@ export function TokenDetailSkeleton() {
         {/* Right: Trade panel */}
         <div className="flex flex-col gap-3">
           <div
-            className="rounded-lg border border-[#1a1f2e] p-4"
-            style={{ backgroundColor: "#0a0d14" }}
+            className="rounded-lg border border-[#1c2030] p-4"
+            style={{ backgroundColor: "#0d1017" }}
           >
             {/* Buy/Sell toggle */}
-            <div className="flex items-center gap-1 mb-4 p-1 rounded-lg" style={{ backgroundColor: "#10131c" }}>
+            <div className="flex items-center gap-1 mb-4 p-1 rounded-lg" style={{ backgroundColor: "#141820" }}>
               <Skeleton height={32} rounded="rounded-md" className="flex-1" />
               <Skeleton height={32} rounded="rounded-md" className="flex-1" />
             </div>
@@ -410,8 +410,8 @@ export function TokenDetailSkeleton() {
 
           {/* Security signals */}
           <div
-            className="rounded-lg border border-[#1a1f2e] p-3"
-            style={{ backgroundColor: "#0a0d14" }}
+            className="rounded-lg border border-[#1c2030] p-3"
+            style={{ backgroundColor: "#0d1017" }}
           >
             <Skeleton height={10} width={100} rounded="rounded" className="mb-3" />
             <div className="space-y-2">
@@ -426,8 +426,8 @@ export function TokenDetailSkeleton() {
 
           {/* Token links */}
           <div
-            className="rounded-lg border border-[#1a1f2e] p-3"
-            style={{ backgroundColor: "#0a0d14" }}
+            className="rounded-lg border border-[#1c2030] p-3"
+            style={{ backgroundColor: "#0d1017" }}
           >
             <div className="flex items-center gap-2">
               <Skeleton height={28} rounded="rounded-md" className="flex-1" />

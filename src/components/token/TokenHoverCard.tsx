@@ -23,7 +23,7 @@ function pctStr(n: number | null | undefined): string {
 
 function pctColor(n: number | null | undefined): string {
   if (n == null) return "#6b7280";
-  return n >= 0 ? "#00d672" : "#f23645";
+  return n >= 0 ? "#22c55e" : "#ef4444";
 }
 
 /* ── Constants ───────────────────────────────────────── */
@@ -157,7 +157,7 @@ export function TokenHoverCard({
             className="rounded-lg border overflow-hidden"
             style={{
               background: "rgba(16, 19, 28, 0.95)",
-              borderColor: "#1a1f2e",
+              borderColor: "#1c2030",
               backdropFilter: "blur(12px)",
               WebkitBackdropFilter: "blur(12px)",
             }}
@@ -172,13 +172,13 @@ export function TokenHoverCard({
               />
               <div className="flex flex-col min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-sm font-semibold truncate" style={{ color: "#eef0f6" }}>
+                  <span className="text-sm font-semibold truncate" style={{ color: "#f0f2f7" }}>
                     {ticker ?? mintAddress.slice(0, 6)}
                   </span>
                   {riskLevel && <RiskBadge level={riskLevel} />}
                 </div>
                 {name && (
-                  <span className="text-[11px] truncate leading-tight" style={{ color: "#9ca3b8" }}>
+                  <span className="text-[11px] truncate leading-tight" style={{ color: "#8890a4" }}>
                     {name}
                   </span>
                 )}
@@ -186,7 +186,7 @@ export function TokenHoverCard({
             </div>
 
             {/* ── Stats Grid ── */}
-            <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 px-3 py-2 border-t border-[#1a1f2e]">
+            <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 px-3 py-2 border-t border-[#1c2030]">
               <StatRow label="MCap" value={`$${fmt(marketCapUsd)}`} />
               <StatRow label="Vol 1h" value={`$${fmt(volume1h)}`} />
               <StatRow label="Holders" value={fmt(holders)} />
@@ -207,7 +207,7 @@ export function TokenHoverCard({
             </div>
 
             {/* ── Mini Sparkline ── */}
-            <div className="px-3 pb-3 pt-1 border-t border-[#1a1f2e]">
+            <div className="px-3 pb-3 pt-1 border-t border-[#1c2030]">
               <MiniChart
                 mintAddress={mintAddress}
                 width={CARD_MAX_W - 24}
@@ -234,7 +234,7 @@ function StatRow({
 }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-[10px] uppercase tracking-wider" style={{ color: "#363d54" }}>
+      <span className="text-[10px] uppercase tracking-wider" style={{ color: "#444c60" }}>
         {label}
       </span>
       <span

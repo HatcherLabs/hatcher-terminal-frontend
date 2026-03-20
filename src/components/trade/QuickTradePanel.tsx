@@ -504,8 +504,8 @@ export function QuickTradePanel() {
       {/* Panel */}
       <div
         style={{
-          background: "#0a0d14",
-          borderColor: "#1a1f2e",
+          background: "#0d1017",
+          borderColor: "#1c2030",
           maxWidth: 360,
         }}
         className={`
@@ -526,14 +526,14 @@ export function QuickTradePanel() {
         {/* Drag handle (mobile) */}
         <div className="md:hidden flex justify-center pt-3 pb-1">
           <div
-            style={{ background: "#1a1f2e" }}
+            style={{ background: "#1c2030" }}
             className="w-10 h-1 rounded-full"
           />
         </div>
 
         {/* Header */}
         <div
-          style={{ borderBottom: "1px solid #1a1f2e" }}
+          style={{ borderBottom: "1px solid #1c2030" }}
           className="flex items-center gap-3 px-4 py-3"
         >
           <TokenAvatar
@@ -603,7 +603,7 @@ export function QuickTradePanel() {
               border:
                 activeTab === "buy"
                   ? "1px solid #22c55e"
-                  : "1px solid #1a1f2e",
+                  : "1px solid #1c2030",
               borderRadius: 8,
               fontWeight: 700,
               fontSize: 13,
@@ -620,7 +620,7 @@ export function QuickTradePanel() {
               border:
                 activeTab === "sell"
                   ? "1px solid #ef4444"
-                  : "1px solid #1a1f2e",
+                  : "1px solid #1c2030",
               borderRadius: 8,
               fontWeight: 700,
               fontSize: 13,
@@ -676,7 +676,7 @@ export function QuickTradePanel() {
                         border:
                           selectedPreset === amt
                             ? "1px solid rgba(34,197,94,0.4)"
-                            : "1px solid #1a1f2e",
+                            : "1px solid #1c2030",
                         color:
                           selectedPreset === amt ? "#22c55e" : "#94a3b8",
                         borderRadius: 20,
@@ -713,7 +713,7 @@ export function QuickTradePanel() {
                     placeholder={String(quickBuyAmount)}
                     style={{
                       background: "#111827",
-                      border: "1px solid #1a1f2e",
+                      border: "1px solid #1c2030",
                       borderRadius: 8,
                       color: "#e2e8f0",
                       fontFamily: "monospace",
@@ -763,7 +763,7 @@ export function QuickTradePanel() {
                         border:
                           sellPercent === pct
                             ? "1px solid rgba(239,68,68,0.3)"
-                            : "1px solid #1a1f2e",
+                            : "1px solid #1c2030",
                         color:
                           sellPercent === pct ? "#ef4444" : "#94a3b8",
                         borderRadius: 20,
@@ -786,7 +786,7 @@ export function QuickTradePanel() {
                   style={{
                     background: "#111827",
                     borderRadius: 8,
-                    border: "1px solid #1a1f2e",
+                    border: "1px solid #1c2030",
                   }}
                   className="p-3 space-y-1.5"
                 >
@@ -828,7 +828,7 @@ export function QuickTradePanel() {
                   style={{
                     background: "#111827",
                     borderRadius: 8,
-                    border: "1px solid #1a1f2e",
+                    border: "1px solid #1c2030",
                   }}
                   className="p-3 text-center"
                 >
@@ -865,7 +865,7 @@ export function QuickTradePanel() {
                     border:
                       slippage === pct && !customSlippage
                         ? "1px solid rgba(99,102,241,0.4)"
-                        : "1px solid #1a1f2e",
+                        : "1px solid #1c2030",
                     color:
                       slippage === pct && !customSlippage
                         ? "#818cf8"
@@ -894,7 +894,7 @@ export function QuickTradePanel() {
                       : "#111827",
                     border: customSlippage
                       ? "1px solid rgba(99,102,241,0.4)"
-                      : "1px solid #1a1f2e",
+                      : "1px solid #1c2030",
                     borderRadius: 20,
                     color: customSlippage ? "#818cf8" : "#94a3b8",
                     fontFamily: "monospace",
@@ -966,7 +966,7 @@ export function QuickTradePanel() {
             style={{
               background: "#111827",
               borderRadius: 8,
-              border: "1px solid #1a1f2e",
+              border: "1px solid #1c2030",
             }}
             className="p-3 space-y-1.5"
           >

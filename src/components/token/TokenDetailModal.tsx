@@ -47,7 +47,7 @@ function pctStr(n: number | null | undefined): string {
 
 function pctColor(n: number | null | undefined): string {
   if (n == null) return "#6b7280";
-  return n >= 0 ? "#00d672" : "#f23645";
+  return n >= 0 ? "#22c55e" : "#ef4444";
 }
 
 function computePosition(
@@ -191,8 +191,8 @@ export function TokenDetailModal({
           >
             <div
               style={{
-                background: "#0a0d14",
-                border: "1px solid #1a1f2e",
+                background: "#0d1017",
+                border: "1px solid #1c2030",
                 borderRadius: 12,
                 overflow: "hidden",
               }}
@@ -312,7 +312,7 @@ export function TokenDetailModal({
                   display: "grid",
                   gridTemplateColumns: "1fr 1fr",
                   gap: 1,
-                  background: "#1a1f2e",
+                  background: "#1c2030",
                   margin: "0 14px",
                   borderRadius: 8,
                   overflow: "hidden",
@@ -402,7 +402,7 @@ export function TokenDetailModal({
                   style={{
                     width: "100%",
                     height: 4,
-                    background: "#1a1f2e",
+                    background: "#1c2030",
                     borderRadius: 2,
                     overflow: "hidden",
                   }}
@@ -414,9 +414,9 @@ export function TokenDetailModal({
                       borderRadius: 2,
                       background:
                         bondingPct >= 90
-                          ? "#00d672"
+                          ? "#22c55e"
                           : bondingPct >= 50
-                            ? "#f0a000"
+                            ? "#f59e0b"
                             : "#3b82f6",
                       transition: "width 0.5s ease-out",
                     }}
@@ -428,10 +428,10 @@ export function TokenDetailModal({
                       style={{
                         fontSize: 9,
                         fontWeight: 700,
-                        color: "#00d672",
+                        color: "#22c55e",
                         textTransform: "uppercase",
                         letterSpacing: "0.05em",
-                        background: "rgba(0,214,114,0.1)",
+                        background: "rgba(34,197,94,0.1)",
                         padding: "2px 8px",
                         borderRadius: 9999,
                       }}
@@ -471,11 +471,11 @@ export function TokenDetailModal({
                       borderRadius: 6,
                       background:
                         token.devHoldPct > 15
-                          ? "rgba(242,54,69,0.1)"
-                          : "rgba(0,214,114,0.1)",
+                          ? "rgba(239,68,68,0.1)"
+                          : "rgba(34,197,94,0.1)",
                       color:
-                        token.devHoldPct > 15 ? "#f23645" : "#00d672",
-                      border: `1px solid ${token.devHoldPct > 15 ? "rgba(242,54,69,0.2)" : "rgba(0,214,114,0.2)"}`,
+                        token.devHoldPct > 15 ? "#ef4444" : "#22c55e",
+                      border: `1px solid ${token.devHoldPct > 15 ? "rgba(239,68,68,0.2)" : "rgba(34,197,94,0.2)"}`,
                     }}
                   >
                     Dev {token.devHoldPct.toFixed(1)}%
@@ -519,18 +519,18 @@ export function TokenDetailModal({
                           : `https://${token.website}`
                       }
                       label="Web"
-                      hoverColor="#00d672"
+                      hoverColor="#22c55e"
                     />
                   )}
                   <SocialLink
                     href={`https://pump.fun/coin/${token.mintAddress}`}
                     label="PF"
-                    hoverColor="#00d672"
+                    hoverColor="#22c55e"
                   />
                   <SocialLink
                     href={`https://dexscreener.com/solana/${token.mintAddress}`}
                     label="DS"
-                    hoverColor="#00d672"
+                    hoverColor="#22c55e"
                   />
                 </div>
               )}
@@ -552,7 +552,7 @@ export function TokenDetailModal({
                     flex: 1,
                     height: 36,
                     borderRadius: 8,
-                    border: "1px solid #1a1f2e",
+                    border: "1px solid #1c2030",
                     background: "#0f1219",
                     color: "#d1d5db",
                     fontSize: 12,
@@ -566,7 +566,7 @@ export function TokenDetailModal({
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.background = "#0f1219";
-                    e.currentTarget.style.borderColor = "#1a1f2e";
+                    e.currentTarget.style.borderColor = "#1c2030";
                   }}
                 >
                   View Detail
@@ -580,19 +580,19 @@ export function TokenDetailModal({
                     flex: 1,
                     height: 36,
                     borderRadius: 8,
-                    border: "1px solid rgba(0,214,114,0.3)",
-                    background: "rgba(0,214,114,0.1)",
-                    color: "#00d672",
+                    border: "1px solid rgba(34,197,94,0.3)",
+                    background: "rgba(34,197,94,0.1)",
+                    color: "#22c55e",
                     fontSize: 12,
                     fontWeight: 700,
                     cursor: "pointer",
                     transition: "background 0.15s",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "rgba(0,214,114,0.2)";
+                    e.currentTarget.style.background = "rgba(34,197,94,0.2)";
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "rgba(0,214,114,0.1)";
+                    e.currentTarget.style.background = "rgba(34,197,94,0.1)";
                   }}
                 >
                   Quick Buy
@@ -626,10 +626,10 @@ function SecurityPill({
         padding: "3px 8px",
         borderRadius: 6,
         background: active
-          ? "rgba(0,214,114,0.1)"
+          ? "rgba(34,197,94,0.1)"
           : "rgba(107,114,128,0.1)",
-        color: active ? "#00d672" : "#4b5563",
-        border: `1px solid ${active ? "rgba(0,214,114,0.2)" : "rgba(107,114,128,0.15)"}`,
+        color: active ? "#22c55e" : "#4b5563",
+        border: `1px solid ${active ? "rgba(34,197,94,0.2)" : "rgba(107,114,128,0.15)"}`,
       }}
     >
       <span style={{ fontSize: 9 }}>{active ? "\u2713" : "\u2717"}</span>
@@ -660,7 +660,7 @@ function SocialLink({
         height: 28,
         borderRadius: 6,
         background: "#0f1219",
-        border: "1px solid #1a1f2e",
+        border: "1px solid #1c2030",
         color: "#6b7280",
         fontSize: 10,
         fontWeight: 700,
@@ -673,7 +673,7 @@ function SocialLink({
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.color = "#6b7280";
-        e.currentTarget.style.borderColor = "#1a1f2e";
+        e.currentTarget.style.borderColor = "#1c2030";
       }}
     >
       {label}

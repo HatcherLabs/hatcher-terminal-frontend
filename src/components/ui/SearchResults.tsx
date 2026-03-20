@@ -164,7 +164,7 @@ export function SearchResults({
     <div
       ref={containerRef}
       className={`rounded-lg shadow-xl max-h-80 overflow-y-auto terminal-scrollbar ${className}`}
-      style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
+      style={{ background: "#0d1017", border: "1px solid #1c2030" }}
     >
       <div ref={listRef}>
         {/* Hint when query is too short */}
@@ -208,7 +208,7 @@ export function SearchResults({
               onMouseEnter={() => setSelectedIndex(index)}
               className="w-full flex items-center gap-3 py-2 px-3 text-left transition-colors"
               style={{
-                background: selectedIndex === index ? "#10131c" : "transparent",
+                background: selectedIndex === index ? "#141820" : "transparent",
               }}
             >
               <TokenAvatar
@@ -219,30 +219,30 @@ export function SearchResults({
               />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium truncate" style={{ color: "#eef0f6" }}>
+                  <span className="text-xs font-medium truncate" style={{ color: "#f0f2f7" }}>
                     {token.name}
                   </span>
-                  <span className="text-[10px] font-mono shrink-0" style={{ color: "#9ca3b8" }}>
+                  <span className="text-[10px] font-mono shrink-0" style={{ color: "#8890a4" }}>
                     ${token.ticker}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 mt-0.5">
                   {token.priceUsd != null && (
-                    <span className="text-[10px] font-mono" style={{ color: "#9ca3b8" }}>
+                    <span className="text-[10px] font-mono" style={{ color: "#8890a4" }}>
                       {formatPrice(token.priceUsd)}
                     </span>
                   )}
                   {token.priceChange24h != null && (
                     <span
                       className="text-[10px] font-mono"
-                      style={{ color: token.priceChange24h >= 0 ? "#00d672" : "#f23645" }}
+                      style={{ color: token.priceChange24h >= 0 ? "#22c55e" : "#ef4444" }}
                     >
                       {token.priceChange24h >= 0 ? "+" : ""}
                       {token.priceChange24h.toFixed(1)}%
                     </span>
                   )}
                   {token.marketCapUsd != null && (
-                    <span className="text-[10px] font-mono" style={{ color: "#363d54" }}>
+                    <span className="text-[10px] font-mono" style={{ color: "#444c60" }}>
                       MC {formatMarketCap(token.marketCapUsd)}
                     </span>
                   )}

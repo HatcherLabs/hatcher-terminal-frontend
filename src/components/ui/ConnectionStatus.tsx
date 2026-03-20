@@ -6,10 +6,10 @@ const STATUS_CONFIG: Record<
   Status,
   { color: string; label: string; pulse: boolean; clickable: boolean }
 > = {
-  connected: { color: "#00d672", label: "Live", pulse: false, clickable: false },
-  connecting: { color: "#f0a000", label: "Connecting...", pulse: true, clickable: false },
-  disconnected: { color: "#f23645", label: "Offline", pulse: false, clickable: true },
-  error: { color: "#f23645", label: "Error", pulse: false, clickable: true },
+  connected: { color: "#22c55e", label: "Live", pulse: false, clickable: false },
+  connecting: { color: "#f59e0b", label: "Connecting...", pulse: true, clickable: false },
+  disconnected: { color: "#ef4444", label: "Offline", pulse: false, clickable: true },
+  error: { color: "#ef4444", label: "Error", pulse: false, clickable: true },
 };
 
 export function ConnectionStatus() {

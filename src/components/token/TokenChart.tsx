@@ -6,16 +6,16 @@ import { useLiveCandles } from "@/hooks/useLiveCandles";
 
 // ---- Chart Theme Constants ----
 const CHART_THEME = {
-  background: "#04060b",
-  gridColor: "#1a1f2e",
-  upColor: "#00d672",
-  downColor: "#f23645",
+  background: "#06080e",
+  gridColor: "#1c2030",
+  upColor: "#22c55e",
+  downColor: "#ef4444",
   crosshairColor: "#5c6380",
   textColor: "#5c6380",
-  labelBg: "#0a0d14",
-  borderColor: "#1a1f2e",
-  volumeUpColor: "rgba(0, 214, 114, 0.2)",
-  volumeDownColor: "rgba(242, 54, 69, 0.2)",
+  labelBg: "#0d1017",
+  borderColor: "#1c2030",
+  volumeUpColor: "rgba(34, 197, 94, 0.2)",
+  volumeDownColor: "rgba(239, 68, 68, 0.2)",
   priceLineColor: "#5c6380",
 } as const;
 
@@ -154,7 +154,7 @@ function ChartSkeleton({ height }: { height: number }) {
   return (
     <div
       className="w-full rounded-lg overflow-hidden"
-      style={{ height, background: "#04060b" }}
+      style={{ height, background: "#06080e" }}
     >
       {/* Toolbar skeleton */}
       <div className="flex items-center gap-2 px-3 py-2.5">
@@ -164,7 +164,7 @@ function ChartSkeleton({ height }: { height: number }) {
             className="h-6 rounded animate-pulse"
             style={{
               width: 32 + Math.random() * 8,
-              background: "#1a1f2e",
+              background: "#1c2030",
             }}
           />
         ))}
@@ -173,7 +173,7 @@ function ChartSkeleton({ height }: { height: number }) {
       <div className="px-3 pb-3" style={{ height: height - 48 }}>
         <div
           className="w-full h-full rounded animate-pulse relative overflow-hidden"
-          style={{ background: "#0a0d14" }}
+          style={{ background: "#0d1017" }}
         >
           {/* Fake candle bars */}
           <div className="absolute inset-0 flex items-end justify-around px-4 pb-8 gap-1">
@@ -188,8 +188,8 @@ function ChartSkeleton({ height }: { height: number }) {
                     width: 4,
                     height: `${h}%`,
                     background: isUp
-                      ? "rgba(0, 214, 114, 0.15)"
-                      : "rgba(242, 54, 69, 0.15)",
+                      ? "rgba(34, 197, 94, 0.15)"
+                      : "rgba(239, 68, 68, 0.15)",
                     animationDelay: `${i * 80}ms`,
                   }}
                 />
@@ -222,7 +222,7 @@ function ChartError({ height }: { height: number }) {
   return (
     <div
       className="w-full rounded-lg flex flex-col items-center justify-center gap-2"
-      style={{ height, background: "#04060b" }}
+      style={{ height, background: "#06080e" }}
     >
       <svg
         width="28"
@@ -249,7 +249,7 @@ function ChartError({ height }: { height: number }) {
       </p>
       <p
         className="font-mono"
-        style={{ color: "#363d54", fontSize: 10 }}
+        style={{ color: "#444c60", fontSize: 10 }}
       >
         Try again later or switch timeframe
       </p>
@@ -272,37 +272,37 @@ function OHLCVOverlay({ data }: { data: OHLCVData | null }) {
     >
       <span style={{ color: "#5c6380" }}>
         O{" "}
-        <span style={{ color: isUp ? "#00d672" : "#f23645" }}>
+        <span style={{ color: isUp ? "#22c55e" : "#ef4444" }}>
           {formatPriceCompact(data.open)}
         </span>
       </span>
       <span style={{ color: "#5c6380" }}>
         H{" "}
-        <span style={{ color: isUp ? "#00d672" : "#f23645" }}>
+        <span style={{ color: isUp ? "#22c55e" : "#ef4444" }}>
           {formatPriceCompact(data.high)}
         </span>
       </span>
       <span style={{ color: "#5c6380" }}>
         L{" "}
-        <span style={{ color: isUp ? "#00d672" : "#f23645" }}>
+        <span style={{ color: isUp ? "#22c55e" : "#ef4444" }}>
           {formatPriceCompact(data.low)}
         </span>
       </span>
       <span style={{ color: "#5c6380" }}>
         C{" "}
-        <span style={{ color: isUp ? "#00d672" : "#f23645" }}>
+        <span style={{ color: isUp ? "#22c55e" : "#ef4444" }}>
           {formatPriceCompact(data.close)}
         </span>
       </span>
       <span style={{ color: "#5c6380" }}>
         V{" "}
-        <span style={{ color: "#9ca3b8" }}>
+        <span style={{ color: "#8890a4" }}>
           {formatVolume(data.volume)}
         </span>
       </span>
       <span
         className="font-semibold"
-        style={{ color: isUp ? "#00d672" : "#f23645" }}
+        style={{ color: isUp ? "#22c55e" : "#ef4444" }}
       >
         {changePercent > 0 ? "+" : ""}
         {changePercent.toFixed(2)}%
@@ -332,14 +332,14 @@ function TimeRangeSelector({
               padding: "4px 8px",
               fontSize: 11,
               borderRadius: 4,
-              color: isActive ? "#00d672" : "#5c6380",
-              background: isActive ? "rgba(0, 214, 114, 0.08)" : "transparent",
+              color: isActive ? "#22c55e" : "#5c6380",
+              background: isActive ? "rgba(34, 197, 94, 0.08)" : "transparent",
               border: "none",
               cursor: "pointer",
             }}
             onMouseEnter={(e) => {
               if (!isActive) {
-                e.currentTarget.style.color = "#9ca3b8";
+                e.currentTarget.style.color = "#8890a4";
                 e.currentTarget.style.background = "rgba(92, 99, 128, 0.08)";
               }
             }}
@@ -358,7 +358,7 @@ function TimeRangeSelector({
                   width: 12,
                   height: 1.5,
                   borderRadius: 1,
-                  background: "#00d672",
+                  background: "#22c55e",
                 }}
               />
             )}
@@ -498,7 +498,7 @@ function CandlestickChart({
       const isUp = lastCandle.close >= lastCandle.open;
       candlestickSeries.createPriceLine({
         price: lastCandle.close,
-        color: isUp ? "#00d672" : "#f23645",
+        color: isUp ? "#22c55e" : "#ef4444",
         lineWidth: 1,
         lineStyle: LineStyle.Dashed,
         axisLabelVisible: true,
@@ -735,16 +735,16 @@ export function TokenChart({ mintAddress, height }: TokenChartProps) {
     return (
       <div
         className="w-full rounded-lg flex flex-col items-center justify-center gap-1.5"
-        style={{ height: responsiveHeight + 40, background: "#04060b" }}
+        style={{ height: responsiveHeight + 40, background: "#06080e" }}
       >
         <div
           className="w-5 h-5 rounded-full border-2 animate-spin"
-          style={{ borderColor: "#1a1f2e", borderTopColor: "#5c6380" }}
+          style={{ borderColor: "#1c2030", borderTopColor: "#5c6380" }}
         />
         <p className="font-mono text-xs" style={{ color: "#5c6380" }}>
           Chart available after ~2 min
         </p>
-        <p className="font-mono" style={{ color: "#363d54", fontSize: 10 }}>
+        <p className="font-mono" style={{ color: "#444c60", fontSize: 10 }}>
           Token was just created
         </p>
       </div>
@@ -760,7 +760,7 @@ export function TokenChart({ mintAddress, height }: TokenChartProps) {
     <div
       className="w-full rounded-lg overflow-hidden"
       style={{
-        background: "#04060b",
+        background: "#06080e",
         minHeight: 200,
       }}
     >
@@ -771,24 +771,24 @@ export function TokenChart({ mintAddress, height }: TokenChartProps) {
           {loading && (
             <div
               className="w-3 h-3 rounded-full border animate-spin"
-              style={{ borderColor: "#1a1f2e", borderTopColor: "#5c6380" }}
+              style={{ borderColor: "#1c2030", borderTopColor: "#5c6380" }}
             />
           )}
           {isLiveCapable && (
             <span
               className="flex items-center gap-1 font-mono"
-              style={{ fontSize: 9, color: "#00d672" }}
+              style={{ fontSize: 9, color: "#22c55e" }}
             >
               <span
                 className="w-1.5 h-1.5 rounded-full animate-pulse"
-                style={{ background: "#00d672" }}
+                style={{ background: "#22c55e" }}
               />
               LIVE
             </span>
           )}
           <span
             className="font-mono"
-            style={{ fontSize: 10, color: "#363d54" }}
+            style={{ fontSize: 10, color: "#444c60" }}
           >
             {TIMEFRAMES[timeframe].label}
           </span>

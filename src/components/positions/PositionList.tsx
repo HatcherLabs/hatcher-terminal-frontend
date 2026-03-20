@@ -77,34 +77,34 @@ function computeStats(positions: Position[]): PortfolioStats {
 
 function PortfolioSummary({ stats }: { stats: PortfolioStats }) {
   const isPositive = stats.totalPnlSol >= 0;
-  const pnlColor = isPositive ? "#00d672" : "#f23645";
-  const pnlColorFaded = isPositive ? "rgba(0,214,114,0.7)" : "rgba(242,54,69,0.7)";
+  const pnlColor = isPositive ? "#22c55e" : "#ef4444";
+  const pnlColorFaded = isPositive ? "rgba(34,197,94,0.7)" : "rgba(239,68,68,0.7)";
 
   return (
-    <div className="rounded-xl p-4 mb-4" style={{ background: "#10131c", border: "1px solid #1a1f2e" }}>
+    <div className="rounded-xl p-4 mb-4" style={{ background: "#141820", border: "1px solid #1c2030" }}>
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#5c6380" }}>
           Portfolio
         </h2>
         <div className="flex items-center gap-3 text-[11px] font-mono" style={{ color: "#5c6380" }}>
           <span>
-            <span style={{ color: "#00d672" }}>{stats.wins}W</span>
+            <span style={{ color: "#22c55e" }}>{stats.wins}W</span>
             {" / "}
-            <span style={{ color: "#f23645" }}>{stats.losses}L</span>
+            <span style={{ color: "#ef4444" }}>{stats.losses}L</span>
           </span>
         </div>
       </div>
       <div className="grid grid-cols-3 gap-3">
         <div>
           <p className="text-[10px] uppercase" style={{ color: "#5c6380" }}>Value</p>
-          <p className="text-sm font-mono font-bold" style={{ color: "#eef0f6" }}>
+          <p className="text-sm font-mono font-bold" style={{ color: "#f0f2f7" }}>
             {stats.totalValue.toFixed(4)}
           </p>
           <p className="text-[10px] font-mono" style={{ color: "#5c6380" }}>SOL</p>
         </div>
         <div>
           <p className="text-[10px] uppercase" style={{ color: "#5c6380" }}>Invested</p>
-          <p className="text-sm font-mono font-bold" style={{ color: "#9ca3b8" }}>
+          <p className="text-sm font-mono font-bold" style={{ color: "#8890a4" }}>
             {stats.totalInvested.toFixed(4)}
           </p>
           <p className="text-[10px] font-mono" style={{ color: "#5c6380" }}>SOL</p>
@@ -302,7 +302,7 @@ export function PositionList() {
       {/* Position count + total unrealized P&L bar */}
       <div
         className="flex items-center justify-between rounded-xl px-4 py-2.5"
-        style={{ background: "#10131c", border: "1px solid #1a1f2e" }}
+        style={{ background: "#141820", border: "1px solid #1c2030" }}
       >
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#5c6380" }}>
@@ -310,7 +310,7 @@ export function PositionList() {
           </span>
           <span
             className="text-xs font-mono font-bold px-2 py-0.5 rounded-md"
-            style={{ color: "#eef0f6", background: "#1f2435" }}
+            style={{ color: "#f0f2f7", background: "#1f2435" }}
           >
             {positions.length}
           </span>
@@ -321,7 +321,7 @@ export function PositionList() {
           </span>
           <span
             className="text-sm font-mono font-bold"
-            style={{ color: pnlIsPositive ? "#00d672" : "#f23645" }}
+            style={{ color: pnlIsPositive ? "#22c55e" : "#ef4444" }}
           >
             {pnlIsPositive ? "+" : ""}
             {totalUnrealizedPnlSol.toFixed(4)} SOL

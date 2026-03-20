@@ -3,10 +3,10 @@ interface RiskBadgeProps {
 }
 
 const riskStyles: Record<string, React.CSSProperties> = {
-  LOW: { background: "rgba(0,214,114,0.08)", color: "#00d672", borderColor: "rgba(0,214,114,0.2)" },
-  MED: { background: "rgba(240,160,0,0.08)", color: "#f0a000", borderColor: "rgba(240,160,0,0.2)" },
-  HIGH: { background: "rgba(242,54,69,0.08)", color: "#f23645", borderColor: "rgba(242,54,69,0.2)" },
-  EXTREME: { background: "#f23645", color: "#04060b", borderColor: "#f23645" },
+  LOW: { background: "rgba(34,197,94,0.08)", color: "#22c55e", borderColor: "rgba(34,197,94,0.2)" },
+  MED: { background: "rgba(245,158,11,0.08)", color: "#f59e0b", borderColor: "rgba(245,158,11,0.2)" },
+  HIGH: { background: "rgba(239,68,68,0.08)", color: "#ef4444", borderColor: "rgba(239,68,68,0.2)" },
+  EXTREME: { background: "#ef4444", color: "#06080e", borderColor: "#ef4444" },
 };
 
 const riskLabels = {

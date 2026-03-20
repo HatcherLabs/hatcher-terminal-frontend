@@ -1,7 +1,7 @@
 "use client";
 
-import { ReactNode } from "react";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { ReactNode, useEffect, useState } from "react";
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { TxStatusTracker } from "@/components/trade/TxStatusTracker";
 
@@ -10,7 +10,44 @@ interface TerminalLayoutProps {
 }
 
 export function TerminalLayout({ children }: TerminalLayoutProps) {
+  const { connection } = useConnection();
   const { publicKey } = useWallet();
+  const [solBalance, setSolBalance] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!publicKey) {
+      setSolBalance(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function fetchBalance() {
+      try {
+        const lamports = await connection.getBalance(publicKey!);
+        if (!cancelled) {
+          setSolBalance(lamports / 1e9);
+        }
+      } catch {
+        if (!cancelled) {
+          setSolBalance(null);
+        }
+      }
+    }
+
+    fetchBalance();
+
+    const id = connection.onAccountChange(publicKey, (accountInfo) => {
+      if (!cancelled) {
+        setSolBalance(accountInfo.lamports / 1e9);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      connection.removeAccountChangeListener(id);
+    };
+  }, [connection, publicKey]);
 
   return (
     <>
@@ -23,15 +60,25 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
           >
             HATCHER
           </span>
-          <WalletMultiButton
-            style={{
-              height: 32,
-              fontSize: 11,
-              borderRadius: 8,
-              padding: "0 12px",
-              background: "#1a1f2e",
-            }}
-          />
+          <div className="flex items-center gap-2">
+            {publicKey && solBalance !== null && (
+              <span
+                className="text-[10px] font-mono px-1.5 py-0.5 rounded"
+                style={{ color: "#c4b5fd", background: "#1c2030" }}
+              >
+                {"\uD83D\uDC5B"} {solBalance.toFixed(1)} SOL
+              </span>
+            )}
+            <WalletMultiButton
+              style={{
+                height: 32,
+                fontSize: 11,
+                borderRadius: 8,
+                padding: "0 12px",
+                background: "#1c2030",
+              }}
+            />
+          </div>
         </div>
         <main className="px-4 py-3 animate-fade-in">{children}</main>
       </div>
@@ -42,8 +89,8 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
         <div
           className="flex items-center justify-between px-6 h-12 shrink-0"
           style={{
-            background: "#0a0d14",
-            borderBottom: "1px solid #1a1f2e",
+            background: "#0d1017",
+            borderBottom: "1px solid #1c2030",
           }}
         >
           <span
@@ -54,12 +101,22 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
           </span>
           <div className="flex items-center gap-3">
             {publicKey && (
-              <span
-                className="text-xs font-mono"
-                style={{ color: "#5c6380" }}
-              >
-                {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
-              </span>
+              <div className="flex items-center gap-2">
+                {solBalance !== null && (
+                  <span
+                    className="text-xs font-mono px-2 py-0.5 rounded"
+                    style={{ color: "#c4b5fd", background: "#1c2030" }}
+                  >
+                    {"\uD83D\uDC5B"} {solBalance.toFixed(1)} SOL
+                  </span>
+                )}
+                <span
+                  className="text-xs font-mono"
+                  style={{ color: "#5c6380" }}
+                >
+                  {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
+                </span>
+              </div>
             )}
             <WalletMultiButton
               style={{
@@ -67,7 +124,7 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
                 fontSize: 11,
                 borderRadius: 8,
                 padding: "0 12px",
-                background: "#1a1f2e",
+                background: "#1c2030",
               }}
             />
           </div>

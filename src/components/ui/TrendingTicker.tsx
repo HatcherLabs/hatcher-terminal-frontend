@@ -51,8 +51,8 @@ export function TrendingTicker() {
       className="relative overflow-hidden select-none shrink-0"
       style={{
         height: 28,
-        background: "#04060b",
-        borderBottom: "1px solid #1a1f2e",
+        background: "#06080e",
+        borderBottom: "1px solid #1c2030",
       }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -61,13 +61,13 @@ export function TrendingTicker() {
       <div
         className="absolute left-0 top-0 bottom-0 w-6 z-[1] pointer-events-none"
         style={{
-          background: "linear-gradient(to right, #04060b, transparent)",
+          background: "linear-gradient(to right, #06080e, transparent)",
         }}
       />
       <div
         className="absolute right-0 top-0 bottom-0 w-6 z-[1] pointer-events-none"
         style={{
-          background: "linear-gradient(to left, #04060b, transparent)",
+          background: "linear-gradient(to left, #06080e, transparent)",
         }}
       />
 
@@ -91,7 +91,7 @@ export function TrendingTicker() {
               <span
                 style={{
                   fontSize: 10,
-                  color: "#9ca3b8",
+                  color: "#8890a4",
                   fontWeight: 600,
                 }}
               >
@@ -114,7 +114,7 @@ export function TrendingTicker() {
                   style={{
                     fontSize: 10,
                     fontWeight: 600,
-                    color: isUp ? "#00d672" : isDown ? "#f23645" : "#5c6380",
+                    color: isUp ? "#22c55e" : isDown ? "#ef4444" : "#5c6380",
                   }}
                 >
                   {formatChange(change)}
@@ -125,7 +125,7 @@ export function TrendingTicker() {
               <span
                 style={{
                   fontSize: 8,
-                  color: "#363d54",
+                  color: "#444c60",
                   marginLeft: 4,
                   marginRight: 2,
                 }}

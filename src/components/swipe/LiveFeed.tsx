@@ -26,9 +26,9 @@ function timeAgo(date: string): string {
 
 function riskDot(level: TokenData["riskLevel"]): string {
   if (!level) return "#5c6380";
-  if (level === "LOW") return "#00d672";
-  if (level === "MED") return "#f0a000";
-  return "#f23645";
+  if (level === "LOW") return "#22c55e";
+  if (level === "MED") return "#f59e0b";
+  return "#ef4444";
 }
 
 /* ── Types ────────────────────────────────────── */
@@ -74,7 +74,7 @@ function TokenRow({
         padding: "5px 10px",
         borderBottom: "1px solid rgba(26, 31, 46, 0.3)",
       }}
-      onMouseEnter={(e) => (e.currentTarget.style.background = "#10131c")}
+      onMouseEnter={(e) => (e.currentTarget.style.background = "#141820")}
       onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
     >
       {/* Avatar */}
@@ -95,7 +95,7 @@ function TokenRow({
             height: 6,
             borderRadius: "50%",
             background: riskDot(token.riskLevel),
-            border: "1px solid #0a0d14",
+            border: "1px solid #0d1017",
           }}
         />
       </div>
@@ -105,13 +105,13 @@ function TokenRow({
         <div className="flex items-center gap-1">
           <span
             className="font-mono font-bold text-[10px] truncate"
-            style={{ color: "#eef0f6" }}
+            style={{ color: "#f0f2f7" }}
           >
             ${token.ticker}
           </span>
           <span
             className="text-[8px] font-mono shrink-0"
-            style={{ color: "#363d54" }}
+            style={{ color: "#444c60" }}
           >
             {timeAgo(token.detectedAt)}
           </span>
@@ -124,7 +124,7 @@ function TokenRow({
             height: 2,
             borderRadius: 1,
             marginTop: 2,
-            background: "#1a1f2e",
+            background: "#1c2030",
             overflow: "hidden",
           }}
         >
@@ -132,7 +132,7 @@ function TokenRow({
             style={{
               width: `${buyRatio * 100}%`,
               height: "100%",
-              background: buyRatio > 0.5 ? "#00d672" : "#f23645",
+              background: buyRatio > 0.5 ? "#22c55e" : "#ef4444",
               borderRadius: 1,
               transition: "width 0.3s ease",
             }}
@@ -156,7 +156,7 @@ function TokenRow({
               width: 32,
               height: 4,
               borderRadius: 2,
-              background: "#1a1f2e",
+              background: "#1c2030",
               overflow: "hidden",
             }}
           >
@@ -166,9 +166,9 @@ function TokenRow({
                 height: "100%",
                 background:
                   token.bondingProgress > 80
-                    ? "#f0a000"
+                    ? "#f59e0b"
                     : token.bondingProgress > 50
-                      ? "#00d672"
+                      ? "#22c55e"
                       : "#5c6380",
                 borderRadius: 2,
               }}
@@ -178,7 +178,7 @@ function TokenRow({
             className="text-[8px] font-mono font-bold"
             style={{
               color:
-                token.bondingProgress > 80 ? "#f0a000" : "#5c6380",
+                token.bondingProgress > 80 ? "#f59e0b" : "#5c6380",
             }}
           >
             {token.bondingProgress.toFixed(0)}%
@@ -187,7 +187,7 @@ function TokenRow({
       ) : (
         <span
           className="text-[9px] font-mono font-bold shrink-0"
-          style={{ color: isPositive ? "#00d672" : "#f23645" }}
+          style={{ color: isPositive ? "#22c55e" : "#ef4444" }}
         >
           {isPositive ? "+" : ""}
           {pct.toFixed(1)}%
@@ -247,15 +247,15 @@ export function LiveFeed({ tokens, graduatingTokens }: LiveFeedProps) {
       className="hidden terminal:flex flex-col overflow-hidden"
       style={{
         width: 320,
-        borderLeft: "1px solid #1a1f2e",
-        background: "#0a0d14",
+        borderLeft: "1px solid #1c2030",
+        background: "#0d1017",
       }}
     >
       {/* Header with tabs */}
       <div
         className="shrink-0"
         style={{
-          borderBottom: "1px solid #1a1f2e",
+          borderBottom: "1px solid #1c2030",
         }}
       >
         <div
@@ -288,9 +288,9 @@ export function LiveFeed({ tokens, graduatingTokens }: LiveFeedProps) {
                   fontFamily: "var(--font-jetbrains-mono), monospace",
                   textTransform: "uppercase",
                   letterSpacing: "0.04em",
-                  color: isActive ? "#eef0f6" : "#5c6380",
+                  color: isActive ? "#f0f2f7" : "#5c6380",
                   borderBottom: isActive
-                    ? "2px solid #00d672"
+                    ? "2px solid #22c55e"
                     : "2px solid transparent",
                   background: "transparent",
                   cursor: "pointer",
@@ -302,7 +302,7 @@ export function LiveFeed({ tokens, graduatingTokens }: LiveFeedProps) {
                   style={{
                     marginLeft: 4,
                     fontSize: 8,
-                    color: isActive ? "#00d672" : "#363d54",
+                    color: isActive ? "#22c55e" : "#444c60",
                   }}
                 >
                   {tabCounts[tab.key]}
@@ -318,10 +318,10 @@ export function LiveFeed({ tokens, graduatingTokens }: LiveFeedProps) {
         className="flex items-center gap-1.5 shrink-0"
         style={{
           padding: "3px 10px",
-          borderBottom: "1px solid #1a1f2e",
+          borderBottom: "1px solid #1c2030",
           fontSize: 8,
           fontWeight: 700,
-          color: "#363d54",
+          color: "#444c60",
           fontFamily: "var(--font-jetbrains-mono), monospace",
           textTransform: "uppercase",
           letterSpacing: "0.05em",
@@ -351,7 +351,7 @@ export function LiveFeed({ tokens, graduatingTokens }: LiveFeedProps) {
         {displayTokens.length === 0 && (
           <div
             className="flex flex-col items-center justify-center gap-1 py-12"
-            style={{ color: "#363d54", fontSize: 11 }}
+            style={{ color: "#444c60", fontSize: 11 }}
           >
             <span style={{ fontSize: 20 }}>
               {activeTab === "graduating" ? "⏳" : activeTab === "movers" ? "📊" : "🔄"}
@@ -372,10 +372,10 @@ export function LiveFeed({ tokens, graduatingTokens }: LiveFeedProps) {
         className="shrink-0 flex items-center justify-between"
         style={{
           padding: "4px 10px",
-          borderTop: "1px solid #1a1f2e",
+          borderTop: "1px solid #1c2030",
           fontSize: 9,
           fontFamily: "var(--font-jetbrains-mono), monospace",
-          color: "#363d54",
+          color: "#444c60",
         }}
       >
         <span>
@@ -387,9 +387,9 @@ export function LiveFeed({ tokens, graduatingTokens }: LiveFeedProps) {
               width: 5,
               height: 5,
               borderRadius: "50%",
-              background: "#00d672",
+              background: "#22c55e",
               display: "inline-block",
-              boxShadow: "0 0 4px #00d672",
+              boxShadow: "0 0 4px #22c55e",
             }}
           />
           LIVE

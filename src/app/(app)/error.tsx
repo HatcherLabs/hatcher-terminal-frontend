@@ -16,14 +16,14 @@ export default function AppError({
     <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center">
       <div
         className="w-14 h-14 rounded-full flex items-center justify-center mb-5"
-        style={{ background: "rgba(242,54,69,0.1)" }}
+        style={{ background: "rgba(239,68,68,0.1)" }}
       >
         <svg
           viewBox="0 0 24 24"
           width={28}
           height={28}
           fill="none"
-          stroke="#f23645"
+          stroke="#ef4444"
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -36,7 +36,7 @@ export default function AppError({
 
       <h1
         className="text-lg font-bold mb-2"
-        style={{ color: "#eef0f6" }}
+        style={{ color: "#f0f2f7" }}
       >
         Something went wrong
       </h1>
@@ -53,9 +53,9 @@ export default function AppError({
           onClick={reset}
           className="px-5 py-2.5 rounded-lg text-sm font-semibold transition-all"
           style={{
-            background: "linear-gradient(135deg, #00d672 0%, #00b060 100%)",
-            color: "#04060b",
-            boxShadow: "0 0 16px rgba(0,214,114,0.2)",
+            background: "linear-gradient(135deg, #22c55e 0%, #00b060 100%)",
+            color: "#06080e",
+            boxShadow: "0 0 16px rgba(34,197,94,0.2)",
           }}
         >
           Try Again
@@ -64,9 +64,9 @@ export default function AppError({
           href="/swipe"
           className="px-5 py-2.5 rounded-lg text-sm font-medium transition-all no-underline"
           style={{
-            background: "#10131c",
-            color: "#9ca3b8",
-            border: "1px solid #1a1f2e",
+            background: "#141820",
+            color: "#8890a4",
+            border: "1px solid #1c2030",
           }}
         >
           Go Home
@@ -76,7 +76,7 @@ export default function AppError({
       <button
         onClick={() => setShowDetails((v) => !v)}
         className="text-[11px] transition-colors"
-        style={{ color: "#363d54" }}
+        style={{ color: "#444c60" }}
       >
         {showDetails ? "Hide details" : "Show details"}
       </button>
@@ -84,18 +84,18 @@ export default function AppError({
       {showDetails && (
         <div
           className="mt-3 w-full max-w-sm rounded-lg p-3 text-left"
-          style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
+          style={{ background: "#0d1017", border: "1px solid #1c2030" }}
         >
           <p
             className="text-[11px] font-mono break-all leading-relaxed"
-            style={{ color: "#f23645" }}
+            style={{ color: "#ef4444" }}
           >
             {error.message}
           </p>
           {error.digest && (
             <p
               className="text-[10px] font-mono mt-2"
-              style={{ color: "#363d54" }}
+              style={{ color: "#444c60" }}
             >
               Digest: {error.digest}
             </p>

@@ -67,26 +67,26 @@ function SkeletonRow({ index }: { index: number }) {
       <td className="py-1.5 pr-2">
         <span
           className="inline-block w-8 h-3 rounded animate-pulse"
-          style={{ background: "#10131c" }}
+          style={{ background: "#141820" }}
         />
       </td>
       <td className="py-1.5 px-2">
         <span
           className="inline-block w-7 h-3 rounded animate-pulse"
-          style={{ background: "#10131c" }}
+          style={{ background: "#141820" }}
         />
       </td>
       <td className="py-1.5 px-2 text-right">
         <span
           className="inline-block w-10 h-3 rounded animate-pulse"
-          style={{ background: "#10131c" }}
+          style={{ background: "#141820" }}
         />
       </td>
       <td className="py-1.5 px-2 text-right">
         <span
           className="inline-block rounded animate-pulse"
           style={{
-            background: "#10131c",
+            background: "#141820",
             width: `${40 + (index % 3) * 10}px`,
             height: "12px",
           }}
@@ -95,7 +95,7 @@ function SkeletonRow({ index }: { index: number }) {
       <td className="py-1.5 pl-2 text-right">
         <span
           className="inline-block w-14 h-3 rounded animate-pulse"
-          style={{ background: "#10131c" }}
+          style={{ background: "#141820" }}
         />
       </td>
     </tr>
@@ -160,12 +160,12 @@ export function RecentTrades({ mintAddress }: RecentTradesProps) {
   return (
     <div
       className="rounded overflow-hidden"
-      style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
+      style={{ background: "#0d1017", border: "1px solid #1c2030" }}
     >
       {/* Header */}
       <div
         className="flex items-center justify-between h-8 px-3"
-        style={{ borderBottom: "1px solid #1a1f2e" }}
+        style={{ borderBottom: "1px solid #1c2030" }}
       >
         <div className="flex items-center gap-2">
           <span
@@ -178,11 +178,11 @@ export function RecentTrades({ mintAddress }: RecentTradesProps) {
           <span className="relative flex h-1.5 w-1.5">
             <span
               className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
-              style={{ background: "#00d672" }}
+              style={{ background: "#22c55e" }}
             />
             <span
               className="relative inline-flex rounded-full h-1.5 w-1.5"
-              style={{ background: "#00d672" }}
+              style={{ background: "#22c55e" }}
             />
           </span>
         </div>
@@ -207,9 +207,9 @@ export function RecentTrades({ mintAddress }: RecentTradesProps) {
               onClick={fetchTrades}
               className="text-[10px] font-mono px-2 py-1 rounded transition-colors"
               style={{
-                background: "#10131c",
-                border: "1px solid #1a1f2e",
-                color: "#9ca3b8",
+                background: "#141820",
+                border: "1px solid #1c2030",
+                color: "#8890a4",
               }}
             >
               Retry
@@ -272,7 +272,7 @@ export function RecentTrades({ mintAddress }: RecentTradesProps) {
             </p>
             <p
               className="text-[9px] font-mono mt-1"
-              style={{ color: "#363d54" }}
+              style={{ color: "#444c60" }}
             >
               Transaction feed coming soon
             </p>
@@ -321,14 +321,14 @@ export function RecentTrades({ mintAddress }: RecentTradesProps) {
                 {trades.map((trade) => {
                   const isBuy = trade.type === "buy";
                   const isNew = newTradeIds.has(trade.id);
-                  const typeColor = isBuy ? "#00d672" : "#f23645";
+                  const typeColor = isBuy ? "#22c55e" : "#ef4444";
 
                   return (
                     <tr
                       key={trade.id}
                       className={isNew ? "animate-pulse-new" : ""}
                       style={{
-                        borderLeft: `2px solid ${isBuy ? "rgba(0, 214, 114, 0.2)" : "rgba(242, 54, 69, 0.2)"}`,
+                        borderLeft: `2px solid ${isBuy ? "rgba(34, 197, 94, 0.2)" : "rgba(239, 68, 68, 0.2)"}`,
                       }}
                     >
                       <td
@@ -343,8 +343,8 @@ export function RecentTrades({ mintAddress }: RecentTradesProps) {
                           style={{
                             color: typeColor,
                             background: isBuy
-                              ? "rgba(0, 214, 114, 0.08)"
-                              : "rgba(242, 54, 69, 0.08)",
+                              ? "rgba(34, 197, 94, 0.08)"
+                              : "rgba(239, 68, 68, 0.08)",
                           }}
                         >
                           {trade.type}
@@ -352,13 +352,13 @@ export function RecentTrades({ mintAddress }: RecentTradesProps) {
                       </td>
                       <td
                         className="py-1.5 px-2 text-right text-[10px] font-mono"
-                        style={{ color: "#eef0f6" }}
+                        style={{ color: "#f0f2f7" }}
                       >
                         {formatSol(trade.amountSol)}
                       </td>
                       <td
                         className="py-1.5 px-2 text-right text-[10px] font-mono"
-                        style={{ color: "#9ca3b8" }}
+                        style={{ color: "#8890a4" }}
                       >
                         {formatPrice(trade.price)}
                       </td>

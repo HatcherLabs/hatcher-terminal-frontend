@@ -39,7 +39,7 @@ export function QuickTradeFAB() {
       </svg>
 
       {/* Ticker badge */}
-      <span className="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold font-mono leading-none shadow-sm" style={{ background: "#0a0d14", border: "1px solid #1a1f2e", color: "#eef0f6" }}>
+      <span className="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold font-mono leading-none shadow-sm" style={{ background: "#0d1017", border: "1px solid #1c2030", color: "#f0f2f7" }}>
         ${selectedToken.ticker}
       </span>
     </button>

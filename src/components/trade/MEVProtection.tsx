@@ -60,7 +60,7 @@ export function MEVProtection() {
       {/* Toggle row */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs font-medium" style={{ color: "#9ca3b8" }}>
+          <p className="text-xs font-medium" style={{ color: "#8890a4" }}>
             MEV Protection
           </p>
           <p className="text-[10px]" style={{ color: "#5c6380" }}>
@@ -78,7 +78,7 @@ export function MEVProtection() {
 
       {/* Protected badge */}
       {enabled && (
-        <div className="flex items-center gap-2 rounded-lg px-3 py-2" style={{ background: "rgba(0,214,114,0.1)", border: "1px solid rgba(0,214,114,0.2)" }}>
+        <div className="flex items-center gap-2 rounded-lg px-3 py-2" style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)" }}>
           {/* Shield icon */}
           <svg
             viewBox="0 0 24 24"
@@ -88,18 +88,18 @@ export function MEVProtection() {
             strokeLinecap="round"
             strokeLinejoin="round"
             className="w-4 h-4 shrink-0"
-            style={{ color: "#00d672" }}
+            style={{ color: "#22c55e" }}
           >
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
           </svg>
-          <span className="text-[11px] font-medium font-mono" style={{ color: "#00d672" }}>
+          <span className="text-[11px] font-medium font-mono" style={{ color: "#22c55e" }}>
             Protected
           </span>
         </div>
       )}
 
       {/* Info text */}
-      <p className="text-[10px] leading-relaxed" style={{ color: "#363d54" }}>
+      <p className="text-[10px] leading-relaxed" style={{ color: "#444c60" }}>
         When enabled, your swaps are routed through private transaction pools
         to prevent MEV bots from front-running or sandwiching your trades.
         This may slightly increase confirmation time.

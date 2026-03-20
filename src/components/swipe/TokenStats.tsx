@@ -50,10 +50,10 @@ function BondingCurveBar({
   if (isGraduated) {
     return (
       <div className="flex items-center gap-2">
-        <div className="flex-1 h-2 rounded-full bg-[#10131c] overflow-hidden">
-          <div className="h-full w-full rounded-full" style={{ background: "linear-gradient(to right, #00d672, #f0a000)" }} />
+        <div className="flex-1 h-2 rounded-full bg-[#141820] overflow-hidden">
+          <div className="h-full w-full rounded-full" style={{ background: "linear-gradient(to right, #22c55e, #f59e0b)" }} />
         </div>
-        <span className="text-[10px] font-bold tracking-wider whitespace-nowrap" style={{ color: "#f0a000" }}>
+        <span className="text-[10px] font-bold tracking-wider whitespace-nowrap" style={{ color: "#f59e0b" }}>
           MIGRATED
         </span>
       </div>
@@ -65,8 +65,8 @@ function BondingCurveBar({
 
   // Color logic: gray < 30%, green 30-70%, gold > 70%
   let barHex = "#5c6380";
-  if (pct >= 70) barHex = "#f0a000";
-  else if (pct >= 30) barHex = "#00d672";
+  if (pct >= 70) barHex = "#f59e0b";
+  else if (pct >= 30) barHex = "#22c55e";
 
   return (
     <div className="space-y-1">
@@ -74,11 +74,11 @@ function BondingCurveBar({
         <span className="uppercase tracking-wider" style={{ color: "#5c6380" }}>
           Bonding Curve
         </span>
-        <span className="font-mono" style={{ color: "#9ca3b8" }}>
+        <span className="font-mono" style={{ color: "#8890a4" }}>
           {solInCurve.toFixed(1)} / {BONDING_GRADUATION_SOL} SOL
         </span>
       </div>
-      <div className="w-full h-2 rounded-full bg-[#10131c] overflow-hidden">
+      <div className="w-full h-2 rounded-full bg-[#141820] overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-500"
           style={{ width: `${pct}%`, backgroundColor: barHex }}
@@ -113,20 +113,20 @@ function BuySellBar({
         <span className="uppercase tracking-wider" style={{ color: "#5c6380" }}>
           Buy / Sell
         </span>
-        <span className="font-mono" style={{ color: "#9ca3b8" }}>
-          <span style={{ color: "#00d672" }}>{buys}</span>
+        <span className="font-mono" style={{ color: "#8890a4" }}>
+          <span style={{ color: "#22c55e" }}>{buys}</span>
           {" / "}
-          <span style={{ color: "#f23645" }}>{sells}</span>
+          <span style={{ color: "#ef4444" }}>{sells}</span>
         </span>
       </div>
       <div className="w-full h-1.5 rounded-full overflow-hidden flex">
         <div
           className="h-full rounded-l-full"
-          style={{ width: `${buyPct}%`, backgroundColor: "#00d672" }}
+          style={{ width: `${buyPct}%`, backgroundColor: "#22c55e" }}
         />
         <div
           className="h-full rounded-r-full"
-          style={{ width: `${100 - buyPct}%`, backgroundColor: "#f23645" }}
+          style={{ width: `${100 - buyPct}%`, backgroundColor: "#ef4444" }}
         />
       </div>
     </div>
@@ -212,39 +212,39 @@ export function TokenStats({
       )}
 
       {/* Stats grid - 4 columns */}
-      <div className="grid grid-cols-4 gap-px rounded-lg overflow-hidden" style={{ backgroundColor: "#1a1f2e" }}>
-        <div className="bg-[#10131c] px-2 py-2 text-center">
+      <div className="grid grid-cols-4 gap-px rounded-lg overflow-hidden" style={{ backgroundColor: "#1c2030" }}>
+        <div className="bg-[#141820] px-2 py-2 text-center">
           <p className="text-[10px] uppercase tracking-wider" style={{ color: "#5c6380" }}>
             Holders
           </p>
-          <p className="text-sm font-mono font-medium mt-0.5" style={{ color: "#eef0f6" }}>
+          <p className="text-sm font-mono font-medium mt-0.5" style={{ color: "#f0f2f7" }}>
             {holders !== null ? formatNumber(holders) : "\u2014"}
           </p>
         </div>
-        <div className="bg-[#10131c] px-2 py-2 text-center">
+        <div className="bg-[#141820] px-2 py-2 text-center">
           <p className="text-[10px] uppercase tracking-wider" style={{ color: "#5c6380" }}>
             Vol 1h
           </p>
-          <p className="text-sm font-mono font-medium mt-0.5" style={{ color: "#eef0f6" }}>
+          <p className="text-sm font-mono font-medium mt-0.5" style={{ color: "#f0f2f7" }}>
             {effectiveVolume1h ? `$${formatNumber(effectiveVolume1h)}` : "\u2014"}
           </p>
         </div>
-        <div className="bg-[#10131c] px-2 py-2 text-center">
+        <div className="bg-[#141820] px-2 py-2 text-center">
           <p className="text-[10px] uppercase tracking-wider" style={{ color: "#5c6380" }}>
             Dev %
           </p>
           <p
             className="text-sm font-mono font-medium mt-0.5"
-            style={{ color: devWarn ? "#f23645" : "#eef0f6" }}
+            style={{ color: devWarn ? "#ef4444" : "#f0f2f7" }}
           >
             {devHoldPct !== null ? `${devHoldPct.toFixed(1)}%` : "\u2014"}
           </p>
         </div>
-        <div className="bg-[#10131c] px-2 py-2 text-center">
+        <div className="bg-[#141820] px-2 py-2 text-center">
           <p className="text-[10px] uppercase tracking-wider" style={{ color: "#5c6380" }}>
             Age
           </p>
-          <p className="text-sm font-mono font-medium mt-0.5" style={{ color: "#eef0f6" }}>
+          <p className="text-sm font-mono font-medium mt-0.5" style={{ color: "#f0f2f7" }}>
             {tokenAge(createdAt)}
           </p>
         </div>

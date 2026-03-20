@@ -98,11 +98,11 @@ export function PositionCard({ position, onClose, takeProfitPct, stopLossPct }: 
   // Compute gradient intensity based on P&L magnitude (capped at 50%)
   const gradientIntensity = Math.min(Math.abs(pnl) / 50, 1);
   const gradientColor = isPositive
-    ? `rgba(0, 214, 114, ${0.15 + gradientIntensity * 0.45})`
-    : `rgba(242, 54, 69, ${0.15 + gradientIntensity * 0.45})`;
+    ? `rgba(34, 197, 94, ${0.15 + gradientIntensity * 0.45})`
+    : `rgba(239, 68, 68, ${0.15 + gradientIntensity * 0.45})`;
 
-  const pnlColor = isPositive ? "#00d672" : "#f23645";
-  const pnlColorFaded = isPositive ? "rgba(0,214,114,0.7)" : "rgba(242,54,69,0.7)";
+  const pnlColor = isPositive ? "#22c55e" : "#ef4444";
+  const pnlColorFaded = isPositive ? "rgba(34,197,94,0.7)" : "rgba(239,68,68,0.7)";
 
   const handleSell = async (percent: number) => {
     setSellingPercent(percent);
@@ -116,7 +116,7 @@ export function PositionCard({ position, onClose, takeProfitPct, stopLossPct }: 
   return (
     <div
       className="group relative rounded-xl overflow-hidden"
-      style={{ background: "#10131c", border: "1px solid #1a1f2e" }}
+      style={{ background: "#141820", border: "1px solid #1c2030" }}
       onMouseEnter={() => setShowSellButtons(true)}
       onMouseLeave={() => {
         if (sellingPercent === null) setShowSellButtons(false);
@@ -127,7 +127,7 @@ export function PositionCard({ position, onClose, takeProfitPct, stopLossPct }: 
         className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl"
         style={{
           background: `linear-gradient(to bottom, ${gradientColor}, ${
-            isPositive ? "rgba(0, 214, 114, 0.05)" : "rgba(242, 54, 69, 0.05)"
+            isPositive ? "rgba(34, 197, 94, 0.05)" : "rgba(239, 68, 68, 0.05)"
           })`,
         }}
       />
@@ -143,11 +143,11 @@ export function PositionCard({ position, onClose, takeProfitPct, stopLossPct }: 
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-sm" style={{ color: "#eef0f6" }}>
+              <span className="font-semibold text-sm" style={{ color: "#f0f2f7" }}>
                 ${position.token.ticker}
               </span>
               {isPending && (
-                <span className="text-[10px] animate-pulse font-medium" style={{ color: "#f0a000" }}>
+                <span className="text-[10px] animate-pulse font-medium" style={{ color: "#f59e0b" }}>
                   BUYING...
                 </span>
               )}
@@ -172,15 +172,15 @@ export function PositionCard({ position, onClose, takeProfitPct, stopLossPct }: 
         <div className="grid grid-cols-3 gap-2 text-[11px] font-mono">
           <div>
             <p style={{ color: "#5c6380" }}>Entry</p>
-            <p style={{ color: "#9ca3b8" }}>{position.entrySol.toFixed(4)} SOL</p>
+            <p style={{ color: "#8890a4" }}>{position.entrySol.toFixed(4)} SOL</p>
           </div>
           <div>
             <p style={{ color: "#5c6380" }}>Value</p>
-            <p style={{ color: "#9ca3b8" }}>{currentValueSol.toFixed(4)} SOL</p>
+            <p style={{ color: "#8890a4" }}>{currentValueSol.toFixed(4)} SOL</p>
           </div>
           <div>
             <p style={{ color: "#5c6380" }}>Held</p>
-            <p style={{ color: "#9ca3b8" }}>
+            <p style={{ color: "#8890a4" }}>
               {formatTimeHeld(position.entryTimestamp)}
             </p>
           </div>
@@ -223,8 +223,8 @@ export function PositionCard({ position, onClose, takeProfitPct, stopLossPct }: 
                   onClick={() => handleSell(pct)}
                   className="py-1.5 text-xs font-medium rounded-lg border transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
-                    borderColor: pct === 100 ? "rgba(242,54,69,0.4)" : "#1a1f2e",
-                    color: pct === 100 ? "#f23645" : "#9ca3b8",
+                    borderColor: pct === 100 ? "rgba(239,68,68,0.4)" : "#1c2030",
+                    color: pct === 100 ? "#ef4444" : "#8890a4",
                     background: "transparent",
                   }}
                 >

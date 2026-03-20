@@ -22,7 +22,7 @@ export function ExternalLink({ href, children, className = "" }: ExternalLinkPro
         transition: "color 150ms ease",
       }}
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLAnchorElement).style.color = "#9ca3b8";
+        (e.currentTarget as HTMLAnchorElement).style.color = "#8890a4";
       }}
       onMouseLeave={(e) => {
         (e.currentTarget as HTMLAnchorElement).style.color = "#5c6380";

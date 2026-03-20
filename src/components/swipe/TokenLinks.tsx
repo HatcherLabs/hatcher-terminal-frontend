@@ -85,48 +85,48 @@ export function TokenLinks({ mintAddress }: TokenLinksProps) {
         rel="noopener noreferrer"
         className="flex items-center gap-1 text-[10px] transition-colors px-1.5 py-1 rounded"
         style={{ color: "#5c6380" }}
-        onMouseEnter={(e) => { e.currentTarget.style.color = "#9ca3b8"; e.currentTarget.style.background = "#181c28"; }}
+        onMouseEnter={(e) => { e.currentTarget.style.color = "#8890a4"; e.currentTarget.style.background = "#1a1f2a"; }}
         onMouseLeave={(e) => { e.currentTarget.style.color = "#5c6380"; e.currentTarget.style.background = "transparent"; }}
         aria-label="View on Pump.fun"
       >
         <ExternalLinkIcon />
         <span>Pump</span>
       </a>
-      <span style={{ color: "#363d54" }} aria-hidden="true">|</span>
+      <span style={{ color: "#444c60" }} aria-hidden="true">|</span>
       <a
         href={solscanUrl}
         target="_blank"
         rel="noopener noreferrer"
         className="flex items-center gap-1 text-[10px] transition-colors px-1.5 py-1 rounded"
         style={{ color: "#5c6380" }}
-        onMouseEnter={(e) => { e.currentTarget.style.color = "#9ca3b8"; e.currentTarget.style.background = "#181c28"; }}
+        onMouseEnter={(e) => { e.currentTarget.style.color = "#8890a4"; e.currentTarget.style.background = "#1a1f2a"; }}
         onMouseLeave={(e) => { e.currentTarget.style.color = "#5c6380"; e.currentTarget.style.background = "transparent"; }}
         aria-label="View on Solscan"
       >
         <ExternalLinkIcon />
         <span>Solscan</span>
       </a>
-      <span style={{ color: "#363d54" }} aria-hidden="true">|</span>
+      <span style={{ color: "#444c60" }} aria-hidden="true">|</span>
       <a
         href={dexscreenerUrl}
         target="_blank"
         rel="noopener noreferrer"
         className="flex items-center gap-1 text-[10px] transition-colors px-1.5 py-1 rounded"
         style={{ color: "#5c6380" }}
-        onMouseEnter={(e) => { e.currentTarget.style.color = "#9ca3b8"; e.currentTarget.style.background = "#181c28"; }}
+        onMouseEnter={(e) => { e.currentTarget.style.color = "#8890a4"; e.currentTarget.style.background = "#1a1f2a"; }}
         onMouseLeave={(e) => { e.currentTarget.style.color = "#5c6380"; e.currentTarget.style.background = "transparent"; }}
         aria-label="View on DexScreener"
       >
         <ExternalLinkIcon />
         <span>DexS</span>
       </a>
-      <span style={{ color: "#363d54" }} aria-hidden="true">|</span>
+      <span style={{ color: "#444c60" }} aria-hidden="true">|</span>
       <button
         type="button"
         onClick={handleCopy}
         className="flex items-center gap-1 text-[10px] transition-colors px-1.5 py-1 rounded"
-        style={{ color: copied ? "#00d672" : "#5c6380" }}
-        onMouseEnter={(e) => { if (!copied) { e.currentTarget.style.color = "#9ca3b8"; } e.currentTarget.style.background = "#181c28"; }}
+        style={{ color: copied ? "#22c55e" : "#5c6380" }}
+        onMouseEnter={(e) => { if (!copied) { e.currentTarget.style.color = "#8890a4"; } e.currentTarget.style.background = "#1a1f2a"; }}
         onMouseLeave={(e) => { if (!copied) { e.currentTarget.style.color = "#5c6380"; } e.currentTarget.style.background = "transparent"; }}
         aria-label={copied ? "Copied" : "Copy contract address"}
       >

@@ -84,7 +84,7 @@ export function MiniChart({
         className="flex items-center justify-center"
         style={{ width, height }}
       >
-        <span className="text-[10px] font-mono" style={{ color: "#363d54" }}>
+        <span className="text-[10px] font-mono" style={{ color: "#444c60" }}>
           No chart
         </span>
       </div>
@@ -96,7 +96,7 @@ export function MiniChart({
     return (
       <div
         className="rounded animate-pulse"
-        style={{ width, height, background: "#10131c" }}
+        style={{ width, height, background: "#141820" }}
       />
     );
   }

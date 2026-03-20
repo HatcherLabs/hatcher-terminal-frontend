@@ -53,25 +53,25 @@ export function AnimatedPrice({ value, format, className = "", showArrow = false
 
   const flashBg =
     flash === "up"
-      ? "rgba(0,214,114,0.1)"
+      ? "rgba(34,197,94,0.1)"
       : flash === "down"
-        ? "rgba(242,54,69,0.1)"
+        ? "rgba(239,68,68,0.1)"
         : "transparent";
 
   const flashTextColor =
     flash === "up"
-      ? "#00d672"
+      ? "#22c55e"
       : flash === "down"
-        ? "#f23645"
+        ? "#ef4444"
         : undefined;
 
   // For percent format, color is always based on value sign
   const percentColor =
     format === "percent" && value !== null
       ? value > 0
-        ? "#00d672"
+        ? "#22c55e"
         : value < 0
-          ? "#f23645"
+          ? "#ef4444"
           : "#5c6380"
       : undefined;
 

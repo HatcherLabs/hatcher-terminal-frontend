@@ -122,7 +122,7 @@ function AreaChartRenderer({
       width: el.clientWidth,
       height: el.clientHeight,
       layout: {
-        background: { type: ColorType.Solid, color: "#0a0d14" },
+        background: { type: ColorType.Solid, color: "#0d1017" },
         textColor: "#5c6380",
         fontFamily: "var(--font-jetbrains-mono), monospace",
         fontSize: 10,
@@ -136,13 +136,13 @@ function AreaChartRenderer({
           color: "#5c6380",
           width: 1,
           style: 3,
-          labelBackgroundColor: "#10131c",
+          labelBackgroundColor: "#141820",
         },
         horzLine: {
           color: "#5c6380",
           width: 1,
           style: 3,
-          labelBackgroundColor: "#10131c",
+          labelBackgroundColor: "#141820",
         },
       },
       rightPriceScale: {
@@ -158,13 +158,13 @@ function AreaChartRenderer({
 
     chartRef.current = chart;
 
-    const lineColor = isPositive ? "#00d672" : "#f23645";
+    const lineColor = isPositive ? "#22c55e" : "#ef4444";
     const topColor = isPositive
-      ? "rgba(0, 214, 114, 0.25)"
-      : "rgba(242, 54, 69, 0.25)";
+      ? "rgba(34, 197, 94, 0.25)"
+      : "rgba(239, 68, 68, 0.25)";
     const bottomColor = isPositive
-      ? "rgba(0, 214, 114, 0.0)"
-      : "rgba(242, 54, 69, 0.0)";
+      ? "rgba(34, 197, 94, 0.0)"
+      : "rgba(239, 68, 68, 0.0)";
 
     const areaSeries = chart.addSeries(AreaSeries, {
       lineColor,
@@ -268,8 +268,8 @@ export function PortfolioChart() {
       <div
         className="w-full h-[180px] md:h-[220px] flex flex-col items-center justify-center gap-1.5"
         style={{
-          background: "#0a0d14",
-          border: "1px solid #1a1f2e",
+          background: "#0d1017",
+          border: "1px solid #1c2030",
           borderRadius: 8,
         }}
       >
@@ -278,7 +278,7 @@ export function PortfolioChart() {
           height="24"
           viewBox="0 0 24 24"
           fill="none"
-          style={{ color: "#363d54" }}
+          style={{ color: "#444c60" }}
         >
           <path
             d="M3 17L9 11L13 15L21 7"
@@ -296,7 +296,7 @@ export function PortfolioChart() {
           />
         </svg>
         <p className="text-xs" style={{ color: "#5c6380" }}>No trade history yet</p>
-        <p className="text-[10px]" style={{ color: "#363d54" }}>
+        <p className="text-[10px]" style={{ color: "#444c60" }}>
           Close some positions to see your P&amp;L chart
         </p>
       </div>
@@ -313,8 +313,8 @@ export function PortfolioChart() {
   return (
     <div
       style={{
-        background: "#0a0d14",
-        border: "1px solid #1a1f2e",
+        background: "#0d1017",
+        border: "1px solid #1c2030",
         borderRadius: 8,
       }}
       className="p-3"
@@ -330,7 +330,7 @@ export function PortfolioChart() {
           </p>
           <p
             className="font-mono text-sm font-bold"
-            style={{ color: isPositive ? "#00d672" : "#f23645" }}
+            style={{ color: isPositive ? "#22c55e" : "#ef4444" }}
           >
             {isPositive ? "+" : ""}
             {lastValue.toFixed(4)} SOL
@@ -340,9 +340,9 @@ export function PortfolioChart() {
               className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded"
               style={{
                 background: periodPositive
-                  ? "rgba(0, 214, 114, 0.12)"
-                  : "rgba(242, 54, 69, 0.12)",
-                color: periodPositive ? "#00d672" : "#f23645",
+                  ? "rgba(34, 197, 94, 0.12)"
+                  : "rgba(239, 68, 68, 0.12)",
+                color: periodPositive ? "#22c55e" : "#ef4444",
               }}
             >
               {periodPositive ? "+" : ""}{periodChange.toFixed(4)}
@@ -351,15 +351,15 @@ export function PortfolioChart() {
         </div>
 
         {/* Time range selector */}
-        <div className="flex items-center gap-0.5" style={{ background: "#10131c", borderRadius: 6, padding: 2 }}>
+        <div className="flex items-center gap-0.5" style={{ background: "#141820", borderRadius: 6, padding: 2 }}>
           {TIME_RANGES.map((r) => (
             <button
               key={r}
               onClick={() => setRange(r)}
               className="px-2 py-1 text-[10px] font-mono font-medium rounded transition-colors"
               style={{
-                background: range === r ? "#1a1f2e" : "transparent",
-                color: range === r ? "#eef0f6" : "#5c6380",
+                background: range === r ? "#1c2030" : "transparent",
+                color: range === r ? "#f0f2f7" : "#5c6380",
               }}
             >
               {r}

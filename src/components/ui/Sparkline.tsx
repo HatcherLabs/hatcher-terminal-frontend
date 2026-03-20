@@ -29,7 +29,7 @@ export function Sparkline({
     const innerH = height - pad * 2;
 
     const isUp = data[data.length - 1] >= data[0];
-    const c = color ?? (isUp ? "#00d672" : "#f23645");
+    const c = color ?? (isUp ? "#22c55e" : "#ef4444");
 
     // Build SVG path from data points
     const points = data.map((v, i) => ({

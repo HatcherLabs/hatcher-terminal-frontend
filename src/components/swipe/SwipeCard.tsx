@@ -7,7 +7,6 @@ import { MiniChart } from "@/components/token/MiniChart";
 import { AnimatedPrice } from "@/components/ui/AnimatedPrice";
 import { useTokenPrice } from "@/hooks/useTokenPrice";
 import { useSolPriceContext } from "@/components/providers/SolPriceProvider";
-import { LiveAge } from "@/components/ui/LiveAge";
 import type { TokenData } from "@/types/token";
 
 interface SwipeCardProps {
@@ -16,6 +15,15 @@ interface SwipeCardProps {
 }
 
 /* ---- Helpers ---- */
+
+function mintToColor(mint: string): string {
+  let hash = 0;
+  for (let i = 0; i < 6 && i < mint.length; i++) {
+    hash = mint.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const h = ((hash % 360) + 360) % 360;
+  return `hsl(${h}, 65%, 55%)`;
+}
 
 function timeAgo(date: string): string {
   const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
@@ -33,22 +41,17 @@ function fmt(n: number | null | undefined): string {
 }
 
 function pctColor(val: number | null | undefined): string {
-  if (val === null || val === undefined) return "#5c6380";
-  if (val > 0) return "#00d672";
-  if (val < 0) return "#f23645";
-  return "#5c6380";
+  if (val === null || val === undefined) return "#444c60";
+  if (val > 0) return "#22c55e";
+  if (val < 0) return "#ef4444";
+  return "#444c60";
 }
 
 function devColor(pct: number | null | undefined): string {
-  if (pct === null || pct === undefined) return "#5c6380";
-  if (pct > 20) return "#f23645";
-  if (pct > 10) return "#f0a000";
-  return "#00d672";
-}
-
-function bondingPct(progress: number | null | undefined): string {
-  if (progress === null || progress === undefined) return "\u2014";
-  return `${Math.min(progress, 100).toFixed(0)}%`;
+  if (pct === null || pct === undefined) return "#444c60";
+  if (pct > 20) return "#ef4444";
+  if (pct > 10) return "#f59e0b";
+  return "#22c55e";
 }
 
 /* ---- Metric Cell ---- */
@@ -74,7 +77,7 @@ function MetricCell({
         style={{
           fontSize: 9,
           fontWeight: 600,
-          color: "#5c6380",
+          color: "#444c60",
           textTransform: "uppercase",
           letterSpacing: "0.05em",
           lineHeight: 1,
@@ -88,7 +91,7 @@ function MetricCell({
         style={{
           fontSize: 13,
           fontWeight: 700,
-          color: valueColor ?? "#eef0f6",
+          color: valueColor ?? "#f0f2f7",
           lineHeight: 1,
           whiteSpace: "nowrap",
           overflow: "hidden",
@@ -104,7 +107,7 @@ function MetricCell({
 /* ---- Security Dot ---- */
 
 function SecDot({ ok, label }: { ok: boolean; label: string }) {
-  const color = ok ? "#00d672" : "#f23645";
+  const color = ok ? "#22c55e" : "#ef4444";
   return (
     <span
       style={{
@@ -159,17 +162,17 @@ function SocialIcon({
         width: 22,
         height: 22,
         borderRadius: 4,
-        background: "#1a1f2e",
-        color: "#5c6380",
+        background: "#1c2030",
+        color: "#444c60",
         transition: "color 0.15s, background 0.15s",
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.color = "#eef0f6";
-        e.currentTarget.style.background = "#252b3d";
+        e.currentTarget.style.color = "#f0f2f7";
+        e.currentTarget.style.background = "#1a1f2a";
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.color = "#5c6380";
-        e.currentTarget.style.background = "#1a1f2e";
+        e.currentTarget.style.color = "#444c60";
+        e.currentTarget.style.background = "#1c2030";
       }}
     >
       {children}
@@ -231,11 +234,11 @@ export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
     <div
       className="relative w-full no-select overflow-hidden"
       style={{
-        background: "#0a0d14",
-        border: "1px solid #1a1f2e",
+        background: "#0d1017",
+        border: "1px solid #1c2030",
         borderRadius: 12,
         maxWidth: 420,
-        boxShadow: "0 4px 24px rgba(4,6,11,0.8), 0 1px 3px rgba(0,0,0,0.4)",
+        boxShadow: "0 4px 24px rgba(6,8,14,0.8), 0 1px 3px rgba(0,0,0,0.4)",
       }}
     >
       {/* ---- Row 1: Header ---- */}
@@ -247,13 +250,28 @@ export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
           gap: 8,
         }}
       >
-        {/* Avatar + Name + Ticker */}
-        <TokenAvatar
-          mintAddress={token.mintAddress}
-          imageUri={token.imageUri}
-          size={32}
-          ticker={token.ticker}
-        />
+        {/* Avatar + Colored circle fallback + Name + Ticker */}
+        <div style={{ position: "relative", width: 32, height: 32, flexShrink: 0 }}>
+          <div
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: "50%",
+              background: mintToColor(token.mintAddress),
+              position: "absolute",
+              top: 0,
+              left: 0,
+            }}
+          />
+          <div style={{ position: "relative", zIndex: 1 }}>
+            <TokenAvatar
+              mintAddress={token.mintAddress}
+              imageUri={token.imageUri}
+              size={32}
+              ticker={token.ticker}
+            />
+          </div>
+        </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
             <span
@@ -261,7 +279,7 @@ export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
               style={{
                 fontSize: 15,
                 fontWeight: 800,
-                color: "#eef0f6",
+                color: "#f0f2f7",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
@@ -273,7 +291,7 @@ export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
               className="font-mono"
               style={{
                 fontSize: 10,
-                color: "#363d54",
+                color: "#444c60",
                 flexShrink: 0,
               }}
             >
@@ -285,10 +303,10 @@ export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
                   width: 5,
                   height: 5,
                   borderRadius: "50%",
-                  background: "#00d672",
+                  background: "#22c55e",
                   display: "inline-block",
                   flexShrink: 0,
-                  boxShadow: "0 0 4px #00d672",
+                  boxShadow: "0 0 4px #22c55e",
                 }}
                 title="Live data"
               />
@@ -299,11 +317,11 @@ export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
               className="font-mono"
               style={{
                 fontSize: 9,
-                color: "#5c6380",
-                background: "#5c638015",
+                color: "#444c60",
+                background: "#444c6015",
                 padding: "1px 5px",
                 borderRadius: 3,
-                border: "1px solid #5c638025",
+                border: "1px solid #444c6025",
                 fontWeight: 600,
               }}
             >
@@ -338,7 +356,7 @@ export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
             className="text-lg font-bold"
           />
           {token.marketCapSol != null && (
-            <span className="font-mono" style={{ fontSize: 10, color: "#5c6380" }}>
+            <span className="font-mono" style={{ fontSize: 10, color: "#444c60" }}>
               {fmt(token.marketCapSol)}&nbsp;SOL
             </span>
           )}
@@ -346,7 +364,7 @@ export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {change5m != null && (
             <span style={{ display: "inline-flex", alignItems: "center", gap: 2 }}>
-              <span style={{ fontSize: 9, color: "#5c6380", fontWeight: 600 }}>5m</span>
+              <span style={{ fontSize: 9, color: "#444c60", fontWeight: 600 }}>5m</span>
               <span className="font-mono" style={{ fontSize: 12, fontWeight: 700, color: pctColor(change5m) }}>
                 {change5m > 0 ? "+" : ""}{change5m.toFixed(1)}%
               </span>
@@ -354,7 +372,7 @@ export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
           )}
           {change1h != null && (
             <span style={{ display: "inline-flex", alignItems: "center", gap: 2 }}>
-              <span style={{ fontSize: 9, color: "#5c6380", fontWeight: 600 }}>1h</span>
+              <span style={{ fontSize: 9, color: "#444c60", fontWeight: 600 }}>1h</span>
               <span className="font-mono" style={{ fontSize: 12, fontWeight: 700, color: pctColor(change1h) }}>
                 {change1h > 0 ? "+" : ""}{change1h.toFixed(1)}%
               </span>
@@ -368,69 +386,69 @@ export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
         <MiniChart mintAddress={token.mintAddress} />
       </div>
 
-      {/* ---- Row 4: 2x4 Metrics Grid ---- */}
+      {/* ---- Row 4: 2x3 Metrics Grid ---- */}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
+          gridTemplateColumns: "repeat(3, 1fr)",
           gap: "1px",
           margin: "6px 12px 0",
-          background: "#1a1f2e",
+          background: "#1c2030",
           borderRadius: 6,
           overflow: "hidden",
         }}
       >
-        <div style={{ background: "#0e1219" }}>
+        <div style={{ background: "#0d1017" }}>
           <MetricCell label="MCap" value={mcapUsd != null ? `$${fmt(mcapUsd)}` : "\u2014"} />
         </div>
-        <div style={{ background: "#0e1219" }}>
-          <MetricCell label="Vol 1h" value={vol1h ? `$${fmt(vol1h)}` : "\u2014"} />
+        <div style={{ background: "#0d1017" }}>
+          <MetricCell label="Volume" value={vol1h ? `$${fmt(vol1h)}` : "\u2014"} />
         </div>
-        <div style={{ background: "#0e1219" }}>
+        <div style={{ background: "#0d1017" }}>
           <MetricCell label="Holders" value={token.holders != null ? fmt(token.holders) : "\u2014"} />
         </div>
-        <div style={{ background: "#0e1219" }}>
+        <div style={{ background: "#0d1017" }}>
           <MetricCell
             label="Dev%"
             value={token.devHoldPct != null ? `${token.devHoldPct.toFixed(1)}%` : "\u2014"}
             valueColor={devColor(token.devHoldPct)}
           />
         </div>
-        <div style={{ background: "#0e1219" }}>
+        <div style={{ background: "#0d1017" }}>
           <MetricCell
             label="Buys/Sells"
             value={`${buys}/${sells}`}
-            valueColor={buys > sells ? "#00d672" : buys < sells ? "#f23645" : "#eef0f6"}
+            valueColor={buys > sells ? "#22c55e" : buys < sells ? "#ef4444" : "#f0f2f7"}
           />
         </div>
-        <div style={{ background: "#0e1219" }}>
+        <div style={{ background: "#0d1017" }}>
           <MetricCell
-            label="Bonding"
-            value={token.isGraduated ? "GRAD" : bondingPct(token.bondingProgress)}
-            valueColor={token.isGraduated ? "#f0a000" : undefined}
+            label="Heat"
+            value={heat}
+            valueColor={heat >= 70 ? "#22c55e" : heat >= 40 ? "#f59e0b" : "#ef4444"}
           />
-        </div>
-        <div style={{ background: "#0e1219" }}>
-          <MetricCell
-            label="Top10%"
-            value={token.topHoldersPct != null ? `${token.topHoldersPct.toFixed(0)}%` : "\u2014"}
-            valueColor={
-              token.topHoldersPct != null
-                ? token.topHoldersPct > 70
-                  ? "#f23645"
-                  : token.topHoldersPct > 50
-                    ? "#f0a000"
-                    : "#00d672"
-                : undefined
-            }
-          />
-        </div>
-        <div style={{ background: "#0e1219" }}>
-          <MetricCell label="Age" value={<LiveAge createdAt={token.createdAt} className="text-xs" />} />
         </div>
       </div>
 
-      {/* ---- Row 5: Security Dots + Social Links + Terminal Button ---- */}
+      {/* ---- Row 5: Description ---- */}
+      {token.description && (
+        <div
+          style={{
+            padding: "8px 12px",
+            fontSize: 11,
+            color: "#8890a4",
+            lineHeight: 1.4,
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+          }}
+        >
+          {token.description}
+        </div>
+      )}
+
+      {/* ---- Row 6: Security Dots + Social Links + Terminal Button ---- */}
       <div
         style={{
           display: "flex",
@@ -438,7 +456,7 @@ export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
           justifyContent: "space-between",
           padding: "8px 12px 10px",
           marginTop: 6,
-          borderTop: "1px solid #1a1f2e",
+          borderTop: "1px solid #1c2030",
         }}
       >
         {/* Security indicators */}
@@ -466,7 +484,7 @@ export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
             </SocialIcon>
           )}
           {!hasSocials && (
-            <span style={{ fontSize: 9, color: "#5c6380", fontStyle: "italic" }}>
+            <span style={{ fontSize: 9, color: "#444c60", fontStyle: "italic" }}>
               no socials
             </span>
           )}
@@ -485,21 +503,21 @@ export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
               fontWeight: 700,
               padding: "4px 10px",
               borderRadius: 4,
-              background: "#1a1f2e",
-              border: "1px solid #252b3d",
-              color: "#9ca3b8",
+              background: "#1c2030",
+              border: "1px solid #1a1f2a",
+              color: "#8890a4",
               cursor: "pointer",
               transition: "background 0.15s, color 0.15s",
               fontFamily: "monospace",
               letterSpacing: "0.03em",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = "#252b3d";
-              e.currentTarget.style.color = "#eef0f6";
+              e.currentTarget.style.background = "#1a1f2a";
+              e.currentTarget.style.color = "#f0f2f7";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = "#1a1f2e";
-              e.currentTarget.style.color = "#9ca3b8";
+              e.currentTarget.style.background = "#1c2030";
+              e.currentTarget.style.color = "#8890a4";
             }}
             aria-label={`View details for ${token.name}`}
           >

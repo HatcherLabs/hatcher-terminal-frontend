@@ -109,11 +109,11 @@ function useConfirmationPoller(tx: TrackedTx) {
 // ---------------------------------------------------------------------------
 
 const statusConfig: Record<TxStatus, { label: string; color: string; bgColor: string }> = {
-  signing: { label: "Signing", color: "#f0a000", bgColor: "rgba(240,160,0,0.08)" },
+  signing: { label: "Signing", color: "#f59e0b", bgColor: "rgba(245,158,11,0.08)" },
   submitting: { label: "Submitting", color: "#3b82f6", bgColor: "rgba(59,130,246,0.08)" },
   confirming: { label: "Confirming", color: "#8b5cf6", bgColor: "rgba(139,92,246,0.08)" },
-  confirmed: { label: "Confirmed", color: "#00d672", bgColor: "rgba(0,214,114,0.08)" },
-  failed: { label: "Failed", color: "#f23645", bgColor: "rgba(242,54,69,0.08)" },
+  confirmed: { label: "Confirmed", color: "#22c55e", bgColor: "rgba(34,197,94,0.08)" },
+  failed: { label: "Failed", color: "#ef4444", bgColor: "rgba(239,68,68,0.08)" },
 };
 
 const typeLabels: Record<TrackedTx["type"], string> = {
@@ -151,7 +151,7 @@ function TxRow({ tx }: { tx: TrackedTx }) {
         {isTerminal ? (
           <div
             className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
-            style={{ background: config.color, color: "#04060b" }}
+            style={{ background: config.color, color: "#06080e" }}
           >
             {tx.status === "confirmed" ? "✓" : "✕"}
           </div>
@@ -172,14 +172,14 @@ function TxRow({ tx }: { tx: TrackedTx }) {
           <span
             className="text-[10px] font-bold px-1.5 py-0.5 rounded"
             style={{
-              color: tx.type === "buy" ? "#00d672" : tx.type === "sell" ? "#f23645" : "#9ca3b8",
-              background: tx.type === "buy" ? "rgba(0,214,114,0.1)" : tx.type === "sell" ? "rgba(242,54,69,0.1)" : "rgba(156,163,184,0.1)",
+              color: tx.type === "buy" ? "#22c55e" : tx.type === "sell" ? "#ef4444" : "#8890a4",
+              background: tx.type === "buy" ? "rgba(34,197,94,0.1)" : tx.type === "sell" ? "rgba(239,68,68,0.1)" : "rgba(156,163,184,0.1)",
             }}
           >
             {typeLabels[tx.type]}
           </span>
           {tx.tokenTicker && (
-            <span className="text-xs font-medium truncate" style={{ color: "#eef0f6" }}>
+            <span className="text-xs font-medium truncate" style={{ color: "#f0f2f7" }}>
               ${tx.tokenTicker}
             </span>
           )}
@@ -189,7 +189,7 @@ function TxRow({ tx }: { tx: TrackedTx }) {
             {config.label}
           </span>
           {tx.error && (
-            <span className="text-[10px] truncate" style={{ color: "#f23645" }}>
+            <span className="text-[10px] truncate" style={{ color: "#ef4444" }}>
               — {tx.error}
             </span>
           )}
@@ -208,7 +208,7 @@ function TxRow({ tx }: { tx: TrackedTx }) {
             rel="noopener noreferrer"
             className="text-[10px] transition-colors"
             style={{ color: "#5c6380" }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = "#00d672"; }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = "#22c55e"; }}
             onMouseLeave={(e) => { e.currentTarget.style.color = "#5c6380"; }}
             title="View on Solscan"
           >
@@ -224,7 +224,7 @@ function TxRow({ tx }: { tx: TrackedTx }) {
             onClick={() => remove(tx.id)}
             className="transition-colors"
             style={{ color: "#5c6380" }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = "#9ca3b8"; }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = "#8890a4"; }}
             onMouseLeave={(e) => { e.currentTarget.style.color = "#5c6380"; }}
             aria-label="Dismiss"
           >
@@ -258,7 +258,7 @@ export function TxStatusTracker() {
       className="fixed bottom-4 right-4 z-[100] w-[320px] max-h-[400px] overflow-y-auto terminal-scrollbar rounded-xl shadow-2xl"
       style={{
         background: "rgba(10,13,20,0.95)",
-        border: "1px solid #1a1f2e",
+        border: "1px solid #1c2030",
         backdropFilter: "blur(12px)",
       }}
     >
@@ -267,7 +267,7 @@ export function TxStatusTracker() {
         className="flex items-center justify-between px-3 py-2 sticky top-0"
         style={{
           background: "rgba(10,13,20,0.95)",
-          borderBottom: "1px solid #1a1f2e",
+          borderBottom: "1px solid #1c2030",
         }}
       >
         <div className="flex items-center gap-1.5">
@@ -284,7 +284,7 @@ export function TxStatusTracker() {
             onClick={clearCompleted}
             className="text-[10px] transition-colors"
             style={{ color: "#5c6380" }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = "#9ca3b8"; }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = "#8890a4"; }}
             onMouseLeave={(e) => { e.currentTarget.style.color = "#5c6380"; }}
           >
             Clear done

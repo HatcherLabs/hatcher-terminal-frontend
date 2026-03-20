@@ -125,8 +125,8 @@ export function LimitOrderForm({
   const red = "#ef4444";
   const redDim = "rgba(239,68,68,0.12)";
   const redBorder = "rgba(239,68,68,0.35)";
-  const bg = "#0a0d14";
-  const border = "#1a1f2e";
+  const bg = "#0d1017";
+  const border = "#1c2030";
   const bgElevated = "#111520";
   const textPrimary = "#e2e8f0";
   const textMuted = "#64748b";
@@ -654,7 +654,7 @@ export function LimitOrderForm({
           opacity: canSubmit ? 1 : 0.4,
           transition: "all 0.15s ease",
           background: accentColor,
-          color: isBuy ? "#0a0d14" : "#ffffff",
+          color: isBuy ? "#0d1017" : "#ffffff",
         }}
       >
         {submitting

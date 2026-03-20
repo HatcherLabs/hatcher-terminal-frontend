@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Lexend, JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { WalletConnectionProvider } from "@/components/providers/WalletConnectionProvider";
 
-const lexend = Lexend({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-lexend",
+  variable: "--font-inter",
   weight: ["300", "400", "500", "600", "700"],
 });
 
@@ -28,7 +28,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#04060b",
+  themeColor: "#06080e",
 };
 
 export default function RootLayout({
@@ -39,7 +39,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${lexend.variable} ${jetbrainsMono.variable} font-sans antialiased`}
+        className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
         <WalletConnectionProvider>{children}</WalletConnectionProvider>
       </body>

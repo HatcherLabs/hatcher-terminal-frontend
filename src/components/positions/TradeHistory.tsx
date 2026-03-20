@@ -53,16 +53,16 @@ function TradeRow({ position }: { position: ClosedPosition }) {
   const pnlSol = position.pnlSol ?? 0;
   const pnlPercent = position.pnlPercent ?? 0;
   const isPositive = pnlSol >= 0;
-  const pnlColor = isPositive ? "#00d672" : "#f23645";
-  const pnlColorFaded = isPositive ? "rgba(0,214,114,0.7)" : "rgba(242,54,69,0.7)";
-  const borderLeftColor = isPositive ? "rgba(0,214,114,0.3)" : "rgba(242,54,69,0.3)";
+  const pnlColor = isPositive ? "#22c55e" : "#ef4444";
+  const pnlColorFaded = isPositive ? "rgba(34,197,94,0.7)" : "rgba(239,68,68,0.7)";
+  const borderLeftColor = isPositive ? "rgba(34,197,94,0.3)" : "rgba(239,68,68,0.3)";
 
   return (
     <div
       className="rounded-xl p-3"
       style={{
-        background: "#10131c",
-        border: "1px solid #1a1f2e",
+        background: "#141820",
+        border: "1px solid #1c2030",
         borderLeft: `2px solid ${borderLeftColor}`,
       }}
     >
@@ -76,10 +76,10 @@ function TradeRow({ position }: { position: ClosedPosition }) {
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-sm" style={{ color: "#eef0f6" }}>
+            <span className="font-semibold text-sm" style={{ color: "#f0f2f7" }}>
               ${position.token.ticker}
             </span>
-            <span className="text-[10px] font-mono" style={{ color: "#363d54" }}>
+            <span className="text-[10px] font-mono" style={{ color: "#444c60" }}>
               {formatDate(position.exitTimestamp)}
             </span>
           </div>
@@ -103,13 +103,13 @@ function TradeRow({ position }: { position: ClosedPosition }) {
       <div className="grid grid-cols-3 gap-2 mt-2 text-[11px] font-mono">
         <div>
           <p style={{ color: "#5c6380" }}>Entry</p>
-          <p style={{ color: "#9ca3b8" }}>
+          <p style={{ color: "#8890a4" }}>
             {position.entrySol.toFixed(4)} SOL
           </p>
         </div>
         <div>
           <p style={{ color: "#5c6380" }}>Exit</p>
-          <p style={{ color: "#9ca3b8" }}>
+          <p style={{ color: "#8890a4" }}>
             {position.exitSol !== null
               ? `${position.exitSol.toFixed(4)} SOL`
               : "--"}
@@ -117,7 +117,7 @@ function TradeRow({ position }: { position: ClosedPosition }) {
         </div>
         <div>
           <p style={{ color: "#5c6380" }}>Held</p>
-          <p style={{ color: "#9ca3b8" }}>
+          <p style={{ color: "#8890a4" }}>
             {formatTimeHeld(position.entryTimestamp, position.exitTimestamp)}
           </p>
         </div>

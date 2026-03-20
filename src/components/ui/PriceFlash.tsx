@@ -57,8 +57,8 @@ export const PriceFlash = memo(function PriceFlash({
   const flashStyle: React.CSSProperties = flash
     ? {
         transition: "background-color 0.15s ease-out, color 0.15s ease-out",
-        backgroundColor: flash === "up" ? "rgba(0,214,114,0.15)" : "rgba(242,54,69,0.15)",
-        color: flash === "up" ? "#00d672" : "#f23645",
+        backgroundColor: flash === "up" ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)",
+        color: flash === "up" ? "#22c55e" : "#ef4444",
         borderRadius: 3,
         padding: "0 2px",
         margin: "0 -2px",

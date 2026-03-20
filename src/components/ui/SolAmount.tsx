@@ -13,7 +13,7 @@ export function SolAmount({ amount, showUsd = true, size = "sm" }: SolAmountProp
 
   const isPositive = amount > 0;
   const isNegative = amount < 0;
-  const color = isPositive ? "#00d672" : isNegative ? "#ff4a6e" : "#e0e2eb";
+  const color = isPositive ? "#22c55e" : isNegative ? "#ff4a6e" : "#e0e2eb";
 
   const fontSize = size === "sm" ? 12 : 14;
   const usdFontSize = size === "sm" ? 10 : 12;

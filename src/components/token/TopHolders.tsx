@@ -33,14 +33,14 @@ function SkeletonRow({ index }: { index: number }) {
       <td className="py-1.5 pr-2 text-right">
         <span
           className="inline-block w-4 h-3 rounded animate-pulse"
-          style={{ background: "#10131c" }}
+          style={{ background: "#141820" }}
         />
       </td>
       <td className="py-1.5 px-2">
         <span
           className="inline-block rounded animate-pulse"
           style={{
-            background: "#10131c",
+            background: "#141820",
             width: `${60 + (index % 3) * 12}px`,
             height: "12px",
           }}
@@ -49,13 +49,13 @@ function SkeletonRow({ index }: { index: number }) {
       <td className="py-1.5 px-2 text-right">
         <span
           className="inline-block w-10 h-3 rounded animate-pulse"
-          style={{ background: "#10131c" }}
+          style={{ background: "#141820" }}
         />
       </td>
       <td className="py-1.5 pl-2 text-right">
         <span
           className="inline-block w-14 h-3 rounded animate-pulse"
-          style={{ background: "#10131c" }}
+          style={{ background: "#141820" }}
         />
       </td>
     </tr>
@@ -94,12 +94,12 @@ export function TopHolders({ mintAddress }: TopHoldersProps) {
   return (
     <div
       className="rounded overflow-hidden"
-      style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
+      style={{ background: "#0d1017", border: "1px solid #1c2030" }}
     >
       {/* Header */}
       <div
         className="flex items-center justify-between h-8 px-3"
-        style={{ borderBottom: "1px solid #1a1f2e" }}
+        style={{ borderBottom: "1px solid #1c2030" }}
       >
         <span
           className="text-[9px] font-mono uppercase tracking-widest"
@@ -128,9 +128,9 @@ export function TopHolders({ mintAddress }: TopHoldersProps) {
               onClick={fetchHolders}
               className="text-[10px] font-mono px-2 py-1 rounded transition-colors"
               style={{
-                background: "#10131c",
-                border: "1px solid #1a1f2e",
-                color: "#9ca3b8",
+                background: "#141820",
+                border: "1px solid #1c2030",
+                color: "#8890a4",
               }}
             >
               Retry
@@ -185,7 +185,7 @@ export function TopHolders({ mintAddress }: TopHoldersProps) {
             </p>
             <p
               className="text-[9px] font-mono mt-1"
-              style={{ color: "#363d54" }}
+              style={{ color: "#444c60" }}
             >
               Holder analysis coming soon
             </p>
@@ -231,20 +231,20 @@ export function TopHolders({ mintAddress }: TopHoldersProps) {
                 let rowBg = "transparent";
                 let rowBorder = "transparent";
                 if (isDev) {
-                  rowBg = "rgba(240, 160, 0, 0.05)";
-                  rowBorder = "rgba(240, 160, 0, 0.15)";
+                  rowBg = "rgba(245, 158, 11, 0.05)";
+                  rowBorder = "rgba(245, 158, 11, 0.15)";
                 } else if (isConcentrated) {
-                  rowBg = "rgba(242, 54, 69, 0.04)";
-                  rowBorder = "rgba(242, 54, 69, 0.12)";
+                  rowBg = "rgba(239, 68, 68, 0.04)";
+                  rowBorder = "rgba(239, 68, 68, 0.12)";
                 }
 
                 const pctColor = isDev
-                  ? "#f0a000"
+                  ? "#f59e0b"
                   : isConcentrated
-                    ? "#f23645"
-                    : "#eef0f6";
+                    ? "#ef4444"
+                    : "#f0f2f7";
 
-                const addrColor = isDev ? "#f0a000" : "#9ca3b8";
+                const addrColor = isDev ? "#f59e0b" : "#8890a4";
 
                 return (
                   <tr
@@ -273,8 +273,8 @@ export function TopHolders({ mintAddress }: TopHoldersProps) {
                           <span
                             className="text-[7px] font-bold uppercase tracking-wider px-1 py-0.5 rounded"
                             style={{
-                              background: "rgba(240, 160, 0, 0.12)",
-                              color: "#f0a000",
+                              background: "rgba(245, 158, 11, 0.12)",
+                              color: "#f59e0b",
                             }}
                           >
                             DEV
@@ -290,7 +290,7 @@ export function TopHolders({ mintAddress }: TopHoldersProps) {
                     </td>
                     <td
                       className="py-1.5 pl-2 text-right text-[10px] font-mono"
-                      style={{ color: "#9ca3b8" }}
+                      style={{ color: "#8890a4" }}
                     >
                       {formatBalance(holder.balance)}
                     </td>

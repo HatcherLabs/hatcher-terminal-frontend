@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 
 interface SwipeOverlayProps {
-  direction: "left" | "right" | "up" | null;
+  direction: "left" | "right" | null;
   opacity: number;
 }
 
@@ -14,9 +14,9 @@ export function SwipeOverlay({ direction, opacity }: SwipeOverlayProps) {
 
   const config = {
     left: {
-      text: "PASS",
-      color: "#f23645",
-      colorDim: "rgba(242, 54, 69, 0.08)",
+      text: "SKIP",
+      color: "#ef4444",
+      colorDim: "rgba(239, 68, 68, 0.08)",
       icon: (
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
           <line x1="18" y1="6" x2="6" y2="18" />
@@ -27,25 +27,14 @@ export function SwipeOverlay({ direction, opacity }: SwipeOverlayProps) {
     },
     right: {
       text: "BUY",
-      color: "#00d672",
-      colorDim: "rgba(0, 214, 114, 0.08)",
+      color: "#22c55e",
+      colorDim: "rgba(34, 197, 94, 0.08)",
       icon: (
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
           <polyline points="20 6 9 17 4 12" />
         </svg>
       ),
       rotation: 12,
-    },
-    up: {
-      text: "WATCHLIST",
-      color: "#f0a000",
-      colorDim: "rgba(240, 160, 0, 0.08)",
-      icon: (
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-        </svg>
-      ),
-      rotation: 0,
     },
   };
 

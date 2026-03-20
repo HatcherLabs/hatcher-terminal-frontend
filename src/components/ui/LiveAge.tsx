@@ -56,10 +56,10 @@ export function LiveAge({ createdAt, className = "" }: LiveAgeProps) {
   const ageStr = formatAge(age);
 
   // Color: green for very fresh (<5m), default for normal, faint for old (>1d)
-  let color = "#9ca3b8";
-  if (age < 300_000) color = "#00d672"; // < 5 minutes
-  else if (age < 3600_000) color = "#eef0f6"; // < 1 hour
-  else if (age > 86400_000) color = "#363d54"; // > 1 day
+  let color = "#8890a4";
+  if (age < 300_000) color = "#22c55e"; // < 5 minutes
+  else if (age < 3600_000) color = "#f0f2f7"; // < 1 hour
+  else if (age > 86400_000) color = "#444c60"; // > 1 day
 
   return (
     <span

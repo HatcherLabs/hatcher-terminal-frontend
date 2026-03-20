@@ -51,7 +51,7 @@ function SigningInScreen() {
             borderTopColor: "#8b5cf6",
           }}
         />
-        <p className="text-sm" style={{ color: "#9ca3b8" }}>
+        <p className="text-sm" style={{ color: "#8890a4" }}>
           Signing in...
         </p>
       </div>

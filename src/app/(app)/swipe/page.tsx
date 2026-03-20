@@ -2,22 +2,13 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { SwipeStack, type SwipeSessionData } from "@/components/swipe/SwipeStack";
-import { SwipeFilters, useSwipeFilters, type SwipeFilterValues } from "@/components/swipe/SwipeFilters";
-/* SwipeSessionStats replaced by inline floating badge */
+import { useSwipeFilters, type SwipeFilterValues } from "@/components/swipe/SwipeFilters";
+import { SettingsSheet } from "@/components/swipe/SettingsSheet";
 import { LiveFeed } from "@/components/swipe/LiveFeed";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { useFeed, type FeedCategory } from "@/components/providers/FeedProvider";
+import { useQuickBuy } from "@/hooks/useQuickBuy";
 import type { TokenData } from "@/types/token";
-
-type QuickFilter = "all" | "lowRisk" | "highMcap" | "new" | "graduating";
-
-const QUICK_FILTERS: { key: QuickFilter; label: string }[] = [
-  { key: "all", label: "All" },
-  { key: "lowRisk", label: "Low Risk" },
-  { key: "highMcap", label: "High MCap" },
-  { key: "new", label: "New (<5m)" },
-  { key: "graduating", label: "Graduating" },
-];
 
 const TABS: { key: FeedCategory; label: string }[] = [
   { key: "new", label: "New" },
@@ -25,59 +16,62 @@ const TABS: { key: FeedCategory; label: string }[] = [
   { key: "migrated", label: "Migrated" },
 ];
 
-function applySwipeFilters(tokens: TokenData[], filters: SwipeFilterValues): TokenData[] {
+const SLIPPAGE_KEY = "hatcher:slippage";
+const MIN_MCAP_KEY = "hatcher:minMcap";
+
+function getStored(key: string, fallback: number): number {
+  if (typeof window === "undefined") return fallback;
+  const val = localStorage.getItem(key);
+  return val ? parseFloat(val) || fallback : fallback;
+}
+
+function applySwipeFilters(tokens: TokenData[], filters: SwipeFilterValues, minMcapUsd: number): TokenData[] {
   return tokens.filter((t) => {
-    // Min market cap
     if (filters.minMarketCapSol > 0 && (t.marketCapSol === null || t.marketCapSol < filters.minMarketCapSol)) {
       return false;
     }
-    // Risk levels
     if (t.riskLevel && !filters.maxRiskLevels.has(t.riskLevel)) {
       return false;
     }
-    // Min holders
     if (filters.minHolders > 0 && (t.holders === null || t.holders < filters.minHolders)) {
       return false;
     }
-    // Has socials
     if (filters.hasSocials && !t.twitter && !t.telegram) {
       return false;
+    }
+    // Min mcap filter from settings (USD approximation via marketCapSol * ~150)
+    if (minMcapUsd > 0 && t.marketCapSol !== null) {
+      const approxUsd = t.marketCapSol * 150;
+      if (approxUsd < minMcapUsd) return false;
     }
     return true;
   });
 }
 
-function applyQuickFilter(tokens: TokenData[], qf: QuickFilter): TokenData[] {
-  switch (qf) {
-    case "lowRisk":
-      return tokens.filter((t) => t.riskLevel === "LOW");
-    case "highMcap":
-      return tokens.filter((t) => t.marketCapSol !== null && t.marketCapSol >= 10);
-    case "new":
-      return tokens.filter((t) => {
-        if (!t.createdAt) return false;
-        const age = Date.now() - new Date(t.createdAt).getTime();
-        return age < 5 * 60 * 1000; // less than 5 minutes
-      });
-    case "graduating":
-      return tokens.filter((t) => t.bondingProgress !== null && t.bondingProgress !== undefined && t.bondingProgress >= 80);
-    case "all":
-    default:
-      return tokens;
-  }
-}
-
 export default function SwipePage() {
   const [activeTab, setActiveTab] = useState<FeedCategory>("new");
-  const [quickFilter, setQuickFilter] = useState<QuickFilter>("all");
   const { getFilteredTokens } = useFeed();
-  const { filters, updateFilters } = useSwipeFilters();
+  const { filters } = useSwipeFilters();
+  const { amount: buyAmount, setAmount: setBuyAmount } = useQuickBuy();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [slippage, setSlippageState] = useState(() => getStored(SLIPPAGE_KEY, 15));
+  const [minMcap, setMinMcapState] = useState(() => getStored(MIN_MCAP_KEY, 0));
   const [session, setSession] = useState<SwipeSessionData>({
     seen: 0,
     bought: 0,
     passed: 0,
     totalMarketCapSol: 0,
   });
+
+  const setSlippage = useCallback((v: number) => {
+    setSlippageState(v);
+    localStorage.setItem(SLIPPAGE_KEY, String(v));
+  }, []);
+
+  const setMinMcap = useCallback((v: number) => {
+    setMinMcapState(v);
+    localStorage.setItem(MIN_MCAP_KEY, String(v));
+  }, []);
 
   const handleSessionUpdate = useCallback((stats: SwipeSessionData) => {
     setSession(stats);
@@ -100,20 +94,18 @@ export default function SwipePage() {
         base = migratedTokens;
         break;
     }
-    return applyQuickFilter(applySwipeFilters(base, filters), quickFilter);
-  }, [activeTab, newTokens, closeToBondTokens, migratedTokens, filters, quickFilter]);
+    return applySwipeFilters(base, filters, minMcap);
+  }, [activeTab, newTokens, closeToBondTokens, migratedTokens, filters, minMcap]);
 
-  // Count after applying swipe filters
   const counts: Record<FeedCategory, number> = useMemo(
     () => ({
-      new: applySwipeFilters(newTokens, filters).length,
-      closeToBond: applySwipeFilters(closeToBondTokens, filters).length,
-      migrated: applySwipeFilters(migratedTokens, filters).length,
+      new: applySwipeFilters(newTokens, filters, minMcap).length,
+      closeToBond: applySwipeFilters(closeToBondTokens, filters, minMcap).length,
+      migrated: applySwipeFilters(migratedTokens, filters, minMcap).length,
     }),
-    [newTokens, closeToBondTokens, migratedTokens, filters]
+    [newTokens, closeToBondTokens, migratedTokens, filters, minMcap]
   );
 
-  // All tokens for the live feed (unfiltered new tokens)
   const liveFeedTokens = newTokens;
 
   return (
@@ -121,19 +113,10 @@ export default function SwipePage() {
       <div className="terminal:flex terminal:gap-0 terminal:-mx-6 terminal:-my-4 terminal:h-[calc(100vh-theme(spacing.24))]">
         {/* Main swipe area */}
         <div className="flex-1 flex flex-col items-center pt-2 terminal:pt-4 terminal:overflow-y-auto terminal-scrollbar">
-          <div className="text-center mb-1">
-            <h1 className="text-lg font-bold tracking-tight" style={{ color: "#eef0f6" }}>
-              DISCOVER <span style={{ color: "#00d672" }}>TOKENS</span>
-            </h1>
-            <p className="text-[10px] font-semibold mt-0.5" style={{ color: "#363d54" }}>
-              Tokens with momentum in the last hour
-            </p>
-          </div>
-
           {/* Tab bar */}
           <nav
             className="flex items-center gap-1 p-1 mb-3 rounded-full"
-            style={{ background: "#0a0d14", border: "1px solid #1a1f2e" }}
+            style={{ background: "#0d1017", border: "1px solid #1c2030" }}
             role="tablist"
             aria-label="Token categories"
           >
@@ -153,20 +136,17 @@ export default function SwipePage() {
                   `}
                   style={
                     isActive
-                      ? { background: "#00d672", color: "#04060b" }
+                      ? { background: "#22c55e", color: "#06080e" }
                       : { color: "#5c6380" }
                   }
                 >
                   {tab.label}
                   <span
-                    className={`
-                      inline-flex items-center justify-center min-w-[18px] h-[18px] px-1
-                      rounded-full text-[10px] font-bold leading-none
-                    `}
+                    className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold leading-none"
                     style={
                       isActive
-                        ? { background: "rgba(4,6,11,0.2)", color: "#04060b" }
-                        : { background: "#10131c", color: "#5c6380" }
+                        ? { background: "rgba(6,8,14,0.2)", color: "#06080e" }
+                        : { background: "#141820", color: "#5c6380" }
                     }
                   >
                     {counts[tab.key]}
@@ -176,51 +156,26 @@ export default function SwipePage() {
             })}
           </nav>
 
-          {/* Quick filter pills */}
-          <div className="flex items-center gap-1.5 flex-wrap justify-center mb-2 px-4">
-            {QUICK_FILTERS.map((qf) => {
-              const isActive = quickFilter === qf.key;
-              return (
-                <button
-                  key={qf.key}
-                  onClick={() => setQuickFilter(qf.key)}
-                  className="px-3 py-1 rounded-full text-[11px] font-semibold transition-all duration-200 whitespace-nowrap"
-                  style={{
-                    background: isActive ? "#8b5cf6" : "rgba(31,36,53,0.6)",
-                    color: isActive ? "#eef0f6" : "#5c6380",
-                    border: `1px solid ${isActive ? "#8b5cf6" : "#1a1f2e"}`,
-                    boxShadow: isActive ? "0 0 12px rgba(139,92,246,0.3)" : "none",
-                  }}
-                >
-                  {qf.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Filter panel */}
-          <SwipeFilters filters={filters} onChange={updateFilters} />
-
           {/* Floating session stats badge */}
           {session.seen > 0 && (
             <div
               className="fixed bottom-20 left-4 z-40 flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-md text-[10px] font-mono"
               style={{
-                background: "rgba(10,13,20,0.85)",
-                border: "1px solid #1a1f2e",
+                background: "rgba(13,16,23,0.85)",
+                border: "1px solid #1c2030",
                 boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
               }}
             >
-              <span style={{ color: "#9ca3b8" }}>
+              <span style={{ color: "#8890a4" }}>
                 {session.seen} <span style={{ color: "#5c6380" }}>seen</span>
               </span>
-              <span style={{ color: "#1a1f2e" }}>|</span>
-              <span style={{ color: "#00d672" }}>
-                {session.bought} <span style={{ color: "#5c6380" }}>liked</span>
+              <span style={{ color: "#1c2030" }}>|</span>
+              <span style={{ color: "#22c55e" }}>
+                {session.bought} <span style={{ color: "#5c6380" }}>bought</span>
               </span>
-              <span style={{ color: "#1a1f2e" }}>|</span>
-              <span style={{ color: "#9ca3b8" }}>
-                {session.seen > 0 ? Math.round((session.passed / session.seen) * 100) : 0}% <span style={{ color: "#5c6380" }}>pass</span>
+              <span style={{ color: "#1c2030" }}>|</span>
+              <span style={{ color: "#8890a4" }}>
+                {session.seen > 0 ? Math.round((session.passed / session.seen) * 100) : 0}% <span style={{ color: "#5c6380" }}>skip</span>
               </span>
             </div>
           )}
@@ -236,9 +191,10 @@ export default function SwipePage() {
               key={activeTab}
               tokens={filteredTokens}
               onSessionUpdate={handleSessionUpdate}
+              onSettingsOpen={() => setSettingsOpen(true)}
             />
-            <p className="text-[9px] font-mono text-center mt-2 mb-4" style={{ color: "#363d54" }}>
-              ← → ↑ keys · swipe · or tap Terminal
+            <p className="text-[9px] font-mono text-center mt-2 mb-4" style={{ color: "#444c60" }}>
+              ← → keys · swipe · or tap buttons
             </p>
           </div>
         </div>
@@ -246,6 +202,17 @@ export default function SwipePage() {
         {/* Desktop live feed sidebar */}
         <LiveFeed tokens={liveFeedTokens} graduatingTokens={closeToBondTokens} />
       </div>
+
+      <SettingsSheet
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        buyAmount={buyAmount}
+        onBuyAmountChange={setBuyAmount}
+        slippage={slippage}
+        onSlippageChange={setSlippage}
+        minMcap={minMcap}
+        onMinMcapChange={setMinMcap}
+      />
     </ErrorBoundary>
   );
 }

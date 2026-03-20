@@ -26,17 +26,17 @@ export function PasswordInput({
         placeholder={placeholder}
         autoComplete={autoComplete}
         className="w-full h-12 px-4 pr-12 text-base rounded-lg focus:outline-none transition-colors"
-        style={{ background: "#10131c", border: "1px solid #1a1f2e", color: "#eef0f6" }}
-        onFocus={(e) => { e.currentTarget.style.borderColor = "#00d672"; }}
-        onBlur={(e) => { e.currentTarget.style.borderColor = "#1a1f2e"; }}
+        style={{ background: "#141820", border: "1px solid #1c2030", color: "#f0f2f7" }}
+        onFocus={(e) => { e.currentTarget.style.borderColor = "#22c55e"; }}
+        onBlur={(e) => { e.currentTarget.style.borderColor = "#1c2030"; }}
       />
       <button
         type="button"
         onClick={() => setVisible(!visible)}
         className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
-        style={{ color: "#9ca3b8" }}
-        onMouseEnter={(e) => { e.currentTarget.style.color = "#eef0f6"; }}
-        onMouseLeave={(e) => { e.currentTarget.style.color = "#9ca3b8"; }}
+        style={{ color: "#8890a4" }}
+        onMouseEnter={(e) => { e.currentTarget.style.color = "#f0f2f7"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.color = "#8890a4"; }}
         tabIndex={-1}
       >
         {visible ? "Hide" : "Show"}

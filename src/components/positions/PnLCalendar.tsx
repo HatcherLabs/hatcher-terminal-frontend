@@ -22,19 +22,19 @@ interface DailyPnLResponse {
 /* ─── Color palette (hardcoded hex) ─── */
 
 const C = {
-  bg0: "#04060b",
-  bg1: "#0a0d14",
-  bg2: "#10131c",
-  bg3: "#181c28",
+  bg0: "#06080e",
+  bg1: "#0d1017",
+  bg2: "#141820",
+  bg3: "#1a1f2a",
   bg4: "#1f2435",
-  bd: "#1a1f2e",
-  t0: "#eef0f6",
-  t1: "#9ca3b8",
+  bd: "#1c2030",
+  t0: "#f0f2f7",
+  t1: "#8890a4",
   t2: "#5c6380",
-  t3: "#363d54",
-  g: "#00d672",
-  r: "#f23645",
-  a: "#f0a000",
+  t3: "#444c60",
+  g: "#22c55e",
+  r: "#ef4444",
+  a: "#f59e0b",
   ac: "#8b5cf6",
 } as const;
 

@@ -88,11 +88,11 @@ export function VirtualizedTable<T>({
           top: i * rowHeight,
           width: "100%",
           height: rowHeight,
-          borderBottom: "1px solid #1a1f2e",
+          borderBottom: "1px solid #1c2030",
         }}
         onClick={onRowClick ? () => onRowClick(item, i) : undefined}
         onMouseEnter={(e) => {
-          (e.currentTarget as HTMLElement).style.background = "#10131c";
+          (e.currentTarget as HTMLElement).style.background = "#141820";
         }}
         onMouseLeave={(e) => {
           (e.currentTarget as HTMLElement).style.background = "transparent";
@@ -128,7 +128,7 @@ export function VirtualizedTable<T>({
           minHeight: 0,
           overflowY: "auto",
           overflowX: "hidden",
-          background: "#0a0d14",
+          background: "#0d1017",
           position: "relative",
         }}
       >

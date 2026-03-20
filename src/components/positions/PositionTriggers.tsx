@@ -80,7 +80,7 @@ export function PositionTriggers({
       {(() => {
         const x1 = Math.min(entrySvgX, currentSvgX);
         const x2 = Math.max(entrySvgX, currentSvgX);
-        const fillColor = pnlPct >= 0 ? "#00d672" : "#f23645";
+        const fillColor = pnlPct >= 0 ? "#22c55e" : "#ef4444";
         return (
           <rect
             x={x1}
@@ -102,7 +102,7 @@ export function PositionTriggers({
             y1={barY - 6}
             x2={slSvgX}
             y2={barY + barH + 2}
-            stroke="#f23645"
+            stroke="#ef4444"
             strokeWidth={1.5}
             strokeDasharray="2 2"
           />
@@ -110,7 +110,7 @@ export function PositionTriggers({
             x={slSvgX}
             y={barY - 9}
             textAnchor="middle"
-            fill="#f23645"
+            fill="#ef4444"
             fontSize={9}
             fontFamily="monospace"
           >
@@ -120,7 +120,7 @@ export function PositionTriggers({
             x={slSvgX}
             y={barY + barH + 12}
             textAnchor="middle"
-            fill="#f23645"
+            fill="#ef4444"
             fontSize={8}
             fontFamily="monospace"
             opacity={0.7}
@@ -138,7 +138,7 @@ export function PositionTriggers({
             y1={barY - 6}
             x2={tpSvgX}
             y2={barY + barH + 2}
-            stroke="#00d672"
+            stroke="#22c55e"
             strokeWidth={1.5}
             strokeDasharray="2 2"
           />
@@ -146,7 +146,7 @@ export function PositionTriggers({
             x={tpSvgX}
             y={barY - 9}
             textAnchor="middle"
-            fill="#00d672"
+            fill="#22c55e"
             fontSize={9}
             fontFamily="monospace"
           >
@@ -156,7 +156,7 @@ export function PositionTriggers({
             x={tpSvgX}
             y={barY + barH + 12}
             textAnchor="middle"
-            fill="#00d672"
+            fill="#22c55e"
             fontSize={8}
             fontFamily="monospace"
             opacity={0.7}
@@ -191,15 +191,15 @@ export function PositionTriggers({
         cx={currentSvgX}
         cy={barY + barH / 2}
         r={3.5}
-        fill={pnlPct >= 0 ? "#00d672" : "#f23645"}
-        stroke="#eef0f6"
+        fill={pnlPct >= 0 ? "#22c55e" : "#ef4444"}
+        stroke="#f0f2f7"
         strokeWidth={1}
       />
       <text
         x={currentSvgX}
         y={barY - 9}
         textAnchor="middle"
-        fill="#eef0f6"
+        fill="#f0f2f7"
         fontSize={9}
         fontFamily="monospace"
         fontWeight="bold"

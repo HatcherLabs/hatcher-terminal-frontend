@@ -125,8 +125,8 @@ export function SnipeButton({ mintAddress, ticker }: SnipeButtonProps) {
   switch (status) {
     case "idle":
       content = `Snipe ${amount} SOL`;
-      bg = "#00d672";
-      borderColor = "#00d672";
+      bg = "#22c55e";
+      borderColor = "#22c55e";
       textColor = "#000000";
       break;
     case "building":

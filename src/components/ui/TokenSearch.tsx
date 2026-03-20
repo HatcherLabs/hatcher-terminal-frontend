@@ -324,7 +324,7 @@ export function TokenSearch() {
       onClick={onSelect}
       onMouseEnter={() => setSelectedIndex(index)}
       style={{
-        backgroundColor: isSelected ? "#1a1f2e" : "transparent",
+        backgroundColor: isSelected ? "#1c2030" : "transparent",
       }}
       className="w-full flex items-center gap-3 py-2.5 px-3 text-left transition-colors"
     >
@@ -407,7 +407,7 @@ export function TokenSearch() {
               onClick={() => handleRecentSelect(item)}
               onMouseEnter={() => setSelectedIndex(index)}
               style={{
-                backgroundColor: selectedIndex === index ? "#1a1f2e" : "transparent",
+                backgroundColor: selectedIndex === index ? "#1c2030" : "transparent",
               }}
               className="w-full flex items-center gap-3 py-2 px-3 text-left transition-colors"
             >
@@ -544,8 +544,8 @@ export function TokenSearch() {
           <div
             className="absolute top-full left-0 right-0 mt-1 z-50 rounded-lg shadow-xl max-h-80 overflow-y-auto terminal-scrollbar"
             style={{
-              backgroundColor: "#0a0d14",
-              border: "1px solid #1a1f2e",
+              backgroundColor: "#0d1017",
+              border: "1px solid #1c2030",
             }}
           >
             {renderResultsList()}
@@ -577,7 +577,7 @@ export function TokenSearch() {
         <div
           className="fixed inset-0 z-[110] pt-safe-area md:hidden"
           style={{
-            backgroundColor: "#0a0d14",
+            backgroundColor: "#0d1017",
             animation: "slideDown 200ms ease-out",
           }}
         >
@@ -591,7 +591,7 @@ export function TokenSearch() {
           {/* Header */}
           <div
             className="flex items-center gap-3 px-4 py-3"
-            style={{ borderBottom: "1px solid #1a1f2e" }}
+            style={{ borderBottom: "1px solid #1c2030" }}
           >
             <button
               onClick={handleClose}
