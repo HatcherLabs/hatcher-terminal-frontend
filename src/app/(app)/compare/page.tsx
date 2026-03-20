@@ -1,37 +1,59 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useCompare } from "@/components/providers/CompareProvider";
+import { useWatchlist } from "@/components/providers/WatchlistProvider";
 import { useTokenPrice } from "@/hooks/useTokenPrice";
 import { TokenAvatar } from "@/components/ui/TokenAvatar";
 import { RiskBadge } from "@/components/ui/RiskBadge";
-import { MiniChart } from "@/components/token/MiniChart";
-import { TokenLinks } from "@/components/token/TokenLinks";
 import { api } from "@/lib/api";
 import type { TokenData } from "@/types/token";
 import { useSolPriceContext } from "@/components/providers/SolPriceProvider";
 
+// ---- palette (hardcoded hex) ----
+const C = {
+  green: "#00d672",
+  red: "#f23645",
+  accent: "#8b5cf6",
+  bgPrimary: "#04060b",
+  bgCard: "#0a0d14",
+  bgElevated: "#10131c",
+  bgHover: "#181c28",
+  border: "#1a1f2e",
+  borderHover: "#2a3048",
+  textPrimary: "#e0e0e8",
+  textSecondary: "#a0a0b8",
+  textMuted: "#6b6b80",
+  textFaint: "#44445a",
+  yellow: "#facc15",
+} as const;
+
 // ---- helpers ----
 
-function formatNumber(n: number | null | undefined): string {
-  if (n === null || n === undefined) return "\u2014";
+function fmt(n: number | null | undefined): string {
+  if (n == null) return "\u2014";
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-  return n.toFixed(n < 10 ? 1 : 0);
+  return n.toFixed(n < 10 ? 2 : 0);
 }
 
-function formatUsd(n: number): string {
+function fmtUsd(n: number | null | undefined): string {
+  if (n == null) return "\u2014";
   if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
   if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}K`;
   return `$${n.toFixed(0)}`;
 }
 
-function formatPriceSol(n: number | null | undefined): string {
-  if (n === null || n === undefined) return "\u2014";
-  if (n < 0.0001) return n.toExponential(2);
-  if (n < 0.01) return n.toFixed(6);
-  return n.toFixed(4);
+function fmtPct(n: number | null | undefined): string {
+  if (n == null) return "\u2014";
+  return `${n.toFixed(1)}%`;
+}
+
+function fmtChange(n: number | null | undefined): string {
+  if (n == null) return "\u2014";
+  const sign = n >= 0 ? "+" : "";
+  return `${sign}${n.toFixed(1)}%`;
 }
 
 function tokenAge(dateStr: string): string {
@@ -42,200 +64,380 @@ function tokenAge(dateStr: string): string {
   return `${Math.floor(seconds / 86400)}d`;
 }
 
-// ---- TokenColumn with live data ----
-
-interface TokenColumnProps {
-  token: TokenData;
-  onRemove: (mint: string) => void;
-  allTokens: TokenData[];
+// Risk level numeric value (lower = better)
+function riskToNum(level: TokenData["riskLevel"]): number {
+  if (!level) return 99;
+  const map: Record<string, number> = { LOW: 1, MED: 2, HIGH: 3, EXTREME: 4 };
+  return map[level] ?? 99;
 }
 
-function TokenColumn({ token, onRemove, allTokens }: TokenColumnProps) {
-  const router = useRouter();
+// ---- metric definitions ----
+
+type MetricDirection = "higher" | "lower";
+
+interface MetricDef {
+  label: string;
+  key: string;
+  direction: MetricDirection; // "higher" = bigger is better, "lower" = smaller is better
+  getValue: (t: TokenData, live: LiveTokenData) => number | null;
+  format: (v: number | null) => string;
+}
+
+interface LiveTokenData {
+  marketCapSol: number | null;
+  marketCapUsd: number | null;
+  volume1h: number | null;
+  buyCount: number | null;
+  sellCount: number | null;
+  bondingProgress: number | null;
+}
+
+const METRICS: MetricDef[] = [
+  {
+    label: "MCap",
+    key: "mcap",
+    direction: "higher",
+    getValue: (_t, l) => l.marketCapUsd,
+    format: fmtUsd,
+  },
+  {
+    label: "Volume 1h",
+    key: "vol1h",
+    direction: "higher",
+    getValue: (_t, l) => l.volume1h,
+    format: (v) => (v != null ? `$${fmt(v)}` : "\u2014"),
+  },
+  {
+    label: "Holders",
+    key: "holders",
+    direction: "higher",
+    getValue: (t) => t.holders,
+    format: fmt,
+  },
+  {
+    label: "Dev Hold%",
+    key: "devhold",
+    direction: "lower",
+    getValue: (t) => t.devHoldPct,
+    format: fmtPct,
+  },
+  {
+    label: "Top 10%",
+    key: "top10",
+    direction: "lower",
+    getValue: (t) => t.topHoldersPct,
+    format: fmtPct,
+  },
+  {
+    label: "Buy Count",
+    key: "buys",
+    direction: "higher",
+    getValue: (_t, l) => l.buyCount,
+    format: fmt,
+  },
+  {
+    label: "Sell Count",
+    key: "sells",
+    direction: "lower",
+    getValue: (_t, l) => l.sellCount,
+    format: fmt,
+  },
+  {
+    label: "B/S Ratio",
+    key: "bsratio",
+    direction: "higher",
+    getValue: (_t, l) => {
+      const b = l.buyCount ?? 0;
+      const s = l.sellCount ?? 0;
+      if (b + s === 0) return null;
+      return (b / (b + s)) * 100;
+    },
+    format: fmtPct,
+  },
+  {
+    label: "Bonding%",
+    key: "bonding",
+    direction: "higher",
+    getValue: (_t, l) => l.bondingProgress,
+    format: fmtPct,
+  },
+  {
+    label: "Risk",
+    key: "risk",
+    direction: "lower",
+    getValue: (t) => riskToNum(t.riskLevel),
+    format: () => "", // handled specially
+  },
+  {
+    label: "Age",
+    key: "age",
+    direction: "higher",
+    getValue: (t) => {
+      const ms = Date.now() - new Date(t.createdAt).getTime();
+      return ms / 1000;
+    },
+    format: () => "", // handled specially
+  },
+  {
+    label: "5m Change",
+    key: "chg5m",
+    direction: "higher",
+    getValue: (t) => t.priceChange5m,
+    format: fmtChange,
+  },
+  {
+    label: "1h Change",
+    key: "chg1h",
+    direction: "higher",
+    getValue: (t) => t.priceChange1h,
+    format: fmtChange,
+  },
+];
+
+// ---- live data hook per token ----
+
+function useLiveTokenData(token: TokenData): LiveTokenData {
   const { solPrice: SOL_PRICE_USD } = useSolPriceContext();
   const liveData = useTokenPrice(token.mintAddress);
 
-  const priceSol = liveData?.priceSol ?? null;
   const marketCapSol = liveData?.marketCapSol ?? token.marketCapSol;
-  const marketCapUsd = liveData?.marketCapUsd ?? (marketCapSol != null ? marketCapSol * SOL_PRICE_USD : null);
-  const bondingProgress = liveData?.bondingProgress ?? token.bondingProgress;
+  const marketCapUsd =
+    liveData?.marketCapUsd ??
+    (marketCapSol != null ? marketCapSol * SOL_PRICE_USD : null);
   const volume1h = liveData?.volume1h ?? token.volume1h;
   const buyCount = liveData?.buyCount1h ?? token.buyCount;
   const sellCount = liveData?.sellCount1h ?? token.sellCount;
-  const totalTrades = (buyCount ?? 0) + (sellCount ?? 0);
-  const buyRatio = totalTrades > 0 ? ((buyCount ?? 0) / totalTrades * 100) : null;
+  const bondingProgress = liveData?.bondingProgress ?? token.bondingProgress;
 
-  // Determine if a stat differs significantly from others for highlighting
-  function shouldHighlight(getter: (t: TokenData) => number | null | undefined, threshold: number): boolean {
-    if (allTokens.length < 2) return false;
-    const values = allTokens.map(getter).filter((v): v is number => v != null);
-    if (values.length < 2) return false;
-    const max = Math.max(...values);
-    const min = Math.min(...values);
-    if (min === 0 && max === 0) return false;
-    const current = getter(token);
-    if (current == null) return false;
-    // Highlight if the range is significant relative to the mean
-    const mean = values.reduce((a, b) => a + b, 0) / values.length;
-    return mean > 0 && (max - min) / mean > threshold;
-  }
+  return { marketCapSol, marketCapUsd, volume1h, buyCount, sellCount, bondingProgress };
+}
 
-  const highlightRisk = allTokens.length >= 2 && (() => {
-    const levels = allTokens.map((t) => t.riskLevel).filter(Boolean);
-    return levels.length >= 2 && new Set(levels).size > 1;
-  })();
+// ---- LiveDataProvider: renders hooks per token, passes data up ----
 
-  const stats: { label: string; value: string; highlight: boolean; color?: string }[] = [
-    {
-      label: "Price (SOL)",
-      value: formatPriceSol(priceSol),
-      highlight: false,
-    },
-    {
-      label: "MCap (SOL)",
-      value: formatNumber(marketCapSol),
-      highlight: shouldHighlight((t) => t.marketCapSol, 0.5),
-    },
-    {
-      label: "MCap (USD)",
-      value: marketCapUsd != null ? formatUsd(marketCapUsd) : "\u2014",
-      highlight: false,
-    },
-    {
-      label: "Bonding",
-      value: bondingProgress != null ? `${bondingProgress.toFixed(1)}%` : "\u2014",
-      highlight: shouldHighlight((t) => t.bondingProgress, 0.3),
-    },
-    {
-      label: "Holders",
-      value: formatNumber(token.holders),
-      highlight: shouldHighlight((t) => t.holders, 0.5),
-    },
-    {
-      label: "Dev Hold %",
-      value: token.devHoldPct != null ? `${token.devHoldPct.toFixed(1)}%` : "\u2014",
-      highlight: shouldHighlight((t) => t.devHoldPct, 0.3),
-      color: token.devHoldPct != null && token.devHoldPct > 15 ? "text-red" : undefined,
-    },
-    {
-      label: "Top Holders %",
-      value: token.topHoldersPct != null ? `${token.topHoldersPct.toFixed(1)}%` : "\u2014",
-      highlight: shouldHighlight((t) => t.topHoldersPct, 0.3),
-    },
-    {
-      label: "Vol 1h",
-      value: volume1h != null ? `$${formatNumber(volume1h)}` : "\u2014",
-      highlight: shouldHighlight((t) => t.volume1h, 0.5),
-    },
-    {
-      label: "Buy/Sell",
-      value: buyRatio != null ? `${buyRatio.toFixed(0)}% / ${(100 - buyRatio).toFixed(0)}%` : "\u2014",
-      highlight: false,
-    },
-    {
-      label: "Age",
-      value: tokenAge(token.createdAt),
-      highlight: false,
-    },
-  ];
+function LiveDataCollector({
+  token,
+  onData,
+}: {
+  token: TokenData;
+  onData: (mint: string, data: LiveTokenData) => void;
+}) {
+  const live = useLiveTokenData(token);
+  const onDataRef = useRef(onData);
+  onDataRef.current = onData;
+
+  useEffect(() => {
+    onDataRef.current(token.mintAddress, live);
+  }, [token.mintAddress, live]);
+
+  return null;
+}
+
+// ---- Search modal for adding tokens ----
+
+interface SearchToken {
+  mintAddress: string;
+  name: string;
+  ticker: string;
+  imageUri: string | null;
+  marketCapUsd: number | null;
+}
+
+function AddTokenSearch({
+  open,
+  onClose,
+  onSelect,
+  existingMints,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onSelect: (mint: string) => void;
+  existingMints: string[];
+}) {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SearchToken[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedIdx, setSelectedIdx] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      setQuery("");
+      setResults([]);
+      requestAnimationFrame(() => inputRef.current?.focus());
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (query.trim().length < 2) {
+      setResults([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await api.raw(
+          `/api/tokens/search?q=${encodeURIComponent(query.trim())}&limit=8`
+        );
+        const json = await res.json();
+        if (json.success) {
+          setResults(
+            (json.data as SearchToken[]).filter(
+              (t) => !existingMints.includes(t.mintAddress)
+            )
+          );
+        } else setResults([]);
+      } catch {
+        setResults([]);
+      }
+      setLoading(false);
+    }, 250);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [query, existingMints]);
+
+  useEffect(() => {
+    setSelectedIdx(0);
+  }, [results]);
+
+  useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setSelectedIdx((p) => (p < results.length - 1 ? p + 1 : 0));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setSelectedIdx((p) => (p > 0 ? p - 1 : results.length - 1));
+      } else if (e.key === "Enter" && results[selectedIdx]) {
+        e.preventDefault();
+        onSelect(results[selectedIdx].mintAddress);
+        onClose();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, results, selectedIdx, onSelect, onClose]);
+
+  if (!open) return null;
 
   return (
-    <div className="bg-bg-card rounded-lg border border-border flex flex-col overflow-hidden">
-      {/* Header */}
-      <div className="p-4 border-b border-border">
-        <div className="flex items-center gap-3">
-          <TokenAvatar
-            mintAddress={token.mintAddress}
-            imageUri={token.imageUri}
-            size={40}
-            ticker={token.ticker}
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]"
+      onClick={onClose}
+    >
+      {/* backdrop */}
+      <div className="absolute inset-0" style={{ background: "rgba(4,6,11,0.80)" }} />
+
+      {/* modal */}
+      <div
+        className="relative w-full max-w-md rounded-xl overflow-hidden"
+        style={{ background: C.bgCard, border: `1px solid ${C.border}` }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* search input */}
+        <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${C.border}` }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="1.5" className="w-4 h-4 shrink-0">
+            <circle cx="11" cy="11" r="8" />
+            <path d="M21 21l-4.35-4.35" />
+          </svg>
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search token to add..."
+            className="flex-1 bg-transparent text-sm font-mono outline-none placeholder:text-text-faint"
+            style={{ color: C.textPrimary }}
           />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-text-primary truncate">
-                {token.name}
-              </h3>
-              <span className="text-xs font-mono text-text-muted shrink-0">
-                ${token.ticker}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 mt-0.5">
-              <RiskBadge level={token.riskLevel} />
-              {liveData && (
-                <div className="flex items-center gap-1">
-                  <span className="relative flex h-1.5 w-1.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green opacity-75" />
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green" />
-                  </span>
-                  <span className="text-[8px] font-bold text-green uppercase tracking-wider">
-                    Live
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Mini Chart */}
-      <div className="px-4 py-2 border-b border-border">
-        <MiniChart mintAddress={token.mintAddress} />
-      </div>
-
-      {/* Stats Table */}
-      <div className="flex-1">
-        {stats.map((stat, i) => (
-          <div
-            key={stat.label}
-            className={`flex items-center justify-between px-4 py-2 text-[11px] ${
-              i % 2 === 0 ? "bg-bg-card" : "bg-bg-elevated/50"
-            } ${stat.highlight ? "bg-accent/5 ring-1 ring-inset ring-accent/10" : ""}`}
+          <kbd
+            className="text-[9px] font-mono px-1.5 py-0.5 rounded"
+            style={{ color: C.textFaint, background: C.bgHover, border: `1px solid ${C.border}` }}
           >
-            <span className="text-text-muted">{stat.label}</span>
-            <span className={`font-mono font-medium ${stat.color || "text-text-primary"}`}>
-              {stat.value}
-            </span>
-          </div>
-        ))}
+            ESC
+          </kbd>
+        </div>
 
-        {/* Risk Level row */}
-        <div
-          className={`flex items-center justify-between px-4 py-2 text-[11px] bg-bg-elevated/50 ${
-            highlightRisk ? "bg-accent/5 ring-1 ring-inset ring-accent/10" : ""
-          }`}
-        >
-          <span className="text-text-muted">Risk Level</span>
-          <RiskBadge level={token.riskLevel} />
+        {/* results */}
+        <div className="max-h-64 overflow-y-auto terminal-scrollbar">
+          {query.trim().length >= 1 && query.trim().length < 2 && (
+            <p className="text-xs font-mono text-center py-6" style={{ color: C.textMuted }}>
+              Type at least 2 characters
+            </p>
+          )}
+          {query.trim().length >= 2 && loading && (
+            <div className="py-6 text-center">
+              <div
+                className="inline-block w-4 h-4 rounded-full animate-spin"
+                style={{ border: `2px solid ${C.border}`, borderTopColor: C.accent }}
+              />
+            </div>
+          )}
+          {query.trim().length >= 2 && !loading && results.length === 0 && (
+            <p className="text-xs font-mono text-center py-6" style={{ color: C.textMuted }}>
+              No tokens found
+            </p>
+          )}
+          {!loading &&
+            results.map((t, i) => (
+              <button
+                key={t.mintAddress}
+                onClick={() => {
+                  onSelect(t.mintAddress);
+                  onClose();
+                }}
+                onMouseEnter={() => setSelectedIdx(i)}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors"
+                style={{
+                  background: selectedIdx === i ? C.bgElevated : "transparent",
+                }}
+              >
+                <TokenAvatar mintAddress={t.mintAddress} imageUri={t.imageUri} size={28} ticker={t.ticker} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium truncate" style={{ color: C.textPrimary }}>
+                      {t.name}
+                    </span>
+                    <span className="text-[10px] font-mono shrink-0" style={{ color: C.textSecondary }}>
+                      ${t.ticker}
+                    </span>
+                  </div>
+                  {t.marketCapUsd != null && (
+                    <span className="text-[10px] font-mono" style={{ color: C.textMuted }}>
+                      MC {fmtUsd(t.marketCapUsd)}
+                    </span>
+                  )}
+                </div>
+                <svg viewBox="0 0 24 24" fill="none" stroke={C.textFaint} strokeWidth="2" className="w-4 h-4 shrink-0">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+              </button>
+            ))}
         </div>
       </div>
+    </div>
+  );
+}
 
-      {/* Social Links */}
-      {(token.twitter || token.telegram || token.website) && (
-        <div className="px-4 py-3 border-t border-border">
-          <TokenLinks
-            mintAddress={token.mintAddress}
-            twitter={token.twitter}
-            telegram={token.telegram}
-            website={token.website}
-          />
-        </div>
-      )}
+// ---- Proportional bar ----
 
-      {/* Action Buttons */}
-      <div className="flex gap-2 p-4 border-t border-border">
-        <button
-          onClick={() => router.push(`/token/${token.mintAddress}`)}
-          className="flex-1 py-2.5 rounded-lg bg-green/10 border border-green/30 text-green font-bold text-xs transition-colors hover:bg-green/20"
-        >
-          View
-        </button>
-        <button
-          onClick={() => onRemove(token.mintAddress)}
-          className="py-2.5 px-4 rounded-lg bg-red/10 border border-red/30 text-red font-bold text-xs transition-colors hover:bg-red/20"
-        >
-          Remove
-        </button>
-      </div>
+function MetricBar({ value, max, color }: { value: number; max: number; color: string }) {
+  const pct = max > 0 ? Math.min((value / max) * 100, 100) : 0;
+  return (
+    <div className="w-full h-1 rounded-full mt-1" style={{ background: C.bgHover }}>
+      <div
+        className="h-full rounded-full transition-all duration-500"
+        style={{ width: `${pct}%`, background: color }}
+      />
     </div>
   );
 }
@@ -243,19 +445,21 @@ function TokenColumn({ token, onRemove, allTokens }: TokenColumnProps) {
 // ---- Main Compare Page ----
 
 export default function ComparePage() {
-  const { compareTokens, removeFromCompare, clearCompare } = useCompare();
+  const router = useRouter();
+  const { compareTokens, addToCompare, removeFromCompare, clearCompare } = useCompare();
+  const { isWatchlisted, addToWatchlist, removeFromWatchlist } = useWatchlist();
   const [tokens, setTokens] = useState<TokenData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState(0);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [liveDataMap, setLiveDataMap] = useState<Record<string, LiveTokenData>>({});
 
-  // Fetch token data for each mint in compareTokens
+  // Fetch token data
   useEffect(() => {
     if (compareTokens.length === 0) {
       setTokens([]);
       setLoading(false);
       return;
     }
-
     setLoading(true);
     const controllers: AbortController[] = [];
 
@@ -280,152 +484,442 @@ export default function ComparePage() {
     return () => controllers.forEach((c) => c.abort());
   }, [compareTokens]);
 
-  const handleRemove = (mint: string) => {
-    removeFromCompare(mint);
-  };
+  const handleLiveData = useCallback((mint: string, data: LiveTokenData) => {
+    setLiveDataMap((prev) => {
+      const existing = prev[mint];
+      if (
+        existing &&
+        existing.marketCapUsd === data.marketCapUsd &&
+        existing.volume1h === data.volume1h &&
+        existing.buyCount === data.buyCount &&
+        existing.sellCount === data.sellCount &&
+        existing.bondingProgress === data.bondingProgress
+      ) {
+        return prev;
+      }
+      return { ...prev, [mint]: data };
+    });
+  }, []);
 
-  // Empty state
-  if (!loading && compareTokens.length === 0) {
+  // Compute winner/loser for each metric
+  function getWinnerLoser(metric: MetricDef): { winner: string | null; loser: string | null } {
+    if (tokens.length < 2) return { winner: null, loser: null };
+
+    const entries = tokens
+      .map((t) => ({
+        mint: t.mintAddress,
+        val: metric.getValue(t, liveDataMap[t.mintAddress] ?? {
+          marketCapSol: null, marketCapUsd: null, volume1h: null,
+          buyCount: null, sellCount: null, bondingProgress: null,
+        }),
+      }))
+      .filter((e): e is { mint: string; val: number } => e.val != null);
+
+    if (entries.length < 2) return { winner: null, loser: null };
+
+    const sorted = [...entries].sort((a, b) => a.val - b.val);
+    if (sorted[0].val === sorted[sorted.length - 1].val) return { winner: null, loser: null };
+
+    if (metric.direction === "higher") {
+      return { winner: sorted[sorted.length - 1].mint, loser: sorted[0].mint };
+    } else {
+      return { winner: sorted[0].mint, loser: sorted[sorted.length - 1].mint };
+    }
+  }
+
+  // Max value per metric (for proportional bars)
+  function getMaxValue(metric: MetricDef): number {
+    let max = 0;
+    for (const t of tokens) {
+      const v = metric.getValue(t, liveDataMap[t.mintAddress] ?? {
+        marketCapSol: null, marketCapUsd: null, volume1h: null,
+        buyCount: null, sellCount: null, bondingProgress: null,
+      });
+      if (v != null && v > max) max = v;
+    }
+    return max;
+  }
+
+  const canAdd = compareTokens.length < 3;
+
+  // ---- EMPTY STATE ----
+  if (!loading && tokens.length < 2 && compareTokens.length < 2) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 pt-16 pb-24">
-        <div className="w-16 h-16 rounded-full bg-bg-elevated border border-border flex items-center justify-center">
-          <svg
-            viewBox="0 0 24 24"
-            width={28}
-            height={28}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="text-text-faint"
-          >
+      <div className="flex flex-col items-center justify-center gap-5 pt-16 pb-24">
+        {/* Live data collectors for existing tokens */}
+        {tokens.map((t) => (
+          <LiveDataCollector key={t.mintAddress} token={t} onData={handleLiveData} />
+        ))}
+
+        <div
+          className="w-16 h-16 rounded-full flex items-center justify-center"
+          style={{ background: C.bgElevated, border: `1px solid ${C.border}` }}
+        >
+          <svg viewBox="0 0 24 24" width={28} height={28} fill="none" stroke={C.textFaint} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="3" width="7" height="18" rx="1" />
             <rect x="14" y="3" width="7" height="18" rx="1" />
           </svg>
         </div>
-        <div className="text-center">
-          <p className="text-text-secondary text-sm font-medium">No tokens to compare</p>
-          <p className="text-text-muted text-xs mt-1">
-            Use the compare button on any token card to add tokens here.
+        <div className="text-center space-y-2">
+          <p className="text-sm font-medium" style={{ color: C.textSecondary }}>
+            Add 2+ tokens to compare
+          </p>
+          <p className="text-xs" style={{ color: C.textMuted }}>
+            Use the compare button on token cards, or search below.
           </p>
         </div>
+        <button
+          onClick={() => setSearchOpen(true)}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-bold transition-colors"
+          style={{
+            background: `${C.accent}18`,
+            border: `1px solid ${C.accent}40`,
+            color: C.accent,
+          }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          Add Token
+        </button>
+
+        <AddTokenSearch
+          open={searchOpen}
+          onClose={() => setSearchOpen(false)}
+          onSelect={addToCompare}
+          existingMints={compareTokens}
+        />
       </div>
     );
   }
 
-  // Loading
+  // ---- LOADING ----
   if (loading) {
     return (
       <div className="flex flex-col pt-2">
-        <h1 className="text-lg font-bold text-text-primary tracking-tight mb-4">Compare</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {compareTokens.map((mint) => (
-            <div key={mint} className="bg-bg-card rounded-lg border border-border animate-pulse">
-              <div className="p-4 space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-bg-elevated" />
-                  <div className="space-y-2 flex-1">
-                    <div className="h-3 w-24 bg-bg-elevated rounded" />
-                    <div className="h-2 w-16 bg-bg-elevated rounded" />
-                  </div>
-                </div>
-                <div className="h-12 bg-bg-elevated rounded" />
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="h-6 bg-bg-elevated rounded" />
-                ))}
-              </div>
-            </div>
+        <h1 className="text-lg font-bold tracking-tight mb-4" style={{ color: C.textPrimary }}>
+          Compare
+        </h1>
+        <div className="space-y-2">
+          {Array.from({ length: 13 }).map((_, i) => (
+            <div
+              key={i}
+              className="h-10 rounded animate-pulse"
+              style={{ background: C.bgElevated }}
+            />
           ))}
         </div>
       </div>
     );
   }
 
+  // ---- MAIN TABLE VIEW ----
+  const colCount = tokens.length;
+  const gridCols =
+    colCount === 1
+      ? "1fr"
+      : colCount === 2
+        ? "1fr 1fr"
+        : "1fr 1fr 1fr";
+
   return (
     <div className="flex flex-col pt-2 pb-24 md:pb-4">
-      {/* Header */}
+      {/* Live data collectors */}
+      {tokens.map((t) => (
+        <LiveDataCollector key={t.mintAddress} token={t} onData={handleLiveData} />
+      ))}
+
+      {/* Page header */}
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-lg font-bold text-text-primary tracking-tight">
+        <h1 className="text-lg font-bold tracking-tight" style={{ color: C.textPrimary }}>
           Compare
-          <span className="ml-2 text-xs font-normal text-text-muted">
-            ({tokens.length} token{tokens.length !== 1 ? "s" : ""})
+          <span className="ml-2 text-xs font-normal" style={{ color: C.textMuted }}>
+            {tokens.length}/3
           </span>
         </h1>
-        {tokens.length > 0 && (
+        <div className="flex items-center gap-3">
+          {canAdd && (
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors"
+              style={{
+                background: `${C.accent}18`,
+                border: `1px solid ${C.accent}40`,
+                color: C.accent,
+              }}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-3 h-3">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Add
+            </button>
+          )}
           <button
             onClick={clearCompare}
-            className="text-xs text-text-muted hover:text-red transition-colors"
+            className="text-[11px] font-medium transition-colors"
+            style={{ color: C.textMuted }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = C.red)}
+            onMouseLeave={(e) => (e.currentTarget.style.color = C.textMuted)}
           >
             Clear all
           </button>
-        )}
-      </div>
-
-      {/* Single token hint */}
-      {tokens.length === 1 && (
-        <div className="mb-4 px-4 py-3 rounded-lg bg-accent/5 border border-accent/10 text-center">
-          <p className="text-xs text-text-secondary">
-            Add more tokens to compare. Use the compare button on any token card.
-          </p>
         </div>
-      )}
-
-      {/* Mobile: Tab switcher */}
-      {tokens.length > 1 && (
-        <nav
-          className="flex items-center gap-1 p-1 mb-4 rounded-full bg-bg-card border border-border self-start md:hidden"
-          role="tablist"
-        >
-          {tokens.map((t, i) => (
-            <button
-              key={t.mintAddress}
-              role="tab"
-              aria-selected={activeTab === i}
-              onClick={() => setActiveTab(i)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 whitespace-nowrap ${
-                activeTab === i
-                  ? "bg-green text-bg-primary shadow-sm"
-                  : "text-text-muted hover:text-text-secondary"
-              }`}
-            >
-              ${t.ticker}
-            </button>
-          ))}
-        </nav>
-      )}
-
-      {/* Mobile: stacked with tab switching */}
-      <div className="md:hidden">
-        {tokens.length > 0 && (
-          <TokenColumn
-            key={tokens[activeTab]?.mintAddress ?? "empty"}
-            token={tokens[activeTab] ?? tokens[0]}
-            onRemove={handleRemove}
-            allTokens={tokens}
-          />
-        )}
       </div>
 
-      {/* Desktop: side-by-side columns */}
+      {/* Comparison table */}
       <div
-        className={`hidden md:grid gap-4 ${
-          tokens.length === 1
-            ? "grid-cols-1 max-w-md mx-auto"
-            : tokens.length === 2
-              ? "grid-cols-2"
-              : "grid-cols-3"
-        }`}
+        className="rounded-xl overflow-hidden"
+        style={{ background: C.bgCard, border: `1px solid ${C.border}` }}
       >
-        {tokens.map((token) => (
-          <TokenColumn
-            key={token.mintAddress}
-            token={token}
-            onRemove={handleRemove}
-            allTokens={tokens}
-          />
-        ))}
+        {/* ---- Token Header Row ---- */}
+        <div
+          className="grid items-stretch"
+          style={{
+            gridTemplateColumns: `120px ${gridCols}`,
+            borderBottom: `1px solid ${C.border}`,
+          }}
+        >
+          {/* label cell */}
+          <div className="px-3 py-3" style={{ borderRight: `1px solid ${C.border}` }} />
+
+          {/* token header cells */}
+          {tokens.map((t, idx) => (
+            <div
+              key={t.mintAddress}
+              className="px-3 py-3 flex flex-col items-center gap-2"
+              style={{
+                borderRight: idx < colCount - 1 ? `1px solid ${C.border}` : undefined,
+              }}
+            >
+              <TokenAvatar mintAddress={t.mintAddress} imageUri={t.imageUri} size={36} ticker={t.ticker} />
+              <div className="text-center">
+                <div className="text-xs font-bold truncate max-w-[120px]" style={{ color: C.textPrimary }}>
+                  {t.name}
+                </div>
+                <div className="text-[10px] font-mono" style={{ color: C.textMuted }}>
+                  ${t.ticker}
+                </div>
+              </div>
+              <RiskBadge level={t.riskLevel} />
+            </div>
+          ))}
+        </div>
+
+        {/* ---- Quick Actions Row ---- */}
+        <div
+          className="grid items-center"
+          style={{
+            gridTemplateColumns: `120px ${gridCols}`,
+            borderBottom: `1px solid ${C.border}`,
+            background: C.bgElevated,
+          }}
+        >
+          <div
+            className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider"
+            style={{ color: C.textFaint, borderRight: `1px solid ${C.border}` }}
+          >
+            Actions
+          </div>
+          {tokens.map((t, idx) => {
+            const watched = isWatchlisted(t.mintAddress);
+            return (
+              <div
+                key={t.mintAddress}
+                className="px-2 py-2 flex flex-wrap items-center justify-center gap-1"
+                style={{ borderRight: idx < colCount - 1 ? `1px solid ${C.border}` : undefined }}
+              >
+                <button
+                  onClick={() => router.push(`/token/${t.mintAddress}`)}
+                  className="px-2 py-1 rounded text-[10px] font-bold transition-colors"
+                  style={{ background: `${C.green}18`, color: C.green, border: `1px solid ${C.green}40` }}
+                >
+                  Detail
+                </button>
+                <button
+                  onClick={() =>
+                    watched
+                      ? removeFromWatchlist(t.mintAddress)
+                      : addToWatchlist({ mintAddress: t.mintAddress, name: t.name, ticker: t.ticker, imageUri: t.imageUri })
+                  }
+                  className="px-2 py-1 rounded text-[10px] font-bold transition-colors"
+                  style={{
+                    background: watched ? `${C.yellow}18` : `${C.accent}18`,
+                    color: watched ? C.yellow : C.accent,
+                    border: `1px solid ${watched ? C.yellow : C.accent}40`,
+                  }}
+                >
+                  {watched ? "Watched" : "Watch"}
+                </button>
+                <button
+                  onClick={() => router.push(`/token/${t.mintAddress}?action=buy`)}
+                  className="px-2 py-1 rounded text-[10px] font-bold transition-colors"
+                  style={{ background: `${C.green}18`, color: C.green, border: `1px solid ${C.green}40` }}
+                >
+                  Buy
+                </button>
+                <button
+                  onClick={() => removeFromCompare(t.mintAddress)}
+                  className="px-2 py-1 rounded text-[10px] font-bold transition-colors"
+                  style={{ background: `${C.red}18`, color: C.red, border: `1px solid ${C.red}40` }}
+                >
+                  Remove
+                </button>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ---- Metric Rows ---- */}
+        {METRICS.map((metric, rowIdx) => {
+          const { winner, loser } = getWinnerLoser(metric);
+          const maxVal = getMaxValue(metric);
+          const isEven = rowIdx % 2 === 0;
+
+          return (
+            <div
+              key={metric.key}
+              className="grid items-center"
+              style={{
+                gridTemplateColumns: `120px ${gridCols}`,
+                background: isEven ? C.bgCard : `${C.bgElevated}80`,
+                borderBottom: rowIdx < METRICS.length - 1 ? `1px solid ${C.border}` : undefined,
+              }}
+            >
+              {/* Row label */}
+              <div
+                className="px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider"
+                style={{ color: C.textMuted, borderRight: `1px solid ${C.border}` }}
+              >
+                {metric.label}
+              </div>
+
+              {/* Value cells */}
+              {tokens.map((t, colIdx) => {
+                const live = liveDataMap[t.mintAddress] ?? {
+                  marketCapSol: null, marketCapUsd: null, volume1h: null,
+                  buyCount: null, sellCount: null, bondingProgress: null,
+                };
+                const val = metric.getValue(t, live);
+                const isWinner = winner === t.mintAddress;
+                const isLoser = loser === t.mintAddress;
+
+                // Cell color
+                let cellColor: string = C.textPrimary;
+                let cellBg = "transparent";
+                if (isWinner) {
+                  cellColor = C.green;
+                  cellBg = `${C.green}0a`;
+                } else if (isLoser) {
+                  cellColor = C.red;
+                  cellBg = `${C.red}0a`;
+                }
+
+                // Special rendering for Risk row
+                if (metric.key === "risk") {
+                  return (
+                    <div
+                      key={t.mintAddress}
+                      className="px-3 py-2.5 flex items-center justify-center"
+                      style={{
+                        background: cellBg,
+                        borderRight: colIdx < colCount - 1 ? `1px solid ${C.border}` : undefined,
+                      }}
+                    >
+                      <RiskBadge level={t.riskLevel} />
+                    </div>
+                  );
+                }
+
+                // Special rendering for Age row
+                if (metric.key === "age") {
+                  return (
+                    <div
+                      key={t.mintAddress}
+                      className="px-3 py-2.5 text-center"
+                      style={{
+                        background: cellBg,
+                        borderRight: colIdx < colCount - 1 ? `1px solid ${C.border}` : undefined,
+                      }}
+                    >
+                      <span className="text-xs font-mono font-medium" style={{ color: cellColor }}>
+                        {tokenAge(t.createdAt)}
+                      </span>
+                    </div>
+                  );
+                }
+
+                // Change rows get special coloring
+                const isChangeMetric = metric.key === "chg5m" || metric.key === "chg1h";
+                let displayColor = cellColor;
+                if (isChangeMetric && val != null && !isWinner && !isLoser) {
+                  displayColor = val >= 0 ? C.green : C.red;
+                }
+
+                // Bar color
+                const barColor = isWinner ? C.green : isLoser ? C.red : C.accent;
+
+                // Should show bar? Only for non-percentage, non-change metrics where absolute value matters
+                const showBar = !isChangeMetric && metric.key !== "bsratio" && metric.key !== "risk" && val != null;
+
+                return (
+                  <div
+                    key={t.mintAddress}
+                    className="px-3 py-2.5 text-center"
+                    style={{
+                      background: cellBg,
+                      borderRight: colIdx < colCount - 1 ? `1px solid ${C.border}` : undefined,
+                    }}
+                  >
+                    <span className="text-xs font-mono font-medium" style={{ color: displayColor }}>
+                      {metric.format(val)}
+                    </span>
+                    {showBar && (
+                      <MetricBar value={Math.abs(val ?? 0)} max={maxVal} color={barColor} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
       </div>
+
+      {/* Add token slot (if under 3) */}
+      {canAdd && (
+        <button
+          onClick={() => setSearchOpen(true)}
+          className="mt-3 w-full py-4 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2"
+          style={{
+            background: C.bgCard,
+            border: `1px dashed ${C.borderHover}`,
+            color: C.textMuted,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = C.accent;
+            e.currentTarget.style.color = C.accent;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = C.borderHover;
+            e.currentTarget.style.color = C.textMuted;
+          }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          Add token to compare ({tokens.length}/3)
+        </button>
+      )}
+
+      {/* Search modal */}
+      <AddTokenSearch
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        onSelect={addToCompare}
+        existingMints={compareTokens}
+      />
     </div>
   );
 }
