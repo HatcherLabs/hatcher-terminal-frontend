@@ -48,12 +48,13 @@ export function Sparkline({
     // Unique gradient ID per color to avoid collisions when multiple sparklines render
     const gradId = `spark-grad-${c.replace("#", "")}`;
 
-    return { c, linePath, areaPath, gradId };
+    const glowId = `spark-glow-${c.replace("#", "")}`;
+    return { c, linePath, areaPath, gradId, glowId };
   }, [data, width, height, color]);
 
   if (!render) return null;
 
-  const { c, linePath, areaPath, gradId } = render;
+  const { c, linePath, areaPath, gradId, glowId } = render;
 
   return (
     <svg
@@ -61,13 +62,20 @@ export function Sparkline({
       height={height}
       viewBox={`0 0 ${width} ${height}`}
       className={className}
-      style={{ display: "block", flexShrink: 0 }}
+      style={{ display: "block", flexShrink: 0, borderBottom: "1px solid rgba(34,197,94,0.05)" }}
     >
       <defs>
         <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={c} stopOpacity={0.15} />
           <stop offset="100%" stopColor={c} stopOpacity={0} />
         </linearGradient>
+        <filter id={glowId}>
+          <feGaussianBlur stdDeviation="2" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
       </defs>
       <path d={areaPath} fill={`url(#${gradId})`} />
       <path
@@ -77,6 +85,7 @@ export function Sparkline({
         strokeWidth={1.5}
         strokeLinecap="round"
         strokeLinejoin="round"
+        filter={`url(#${glowId})`}
       />
     </svg>
   );

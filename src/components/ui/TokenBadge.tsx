@@ -30,22 +30,24 @@ export function TokenBadge({ mintAddress, ticker, imageUri, size = "sm" }: Token
         gap,
         padding,
         borderRadius: 9999,
-        border: "1px solid #2a2d3a",
+        border: "1px solid rgba(34,197,94,0.1)",
         background: "#1a1c28",
         color: "#e0e2eb",
         fontSize,
         fontWeight: 600,
         cursor: "pointer",
-        transition: "border-color 150ms ease, background 150ms ease",
+        transition: "border-color 150ms ease, background 150ms ease, box-shadow 150ms ease",
         whiteSpace: "nowrap",
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = "#3a3d4a";
-        e.currentTarget.style.background = "#222430";
+        e.currentTarget.style.borderColor = "rgba(34,197,94,0.25)";
+        e.currentTarget.style.background = "rgba(34,197,94,0.05)";
+        e.currentTarget.style.boxShadow = "0 0 8px rgba(34,197,94,0.1)";
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = "#2a2d3a";
+        e.currentTarget.style.borderColor = "rgba(34,197,94,0.1)";
         e.currentTarget.style.background = "#1a1c28";
+        e.currentTarget.style.boxShadow = "none";
       }}
       title={`View ${ticker}`}
     >

@@ -324,7 +324,7 @@ export function TokenSearch() {
       onClick={onSelect}
       onMouseEnter={() => setSelectedIndex(index)}
       style={{
-        backgroundColor: isSelected ? "#1c2030" : "transparent",
+        backgroundColor: isSelected ? "rgba(34,197,94,0.04)" : "transparent",
       }}
       className="w-full flex items-center gap-3 py-2.5 px-3 text-left transition-colors"
     >
@@ -407,7 +407,7 @@ export function TokenSearch() {
               onClick={() => handleRecentSelect(item)}
               onMouseEnter={() => setSelectedIndex(index)}
               style={{
-                backgroundColor: selectedIndex === index ? "#1c2030" : "transparent",
+                backgroundColor: selectedIndex === index ? "rgba(34,197,94,0.04)" : "transparent",
               }}
               className="w-full flex items-center gap-3 py-2 px-3 text-left transition-colors"
             >
@@ -522,7 +522,8 @@ export function TokenSearch() {
             placeholder="Search by name, ticker, or mint address"
             style={{
               backgroundColor: "#1f2435",
-              borderColor: open ? "#4ade80" : "#2a3040",
+              borderColor: open ? "rgba(34,197,94,0.4)" : "#2a3040",
+              boxShadow: open ? "0 0 8px rgba(34,197,94,0.15)" : "none",
               color: "#e2e8f0",
             }}
             className="w-full h-7 border rounded text-xs placeholder:text-[#5a6478] pl-8 pr-12 focus:outline-none transition-colors font-mono"
@@ -542,10 +543,12 @@ export function TokenSearch() {
         {/* Desktop dropdown */}
         {showDropdown && (
           <div
-            className="absolute top-full left-0 right-0 mt-1 z-50 rounded-lg shadow-xl max-h-80 overflow-y-auto terminal-scrollbar"
+            className="absolute top-full left-0 right-0 mt-1 z-50 rounded-lg max-h-80 overflow-y-auto terminal-scrollbar"
             style={{
-              backgroundColor: "#0d1017",
-              border: "1px solid #1c2030",
+              background: "rgba(10,13,20,0.95)",
+              backdropFilter: "blur(16px)",
+              border: "1px solid rgba(34,197,94,0.08)",
+              boxShadow: "0 8px 30px rgba(0,0,0,0.5)",
             }}
           >
             {renderResultsList()}
@@ -591,7 +594,7 @@ export function TokenSearch() {
           {/* Header */}
           <div
             className="flex items-center gap-3 px-4 py-3"
-            style={{ borderBottom: "1px solid #1c2030" }}
+            style={{ borderBottom: "1px solid rgba(34,197,94,0.08)" }}
           >
             <button
               onClick={handleClose}
@@ -632,7 +635,8 @@ export function TokenSearch() {
                 placeholder="Search by name, ticker, or mint address"
                 style={{
                   backgroundColor: "#1f2435",
-                  borderColor: "#4ade80",
+                  borderColor: "rgba(34,197,94,0.4)",
+                  boxShadow: "0 0 8px rgba(34,197,94,0.15)",
                   color: "#e2e8f0",
                 }}
                 className="w-full h-9 border rounded-lg text-sm placeholder:text-[#5a6478] pl-9 pr-9 focus:outline-none transition-colors font-mono"

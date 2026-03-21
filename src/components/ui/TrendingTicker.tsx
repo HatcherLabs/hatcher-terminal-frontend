@@ -52,7 +52,7 @@ export function TrendingTicker() {
       style={{
         height: 28,
         background: "#06080e",
-        borderBottom: "1px solid #1c2030",
+        borderBottom: "1px solid rgba(34,197,94,0.08)",
       }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -61,13 +61,15 @@ export function TrendingTicker() {
       <div
         className="absolute left-0 top-0 bottom-0 w-6 z-[1] pointer-events-none"
         style={{
-          background: "linear-gradient(to right, #06080e, transparent)",
+          background: "linear-gradient(to right, #06080e 60%, rgba(6,8,14,0))",
+          borderRight: "1px solid rgba(34,197,94,0.03)",
         }}
       />
       <div
         className="absolute right-0 top-0 bottom-0 w-6 z-[1] pointer-events-none"
         style={{
-          background: "linear-gradient(to left, #06080e, transparent)",
+          background: "linear-gradient(to left, #06080e 60%, rgba(6,8,14,0))",
+          borderLeft: "1px solid rgba(34,197,94,0.03)",
         }}
       />
 
@@ -84,7 +86,7 @@ export function TrendingTicker() {
             <button
               key={`${token.mintAddress}-${i}`}
               onClick={() => handleClick(token.mintAddress)}
-              className="inline-flex items-center gap-1.5 shrink-0 h-full px-2.5 hover:bg-white/[0.03] transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 shrink-0 h-full px-2.5 hover:bg-[rgba(34,197,94,0.04)] transition-colors cursor-pointer"
               style={{ fontFamily: "var(--font-jetbrains-mono), monospace" }}
             >
               {/* Ticker */}
@@ -93,6 +95,7 @@ export function TrendingTicker() {
                   fontSize: 10,
                   color: "#8890a4",
                   fontWeight: 600,
+                  textShadow: "0 0 6px rgba(34,197,94,0.3)",
                 }}
               >
                 ${token.ticker}

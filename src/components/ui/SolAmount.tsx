@@ -14,6 +14,11 @@ export function SolAmount({ amount, showUsd = true, size = "sm" }: SolAmountProp
   const isPositive = amount > 0;
   const isNegative = amount < 0;
   const color = isPositive ? "#22c55e" : isNegative ? "#ff4a6e" : "#e0e2eb";
+  const glow = isPositive
+    ? "0 0 6px rgba(34,197,94,0.2)"
+    : isNegative
+      ? "0 0 6px rgba(239,68,68,0.2)"
+      : "none";
 
   const fontSize = size === "sm" ? 12 : 14;
   const usdFontSize = size === "sm" ? 10 : 12;
@@ -46,7 +51,7 @@ export function SolAmount({ amount, showUsd = true, size = "sm" }: SolAmountProp
         height={iconSize}
         viewBox="0 0 24 24"
         fill="none"
-        style={{ flexShrink: 0 }}
+        style={{ flexShrink: 0, filter: "drop-shadow(0 0 3px rgba(34,197,94,0.3))" }}
       >
         <circle cx="12" cy="12" r="11" stroke={color} strokeWidth="1.5" />
         <text
@@ -62,7 +67,7 @@ export function SolAmount({ amount, showUsd = true, size = "sm" }: SolAmountProp
         </text>
       </svg>
 
-      <span style={{ fontSize, fontWeight: 600 }}>
+      <span style={{ fontSize, fontWeight: 600, textShadow: glow }}>
         {isPositive && "+"}
         {formatted}
       </span>
