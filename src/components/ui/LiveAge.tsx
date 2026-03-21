@@ -61,10 +61,15 @@ export function LiveAge({ createdAt, className = "" }: LiveAgeProps) {
   else if (age < 3600_000) color = "#f0f2f7"; // < 1 hour
   else if (age > 86400_000) color = "#444c60"; // > 1 day
 
+  const isFresh = age < 300_000; // < 5 minutes
+
   return (
     <span
       className={`font-mono ${className}`}
-      style={{ color }}
+      style={{
+        color,
+        ...(isFresh ? { textShadow: "0 0 6px rgba(34,197,94,0.3)" } : {}),
+      }}
       title={`Created: ${new Date(createdAt).toLocaleString()}`}
     >
       {ageStr}

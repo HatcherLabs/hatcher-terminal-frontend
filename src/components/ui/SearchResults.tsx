@@ -164,7 +164,12 @@ export function SearchResults({
     <div
       ref={containerRef}
       className={`rounded-lg shadow-xl max-h-80 overflow-y-auto terminal-scrollbar ${className}`}
-      style={{ background: "#0d1017", border: "1px solid #1c2030" }}
+      style={{
+        background: "rgba(13,16,23,0.85)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        border: "1px solid rgba(34,197,94,0.08)",
+      }}
     >
       <div ref={listRef}>
         {/* Hint when query is too short */}
@@ -208,7 +213,7 @@ export function SearchResults({
               onMouseEnter={() => setSelectedIndex(index)}
               className="w-full flex items-center gap-3 py-2 px-3 text-left transition-colors"
               style={{
-                background: selectedIndex === index ? "#141820" : "transparent",
+                background: selectedIndex === index ? "rgba(34,197,94,0.04)" : "transparent",
               }}
             >
               <TokenAvatar

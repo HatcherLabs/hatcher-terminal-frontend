@@ -22,10 +22,18 @@ export function ExternalLink({ href, children, className = "" }: ExternalLinkPro
         transition: "color 150ms ease",
       }}
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLAnchorElement).style.color = "#8890a4";
+        const el = e.currentTarget as HTMLAnchorElement;
+        el.style.color = "#8890a4";
+        el.style.textShadow = "0 0 6px rgba(34,197,94,0.3)";
+        const icon = el.querySelector("svg") as SVGElement | null;
+        if (icon) icon.style.filter = "drop-shadow(0 0 3px currentColor)";
       }}
       onMouseLeave={(e) => {
-        (e.currentTarget as HTMLAnchorElement).style.color = "#5c6380";
+        const el = e.currentTarget as HTMLAnchorElement;
+        el.style.color = "#5c6380";
+        el.style.textShadow = "none";
+        const icon = el.querySelector("svg") as SVGElement | null;
+        if (icon) icon.style.filter = "none";
       }}
     >
       {children}

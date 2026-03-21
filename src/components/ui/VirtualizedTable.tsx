@@ -88,11 +88,11 @@ export function VirtualizedTable<T>({
           top: i * rowHeight,
           width: "100%",
           height: rowHeight,
-          borderBottom: "1px solid #1c2030",
+          borderBottom: "1px solid rgba(34,197,94,0.04)",
         }}
         onClick={onRowClick ? () => onRowClick(item, i) : undefined}
         onMouseEnter={(e) => {
-          (e.currentTarget as HTMLElement).style.background = "#141820";
+          (e.currentTarget as HTMLElement).style.background = "rgba(34,197,94,0.03)";
         }}
         onMouseLeave={(e) => {
           (e.currentTarget as HTMLElement).style.background = "transparent";
@@ -118,8 +118,20 @@ export function VirtualizedTable<T>({
   }
 
   return (
-    <div className="flex flex-col" style={{ flex: "1 1 0%", minHeight: 0 }}>
-      {renderHeader?.()}
+    <div
+      className="flex flex-col"
+      style={{
+        flex: "1 1 0%",
+        minHeight: 0,
+        border: "1px solid rgba(34,197,94,0.08)",
+        boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+      }}
+    >
+      {renderHeader && (
+        <div style={{ background: "linear-gradient(180deg, rgba(34,197,94,0.03) 0%, transparent 100%)" }}>
+          {renderHeader()}
+        </div>
+      )}
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}

@@ -20,7 +20,12 @@ export function SecurityDots({ lpBurned, mintRevoked, devHoldPct }: SecurityDots
           key={d.label}
           title={`${d.label}: ${d.ok ? "✓" : "✗"}`}
           className="block w-[5px] h-[5px] rounded-full opacity-70"
-          style={{ background: d.ok ? "#22c55e" : "#ef4444" }}
+          style={{
+            background: d.ok ? "#22c55e" : "#ef4444",
+            boxShadow: d.ok
+              ? "0 0 6px rgba(34,197,94,0.4)"
+              : "0 0 6px rgba(239,68,68,0.4)",
+          }}
         />
       ))}
     </div>
