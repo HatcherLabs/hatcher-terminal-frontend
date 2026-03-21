@@ -115,7 +115,7 @@ body::before {
   content: "";
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: 41;
   pointer-events: none;
   opacity: 0.025;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
@@ -591,13 +591,13 @@ form {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 9998;
+  z-index: 40;
   background: repeating-linear-gradient(
     0deg,
     transparent,
     transparent 2px,
-    rgba(0, 0, 0, 0.03) 2px,
-    rgba(0, 0, 0, 0.03) 4px
+    rgba(0, 0, 0, 0.04) 2px,
+    rgba(0, 0, 0, 0.04) 4px
   );
 }
 
@@ -619,6 +619,8 @@ form {
 }
 
 /* ===== Animated Gradient Border ===== */
+/* @property enables CSS custom property animation for conic-gradient rotation.
+   Supported in Chromium 85+. Firefox/Safari fall back to a static gradient. */
 @property --gradient-angle {
   syntax: "<angle>";
   initial-value: 0deg;
@@ -631,15 +633,16 @@ form {
 
 .gradient-border-animated {
   position: relative;
-  border: 1px solid transparent;
-  background-clip: padding-box;
 }
 .gradient-border-animated::before {
   content: "";
   position: absolute;
   inset: -1px;
   border-radius: inherit;
-  background: conic-gradient(from var(--gradient-angle), #22c55e, #8b5cf6, #22c55e);
+  /* Static fallback for browsers without @property support */
+  background: linear-gradient(135deg, #22c55e, #8b5cf6, #22c55e);
+  /* Animated version for supporting browsers */
+  background: conic-gradient(from var(--gradient-angle, 0deg), #22c55e, #8b5cf6, #22c55e);
   z-index: -1;
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);

@@ -125,8 +125,8 @@ export default function LandingPage() {
       <nav
         className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl"
         style={{
-          backgroundColor: "rgba(6,8,14,0.85)",
-          borderBottom: "1px solid rgba(26,31,46,0.6)",
+          backgroundColor: "rgba(6,8,14,0.95)",
+          borderBottom: "1px solid rgba(34,197,94,0.08)",
         }}
       >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">

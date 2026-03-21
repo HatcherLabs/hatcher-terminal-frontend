@@ -51,7 +51,7 @@ function ConnectWalletScreen() {
             <div
               key={i}
               className="boot-line"
-              style={{ color: line.color, animationDelay: `${i * 0.05}s` }}
+              style={{ color: line.color }}
             >
               {line.text === "HATCHER TERMINAL v2.1.0" ? (
                 <span className="text-sm font-bold tracking-widest text-glow-accent">{line.text}</span>
