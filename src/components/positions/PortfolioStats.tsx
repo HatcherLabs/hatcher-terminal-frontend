@@ -32,9 +32,33 @@ function StatCard({
   value: string;
   color?: string;
 }) {
+  const [hovered, setHovered] = useState(false);
+
+  const isNegative = color === "#ef4444";
+  const glowColor = isNegative
+    ? "rgba(239,68,68,0.06)"
+    : "rgba(34,197,94,0.06)";
+  const glowColorHover = isNegative
+    ? "rgba(239,68,68,0.12)"
+    : "rgba(34,197,94,0.12)";
+
   return (
-    <div className="rounded-lg p-2.5" style={{ background: "#141820", border: "1px solid #1c2030" }}>
-      <p className="text-[10px] uppercase tracking-wider mb-0.5" style={{ color: "#5c6380" }}>
+    <div
+      className="rounded-lg p-2.5"
+      style={{
+        background: "#141820",
+        border: "1px solid rgba(34,197,94,0.08)",
+        boxShadow: hovered ? `0 0 16px ${glowColorHover}` : `0 0 12px ${glowColor}`,
+        transform: hovered ? "translateY(-1px)" : "translateY(0)",
+        transition: "transform 0.15s ease, box-shadow 0.15s ease",
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <p
+        className="text-[10px] font-mono uppercase tracking-wider mb-0.5"
+        style={{ color: "#5c6380" }}
+      >
         {label}
       </p>
       <p className="text-sm font-mono font-bold" style={{ color: color ?? "#f0f2f7" }}>{value}</p>

@@ -53,6 +53,7 @@ export function SwipeOverlay({ direction, opacity }: SwipeOverlayProps) {
         borderRadius: 12,
         background: `radial-gradient(ellipse at center, ${c.color}${Math.round(opacity * 25).toString(16).padStart(2, "0")} 0%, transparent 70%)`,
         boxShadow: borderGlow,
+        backdropFilter: "blur(4px)",
       }}
     >
       {/* Colored border glow ring */}
@@ -82,7 +83,9 @@ export function SwipeOverlay({ direction, opacity }: SwipeOverlayProps) {
             : { scale: 1 }
         }
       >
-        {c.icon}
+        <span style={{ filter: "drop-shadow(0 0 6px currentColor)" }}>
+          {c.icon}
+        </span>
         <span
           className="font-mono"
           style={{
@@ -90,6 +93,9 @@ export function SwipeOverlay({ direction, opacity }: SwipeOverlayProps) {
             fontWeight: 900,
             letterSpacing: "0.12em",
             textTransform: "uppercase",
+            textShadow: direction === "right"
+              ? "0 0 12px rgba(34,197,94,0.5)"
+              : "0 0 12px rgba(239,68,68,0.5)",
           }}
         >
           {c.text}

@@ -504,9 +504,11 @@ export function QuickTradePanel() {
       {/* Panel */}
       <div
         style={{
-          background: "#0d1017",
-          borderColor: "#1c2030",
+          background: "rgba(10,13,20,0.92)",
+          backdropFilter: "blur(20px) saturate(1.3)",
+          borderColor: "rgba(34,197,94,0.08)",
           maxWidth: 360,
+          boxShadow: "0 -8px 40px rgba(0,0,0,0.5), 0 0 20px rgba(34,197,94,0.04)",
         }}
         className={`
           fixed z-50
@@ -526,14 +528,14 @@ export function QuickTradePanel() {
         {/* Drag handle (mobile) */}
         <div className="md:hidden flex justify-center pt-3 pb-1">
           <div
-            style={{ background: "#1c2030" }}
+            style={{ background: "rgba(34,197,94,0.08)" }}
             className="w-10 h-1 rounded-full"
           />
         </div>
 
         {/* Header */}
         <div
-          style={{ borderBottom: "1px solid #1c2030" }}
+          style={{ borderBottom: "1px solid rgba(34,197,94,0.08)" }}
           className="flex items-center gap-3 px-4 py-3"
         >
           <TokenAvatar
@@ -603,10 +605,11 @@ export function QuickTradePanel() {
               border:
                 activeTab === "buy"
                   ? "1px solid #22c55e"
-                  : "1px solid #1c2030",
+                  : "1px solid rgba(34,197,94,0.08)",
               borderRadius: 8,
               fontWeight: 700,
               fontSize: 13,
+              boxShadow: activeTab === "buy" ? "0 0 12px rgba(34,197,94,0.25)" : "none",
             }}
             className="flex-1 py-2.5 transition-all"
           >
@@ -620,10 +623,11 @@ export function QuickTradePanel() {
               border:
                 activeTab === "sell"
                   ? "1px solid #ef4444"
-                  : "1px solid #1c2030",
+                  : "1px solid rgba(34,197,94,0.08)",
               borderRadius: 8,
               fontWeight: 700,
               fontSize: 13,
+              boxShadow: activeTab === "sell" ? "0 0 12px rgba(239,68,68,0.25)" : "none",
             }}
             className="flex-1 py-2.5 transition-all"
           >
@@ -676,7 +680,7 @@ export function QuickTradePanel() {
                         border:
                           selectedPreset === amt
                             ? "1px solid rgba(34,197,94,0.4)"
-                            : "1px solid #1c2030",
+                            : "1px solid rgba(34,197,94,0.08)",
                         color:
                           selectedPreset === amt ? "#22c55e" : "#94a3b8",
                         borderRadius: 20,
@@ -713,13 +717,13 @@ export function QuickTradePanel() {
                     placeholder={String(quickBuyAmount)}
                     style={{
                       background: "#111827",
-                      border: "1px solid #1c2030",
+                      border: "1px solid rgba(34,197,94,0.08)",
                       borderRadius: 8,
                       color: "#e2e8f0",
                       fontFamily: "monospace",
                       fontSize: 14,
                     }}
-                    className="w-full px-3 py-2.5 placeholder:text-[#475569] focus:outline-none focus:border-[#6366f1] transition-colors"
+                    className="w-full px-3 py-2.5 placeholder:text-[#475569] focus:outline-none focus:border-[#22c55e] focus:shadow-[0_0_8px_rgba(34,197,94,0.2)] transition-colors"
                     step="0.01"
                     min="0"
                   />
@@ -763,7 +767,7 @@ export function QuickTradePanel() {
                         border:
                           sellPercent === pct
                             ? "1px solid rgba(239,68,68,0.3)"
-                            : "1px solid #1c2030",
+                            : "1px solid rgba(34,197,94,0.08)",
                         color:
                           sellPercent === pct ? "#ef4444" : "#94a3b8",
                         borderRadius: 20,
@@ -786,7 +790,7 @@ export function QuickTradePanel() {
                   style={{
                     background: "#111827",
                     borderRadius: 8,
-                    border: "1px solid #1c2030",
+                    border: "1px solid rgba(34,197,94,0.08)",
                   }}
                   className="p-3 space-y-1.5"
                 >
@@ -828,7 +832,7 @@ export function QuickTradePanel() {
                   style={{
                     background: "#111827",
                     borderRadius: 8,
-                    border: "1px solid #1c2030",
+                    border: "1px solid rgba(34,197,94,0.08)",
                   }}
                   className="p-3 text-center"
                 >
@@ -865,7 +869,7 @@ export function QuickTradePanel() {
                     border:
                       slippage === pct && !customSlippage
                         ? "1px solid rgba(99,102,241,0.4)"
-                        : "1px solid #1c2030",
+                        : "1px solid rgba(34,197,94,0.08)",
                     color:
                       slippage === pct && !customSlippage
                         ? "#818cf8"
@@ -894,7 +898,7 @@ export function QuickTradePanel() {
                       : "#111827",
                     border: customSlippage
                       ? "1px solid rgba(99,102,241,0.4)"
-                      : "1px solid #1c2030",
+                      : "1px solid rgba(34,197,94,0.08)",
                     borderRadius: 20,
                     color: customSlippage ? "#818cf8" : "#94a3b8",
                     fontFamily: "monospace",
@@ -966,7 +970,7 @@ export function QuickTradePanel() {
             style={{
               background: "#111827",
               borderRadius: 8,
-              border: "1px solid #1c2030",
+              border: "1px solid rgba(34,197,94,0.08)",
             }}
             className="p-3 space-y-1.5"
           >
@@ -1044,6 +1048,11 @@ export function QuickTradePanel() {
               opacity: isDisabled ? 0.4 : 1,
               cursor: isDisabled ? "not-allowed" : "pointer",
               transition: "all 0.15s",
+              boxShadow: isDisabled
+                ? "none"
+                : activeTab === "buy"
+                  ? "0 0 16px rgba(34,197,94,0.3), 0 0 4px rgba(34,197,94,0.2)"
+                  : "0 0 16px rgba(239,68,68,0.3), 0 0 4px rgba(239,68,68,0.2)",
             }}
             className="active:scale-[0.98] hover:brightness-110 disabled:hover:brightness-100"
           >

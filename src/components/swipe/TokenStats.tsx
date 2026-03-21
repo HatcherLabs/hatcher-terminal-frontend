@@ -51,7 +51,7 @@ function BondingCurveBar({
     return (
       <div className="flex items-center gap-2">
         <div className="flex-1 h-2 rounded-full bg-[#141820] overflow-hidden">
-          <div className="h-full w-full rounded-full" style={{ background: "linear-gradient(to right, #22c55e, #f59e0b)" }} />
+          <div className="h-full w-full rounded-full" style={{ background: "linear-gradient(to right, #22c55e, #f59e0b)", boxShadow: "2px 0 8px rgba(245,158,11,0.4), 0 0 4px rgba(34,197,94,0.2)" }} />
         </div>
         <span className="text-[10px] font-bold tracking-wider whitespace-nowrap" style={{ color: "#f59e0b" }}>
           MIGRATED
@@ -81,7 +81,7 @@ function BondingCurveBar({
       <div className="w-full h-2 rounded-full bg-[#141820] overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${pct}%`, backgroundColor: barHex }}
+          style={{ width: `${pct}%`, backgroundColor: barHex, boxShadow: `2px 0 8px ${barHex}66, 0 0 4px ${barHex}33` }}
         />
       </div>
       <p className="text-[10px] text-right font-mono" style={{ color: "#5c6380" }}>
@@ -122,11 +122,11 @@ function BuySellBar({
       <div className="w-full h-1.5 rounded-full overflow-hidden flex">
         <div
           className="h-full rounded-l-full"
-          style={{ width: `${buyPct}%`, backgroundColor: "#22c55e" }}
+          style={{ width: `${buyPct}%`, backgroundColor: "#22c55e", boxShadow: "2px 0 8px rgba(34,197,94,0.4), 0 0 4px rgba(34,197,94,0.2)" }}
         />
         <div
           className="h-full rounded-r-full"
-          style={{ width: `${100 - buyPct}%`, backgroundColor: "#ef4444" }}
+          style={{ width: `${100 - buyPct}%`, backgroundColor: "#ef4444", boxShadow: "-2px 0 8px rgba(239,68,68,0.4), 0 0 4px rgba(239,68,68,0.2)" }}
         />
       </div>
     </div>
@@ -212,12 +212,12 @@ export function TokenStats({
       )}
 
       {/* Stats grid - 4 columns */}
-      <div className="grid grid-cols-4 gap-px rounded-lg overflow-hidden" style={{ backgroundColor: "#1c2030" }}>
+      <div className="grid grid-cols-4 gap-px rounded-lg overflow-hidden" style={{ backgroundColor: "rgba(34,197,94,0.06)" }}>
         <div className="bg-[#141820] px-2 py-2 text-center">
           <p className="text-[10px] uppercase tracking-wider" style={{ color: "#5c6380" }}>
             Holders
           </p>
-          <p className="text-sm font-mono font-medium mt-0.5" style={{ color: "#f0f2f7" }}>
+          <p className="text-sm font-mono font-medium mt-0.5" style={{ color: "#f0f2f7", textShadow: "0 0 6px rgba(34,197,94,0.15)" }}>
             {holders !== null ? formatNumber(holders) : "\u2014"}
           </p>
         </div>
@@ -225,7 +225,7 @@ export function TokenStats({
           <p className="text-[10px] uppercase tracking-wider" style={{ color: "#5c6380" }}>
             Vol 1h
           </p>
-          <p className="text-sm font-mono font-medium mt-0.5" style={{ color: "#f0f2f7" }}>
+          <p className="text-sm font-mono font-medium mt-0.5" style={{ color: "#f0f2f7", textShadow: "0 0 6px rgba(34,197,94,0.15)" }}>
             {effectiveVolume1h ? `$${formatNumber(effectiveVolume1h)}` : "\u2014"}
           </p>
         </div>
@@ -235,7 +235,7 @@ export function TokenStats({
           </p>
           <p
             className="text-sm font-mono font-medium mt-0.5"
-            style={{ color: devWarn ? "#ef4444" : "#f0f2f7" }}
+            style={{ color: devWarn ? "#ef4444" : "#f0f2f7", textShadow: devWarn ? "0 0 6px rgba(239,68,68,0.2)" : "0 0 6px rgba(34,197,94,0.15)" }}
           >
             {devHoldPct !== null ? `${devHoldPct.toFixed(1)}%` : "\u2014"}
           </p>
@@ -244,7 +244,7 @@ export function TokenStats({
           <p className="text-[10px] uppercase tracking-wider" style={{ color: "#5c6380" }}>
             Age
           </p>
-          <p className="text-sm font-mono font-medium mt-0.5" style={{ color: "#f0f2f7" }}>
+          <p className="text-sm font-mono font-medium mt-0.5" style={{ color: "#f0f2f7", textShadow: "0 0 6px rgba(34,197,94,0.15)" }}>
             {tokenAge(createdAt)}
           </p>
         </div>

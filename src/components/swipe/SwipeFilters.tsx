@@ -104,7 +104,12 @@ export function SwipeFilters({ filters, onChange }: SwipeFiltersProps) {
       <button
         onClick={() => setOpen((v) => !v)}
         className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
-        style={{ color: "#8890a4", background: "#141820", border: "1px solid #1c2030" }}
+        style={{
+          color: activeCount > 0 ? "#22c55e" : "#8890a4",
+          background: "#141820",
+          border: activeCount > 0 ? "1px solid rgba(34,197,94,0.2)" : "1px solid #1c2030",
+          boxShadow: activeCount > 0 ? "0 0 10px rgba(34,197,94,0.15)" : "none",
+        }}
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <line x1="4" y1="6" x2="20" y2="6" />
@@ -130,7 +135,7 @@ export function SwipeFilters({ filters, onChange }: SwipeFiltersProps) {
             transition={{ duration: 0.2, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div className="mt-2 p-3 rounded-lg space-y-3" style={{ background: "#141820", border: "1px solid #1c2030" }}>
+            <div className="mt-2 p-3 rounded-lg space-y-3" style={{ background: "rgba(10,13,20,0.92)", backdropFilter: "blur(16px) saturate(1.3)", border: "1px solid rgba(34,197,94,0.08)", boxShadow: "0 8px 30px rgba(0,0,0,0.4), 0 0 15px rgba(34,197,94,0.03)" }}>
               {/* Min Market Cap */}
               <div>
                 <label className="text-[10px] uppercase tracking-wider font-medium mb-1.5 block" style={{ color: "#5c6380" }}>
@@ -144,7 +149,7 @@ export function SwipeFilters({ filters, onChange }: SwipeFiltersProps) {
                       className="px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors"
                       style={
                         filters.minMarketCapSol === val
-                          ? { backgroundColor: "#22c55e", color: "#06080e", borderColor: "#22c55e" }
+                          ? { backgroundColor: "#22c55e", color: "#06080e", borderColor: "#22c55e", boxShadow: "0 0 8px rgba(34,197,94,0.3)" }
                           : { color: "#8890a4", background: "#0d1017", borderColor: "#1c2030" }
                       }
                     >
@@ -167,7 +172,7 @@ export function SwipeFilters({ filters, onChange }: SwipeFiltersProps) {
                       className="px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors"
                       style={
                         filters.maxRiskLevels.has(level)
-                          ? { backgroundColor: "#22c55e", color: "#06080e", borderColor: "#22c55e" }
+                          ? { backgroundColor: "#22c55e", color: "#06080e", borderColor: "#22c55e", boxShadow: "0 0 8px rgba(34,197,94,0.3)" }
                           : { color: "#8890a4", background: "#0d1017", borderColor: "#1c2030" }
                       }
                     >
@@ -190,7 +195,7 @@ export function SwipeFilters({ filters, onChange }: SwipeFiltersProps) {
                       className="px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors"
                       style={
                         filters.minHolders === val
-                          ? { backgroundColor: "#22c55e", color: "#06080e", borderColor: "#22c55e" }
+                          ? { backgroundColor: "#22c55e", color: "#06080e", borderColor: "#22c55e", boxShadow: "0 0 8px rgba(34,197,94,0.3)" }
                           : { color: "#8890a4", background: "#0d1017", borderColor: "#1c2030" }
                       }
                     >
