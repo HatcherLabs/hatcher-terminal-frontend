@@ -130,11 +130,18 @@ export function FeedProvider({ children, useWebSocket: useWebSocketProp }: FeedP
         case "price-update": {
           const update = JSON.parse(data);
           setTokens((prev) =>
-            prev.map((t) =>
-              t.mintAddress === update.mintAddress
-                ? { ...t, marketCapSol: update.marketCapSol }
-                : t
-            )
+            prev.map((t) => {
+              if (t.mintAddress !== update.mintAddress) return t;
+              const patch: Partial<TokenData> = { marketCapSol: update.marketCapSol };
+              if (update.marketCapUsd != null) patch.marketCapUsd = update.marketCapUsd;
+              if (update.bondingProgress != null) patch.bondingProgress = update.bondingProgress;
+              if (update.volume1h != null) patch.volume1h = update.volume1h;
+              if (update.buyCount != null) patch.buyCount = update.buyCount;
+              if (update.sellCount != null) patch.sellCount = update.sellCount;
+              if (update.priceChange5m != null) patch.priceChange5m = update.priceChange5m;
+              if (update.priceChange1h != null) patch.priceChange1h = update.priceChange1h;
+              return { ...t, ...patch };
+            })
           );
           break;
         }

@@ -129,20 +129,20 @@ function AreaChartRenderer({
       },
       grid: {
         vertLines: { visible: false },
-        horzLines: { color: "rgba(26, 31, 46, 0.5)" },
+        horzLines: { color: "rgba(34, 197, 94, 0.06)" },
       },
       crosshair: {
         vertLine: {
-          color: "#5c6380",
+          color: "rgba(34, 197, 94, 0.4)",
           width: 1,
           style: 3,
-          labelBackgroundColor: "#141820",
+          labelBackgroundColor: "#0d1017",
         },
         horzLine: {
-          color: "#5c6380",
+          color: "rgba(34, 197, 94, 0.4)",
           width: 1,
           style: 3,
-          labelBackgroundColor: "#141820",
+          labelBackgroundColor: "#0d1017",
         },
       },
       rightPriceScale: {
@@ -295,8 +295,8 @@ export function PortfolioChart() {
             strokeLinejoin="round"
           />
         </svg>
-        <p className="text-xs" style={{ color: "#5c6380" }}>No trade history yet</p>
-        <p className="text-[10px]" style={{ color: "#444c60" }}>
+        <p className="text-xs font-mono" style={{ color: "#5c6380" }}>No trade history yet</p>
+        <p className="text-[10px] font-mono" style={{ color: "#444c60" }}>
           Close some positions to see your P&amp;L chart
         </p>
       </div>
@@ -356,10 +356,10 @@ export function PortfolioChart() {
             <button
               key={r}
               onClick={() => setRange(r)}
-              className="px-2 py-1 text-[10px] font-mono font-medium rounded transition-colors"
+              className="px-2 py-1 text-[10px] font-mono font-bold rounded transition-colors"
               style={{
                 background: range === r ? "rgba(34,197,94,0.08)" : "transparent",
-                color: range === r ? "#f0f2f7" : "#5c6380",
+                color: range === r ? "#22c55e" : "#5c6380",
               }}
             >
               {r}

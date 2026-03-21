@@ -148,7 +148,7 @@ export default function PositionsPage() {
 
   useEffect(() => {
     fetchPositions();
-    const interval = setInterval(fetchPositions, 10_000);
+    const interval = setInterval(fetchPositions, 5_000);
     return () => clearInterval(interval);
   }, [fetchPositions]);
 

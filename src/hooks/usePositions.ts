@@ -43,7 +43,7 @@ export function usePositions(status: string = "open") {
 
   useEffect(() => {
     fetchPositions();
-    const interval = setInterval(fetchPositions, 10_000);
+    const interval = setInterval(fetchPositions, 5_000);
     return () => clearInterval(interval);
   }, [fetchPositions]);
 

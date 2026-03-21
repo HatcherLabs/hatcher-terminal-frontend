@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
 const DEFAULT_SOL_PRICE = 150;
-const REFRESH_INTERVAL = 60_000;
+const REFRESH_INTERVAL = 20_000;
 const COINGECKO_URL =
   "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd";
 

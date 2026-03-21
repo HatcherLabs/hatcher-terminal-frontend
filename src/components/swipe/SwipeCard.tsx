@@ -5,7 +5,7 @@ import { RiskBadge } from "@/components/ui/RiskBadge";
 import { HeatBadge } from "@/components/ui/HeatBadge";
 import { MiniChart } from "@/components/token/MiniChart";
 import { AnimatedPrice } from "@/components/ui/AnimatedPrice";
-import { useTokenPrice } from "@/hooks/useTokenPrice";
+import { useLiveTokenPrice } from "@/hooks/useLiveTokenPrice";
 import { useSolPriceContext } from "@/components/providers/SolPriceProvider";
 import type { TokenData } from "@/types/token";
 
@@ -214,7 +214,7 @@ function WebIcon() {
    ================================================================ */
 
 export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
-  const liveData = useTokenPrice(token.mintAddress);
+  const liveData = useLiveTokenPrice({ mintAddress: token.mintAddress });
   const { solPrice } = useSolPriceContext();
   const heat = ((token as unknown as Record<string, unknown>).heatScore as number | undefined) ?? 50;
   const riskFactors = token.riskFactors ?? {};
@@ -385,7 +385,7 @@ export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
 
       {/* ---- Row 3: Mini Chart ---- */}
       <div style={{ padding: "0 8px", height: 48 }}>
-        <MiniChart mintAddress={token.mintAddress} />
+        <MiniChart mintAddress={token.mintAddress} livePrice={liveData?.priceSol} />
       </div>
 
       {/* ---- Row 4: 2x3 Metrics Grid ---- */}

@@ -7,15 +7,15 @@ import { useLiveCandles } from "@/hooks/useLiveCandles";
 // ---- Chart Theme Constants ----
 const CHART_THEME = {
   background: "#06080e",
-  gridColor: "#1c2030",
+  gridColor: "rgba(34, 197, 94, 0.06)",
   upColor: "#22c55e",
   downColor: "#ef4444",
-  crosshairColor: "#5c6380",
+  crosshairColor: "rgba(34, 197, 94, 0.4)",
   textColor: "#5c6380",
   labelBg: "#0d1017",
-  borderColor: "#1c2030",
-  volumeUpColor: "rgba(34, 197, 94, 0.2)",
-  volumeDownColor: "rgba(239, 68, 68, 0.2)",
+  borderColor: "rgba(34, 197, 94, 0.08)",
+  volumeUpColor: "rgba(34, 197, 94, 0.3)",
+  volumeDownColor: "rgba(239, 68, 68, 0.25)",
   priceLineColor: "#5c6380",
 } as const;
 
@@ -153,66 +153,42 @@ function formatVolume(vol: number): string {
 function ChartSkeleton({ height }: { height: number }) {
   return (
     <div
-      className="w-full rounded-lg overflow-hidden"
+      className="w-full rounded-lg overflow-hidden flex flex-col items-center justify-center"
       style={{ height, background: "#06080e" }}
     >
-      {/* Toolbar skeleton */}
-      <div className="flex items-center gap-2 px-3 py-2.5">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div
-            key={i}
-            className="h-6 rounded animate-pulse"
-            style={{
-              width: 32 + Math.random() * 8,
-              background: "#1c2030",
-            }}
-          />
-        ))}
-      </div>
-      {/* Chart area skeleton */}
-      <div className="px-3 pb-3" style={{ height: height - 48 }}>
+      <div className="flex flex-col items-center gap-3">
         <div
-          className="w-full h-full rounded animate-pulse relative overflow-hidden"
-          style={{ background: "#0d1017" }}
+          className="w-5 h-5 rounded-full border-2 animate-spin"
+          style={{
+            borderColor: "rgba(34,197,94,0.15)",
+            borderTopColor: "#22c55e",
+          }}
+        />
+        <span
+          className="font-mono text-xs animate-pulse"
+          style={{
+            color: "#22c55e",
+            textShadow: "0 0 8px rgba(34,197,94,0.3)",
+            letterSpacing: "0.1em",
+          }}
         >
-          {/* Fake candle bars */}
-          <div className="absolute inset-0 flex items-end justify-around px-4 pb-8 gap-1">
-            {Array.from({ length: 24 }).map((_, i) => {
-              const h = 20 + Math.random() * 50;
-              const isUp = Math.random() > 0.45;
-              return (
-                <div
-                  key={i}
-                  className="rounded-sm animate-pulse"
-                  style={{
-                    width: 4,
-                    height: `${h}%`,
-                    background: isUp
-                      ? "rgba(34, 197, 94, 0.15)"
-                      : "rgba(239, 68, 68, 0.15)",
-                    animationDelay: `${i * 80}ms`,
-                  }}
-                />
-              );
-            })}
-          </div>
-          {/* Shimmer overlay */}
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(90deg, transparent 0%, rgba(26, 31, 46, 0.15) 50%, transparent 100%)",
-              animation: "shimmer 2s ease-in-out infinite",
-            }}
-          />
+          LOADING CHART DATA...
+        </span>
+        <div className="flex items-center gap-1 mt-1">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div
+              key={i}
+              className="rounded-sm animate-pulse"
+              style={{
+                width: 3,
+                height: 8 + Math.sin(i * 0.8) * 6,
+                background: "rgba(34,197,94,0.15)",
+                animationDelay: `${i * 100}ms`,
+              }}
+            />
+          ))}
         </div>
       </div>
-      <style jsx>{`
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-      `}</style>
     </div>
   );
 }
@@ -441,12 +417,14 @@ function CandlestickChart({
           width: 1,
           style: LineStyle.Dashed,
           labelBackgroundColor: CHART_THEME.labelBg,
+          labelVisible: true,
         },
         horzLine: {
           color: CHART_THEME.crosshairColor,
           width: 1,
           style: LineStyle.Dashed,
           labelBackgroundColor: CHART_THEME.labelBg,
+          labelVisible: true,
         },
       },
       rightPriceScale: {
@@ -777,11 +755,18 @@ export function TokenChart({ mintAddress, height }: TokenChartProps) {
           {isLiveCapable && (
             <span
               className="flex items-center gap-1 font-mono"
-              style={{ fontSize: 9, color: "#22c55e" }}
+              style={{
+                fontSize: 9,
+                color: "#22c55e",
+                textShadow: "0 0 6px rgba(34,197,94,0.5), 0 0 12px rgba(34,197,94,0.2)",
+              }}
             >
               <span
                 className="w-1.5 h-1.5 rounded-full animate-pulse"
-                style={{ background: "#22c55e" }}
+                style={{
+                  background: "#22c55e",
+                  boxShadow: "0 0 4px #22c55e, 0 0 8px rgba(34,197,94,0.3)",
+                }}
               />
               LIVE
             </span>

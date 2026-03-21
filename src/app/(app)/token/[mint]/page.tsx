@@ -19,10 +19,9 @@ import { TradePanel } from "@/components/trade/TradePanel";
 import { LiveAge } from "@/components/ui/LiveAge";
 import { useLiveTrades } from "@/hooks/useLiveTrades";
 import { PriceFlash } from "@/components/ui/PriceFlash";
+import { useSolPriceContext } from "@/components/providers/SolPriceProvider";
 import { api } from "@/lib/api";
 import type { TokenData } from "@/types/token";
-
-const SOL_PRICE_USD = Number(process.env.NEXT_PUBLIC_SOL_PRICE_USD || 150);
 const BONDING_GRADUATION_SOL = 85;
 
 // ---- helpers ----
@@ -358,6 +357,8 @@ export default function TokenTerminalPage() {
   const [tradesPage, setTradesPage] = useState(1);
   const [mockHolders, setMockHolders] = useState<MockHolder[]>([]);
   const [holdersLoading, setHoldersLoading] = useState(false);
+
+  const { solPrice: SOL_PRICE_USD } = useSolPriceContext();
 
   const liveData = useLiveTokenPrice({ mintAddress: mint, enabled: !!mint });
   const { trades: liveTrades, connected: tradesConnected } = useLiveTrades({

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { api } from "@/lib/api";
 import { Sparkline } from "@/components/ui/Sparkline";
 
@@ -25,6 +25,7 @@ interface MiniChartProps {
   mintAddress: string;
   width?: number;
   height?: number;
+  livePrice?: number | null;
 }
 
 // Module-level cache shared across all MiniChart instances
@@ -49,6 +50,7 @@ export function MiniChart({
   mintAddress,
   width = 80,
   height = 28,
+  livePrice,
 }: MiniChartProps) {
   const [closes, setCloses] = useState<number[] | null>(null);
   const [error, setError] = useState(false);
@@ -77,6 +79,14 @@ export function MiniChart({
     };
   }, [mintAddress]);
 
+  const displayData = useMemo(() => {
+    if (!closes) return null;
+    if (livePrice != null && livePrice > 0) {
+      return [...closes, livePrice];
+    }
+    return closes;
+  }, [closes, livePrice]);
+
   // Error / no data
   if (error) {
     return (
@@ -92,7 +102,7 @@ export function MiniChart({
   }
 
   // Loading: pulsing placeholder
-  if (closes === null) {
+  if (!displayData) {
     return (
       <div
         className="rounded animate-pulse"
@@ -101,5 +111,5 @@ export function MiniChart({
     );
   }
 
-  return <Sparkline data={closes} width={width} height={height} />;
+  return <Sparkline data={displayData} width={width} height={height} />;
 }
