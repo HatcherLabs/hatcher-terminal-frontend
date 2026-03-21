@@ -126,7 +126,7 @@ export function LimitOrderForm({
   const redDim = "rgba(239,68,68,0.12)";
   const redBorder = "rgba(239,68,68,0.35)";
   const bg = "#0d1017";
-  const border = "#1c2030";
+  const border = "rgba(34,197,94,0.08)";
   const bgElevated = "#111520";
   const textPrimary = "#e2e8f0";
   const textMuted = "#64748b";

@@ -157,9 +157,10 @@ export function TokenHoverCard({
             className="rounded-lg border overflow-hidden"
             style={{
               background: "rgba(16, 19, 28, 0.95)",
-              borderColor: "#1c2030",
+              borderColor: "rgba(34,197,94,0.08)",
               backdropFilter: "blur(12px)",
               WebkitBackdropFilter: "blur(12px)",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.4), 0 0 15px rgba(34,197,94,0.03)",
             }}
           >
             {/* ── Header: Avatar + Name + Risk ── */}
@@ -186,7 +187,7 @@ export function TokenHoverCard({
             </div>
 
             {/* ── Stats Grid ── */}
-            <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 px-3 py-2 border-t border-[#1c2030]">
+            <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 px-3 py-2 border-t" style={{ borderColor: "rgba(34,197,94,0.08)" }}>
               <StatRow label="MCap" value={`$${fmt(marketCapUsd)}`} />
               <StatRow label="Vol 1h" value={`$${fmt(volume1h)}`} />
               <StatRow label="Holders" value={fmt(holders)} />
@@ -207,7 +208,7 @@ export function TokenHoverCard({
             </div>
 
             {/* ── Mini Sparkline ── */}
-            <div className="px-3 pb-3 pt-1 border-t border-[#1c2030]">
+            <div className="px-3 pb-3 pt-1 border-t" style={{ borderColor: "rgba(34,197,94,0.08)" }}>
               <MiniChart
                 mintAddress={mintAddress}
                 width={CARD_MAX_W - 24}

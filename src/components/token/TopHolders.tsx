@@ -94,12 +94,12 @@ export function TopHolders({ mintAddress }: TopHoldersProps) {
   return (
     <div
       className="rounded overflow-hidden"
-      style={{ background: "#0d1017", border: "1px solid #1c2030" }}
+      style={{ background: "#0d1017", border: "1px solid rgba(34,197,94,0.08)" }}
     >
       {/* Header */}
       <div
         className="flex items-center justify-between h-8 px-3"
-        style={{ borderBottom: "1px solid #1c2030" }}
+        style={{ borderBottom: "1px solid rgba(34,197,94,0.08)" }}
       >
         <span
           className="text-[9px] font-mono uppercase tracking-widest"
@@ -129,7 +129,7 @@ export function TopHolders({ mintAddress }: TopHoldersProps) {
               className="text-[10px] font-mono px-2 py-1 rounded transition-colors"
               style={{
                 background: "#141820",
-                border: "1px solid #1c2030",
+                border: "1px solid rgba(34,197,94,0.08)",
                 color: "#8890a4",
               }}
             >

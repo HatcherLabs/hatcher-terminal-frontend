@@ -12,7 +12,7 @@ const C = {
   bg2: "#141820",
   bg3: "#1a1f2a",
   bg4: "#1f2435",
-  bd: "#1c2030",
+  bd: "rgba(34,197,94,0.08)",
   t0: "#f0f2f7",
   t1: "#8890a4",
   t2: "#5c6380",
@@ -971,6 +971,9 @@ export function TradePanel({
             transition: "all 0.15s ease",
             background: accent,
             color: C.bg0,
+            boxShadow: isBuy
+              ? "0 0 12px rgba(34,197,94,0.2)"
+              : "0 0 12px rgba(239,68,68,0.2)",
           }}
         >
           {submitting

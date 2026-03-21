@@ -157,7 +157,7 @@ function MetricCell({
   return (
     <div
       className="px-2.5 py-2 rounded"
-      style={{ background: "#0d1017", border: "1px solid #1c2030" }}
+      style={{ background: "#0d1017", border: "1px solid rgba(34,197,94,0.08)" }}
     >
       <p
         className="text-[9px] uppercase tracking-wider mb-0.5"
@@ -709,7 +709,7 @@ export default function TokenTerminalPage() {
           <button
             onClick={() => router.back()}
             className="w-7 h-7 flex items-center justify-center rounded"
-            style={{ background: "#0d1017", border: "1px solid #1c2030", color: "#5c6380" }}
+            style={{ background: "#0d1017", border: "1px solid rgba(34,197,94,0.08)", color: "#5c6380" }}
           >
             &#8592;
           </button>
@@ -743,7 +743,7 @@ export default function TokenTerminalPage() {
         <button
           onClick={() => router.back()}
           className="px-4 py-2 rounded text-sm transition-colors"
-          style={{ background: "#0d1017", border: "1px solid #1c2030", color: "#8890a4" }}
+          style={{ background: "#0d1017", border: "1px solid rgba(34,197,94,0.08)", color: "#8890a4" }}
         >
           Go back
         </button>
@@ -759,13 +759,13 @@ export default function TokenTerminalPage() {
       {/* ====== TOKEN HEADER BAR ====== */}
       <div
         className="flex items-center gap-3 px-3 py-2.5 mb-3 rounded"
-        style={{ background: "#0d1017", border: "1px solid #1c2030" }}
+        style={{ background: "#0d1017", border: "1px solid rgba(34,197,94,0.08)" }}
       >
         {/* Back button */}
         <button
           onClick={() => router.back()}
           className="w-7 h-7 flex items-center justify-center rounded shrink-0 transition-colors"
-          style={{ background: "#141820", border: "1px solid #1c2030", color: "#5c6380" }}
+          style={{ background: "#141820", border: "1px solid rgba(34,197,94,0.08)", color: "#5c6380" }}
           aria-label="Go back"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -832,7 +832,7 @@ export default function TokenTerminalPage() {
         </div>
 
         {/* Divider */}
-        <div className="hidden sm:block w-px h-5 shrink-0" style={{ background: "#1c2030" }} />
+        <div className="hidden sm:block w-px h-5 shrink-0" style={{ background: "rgba(34,197,94,0.08)" }} />
 
         {/* Social links inline */}
         <div className="hidden sm:flex items-center shrink-0">
@@ -845,7 +845,7 @@ export default function TokenTerminalPage() {
         </div>
 
         {/* Divider */}
-        <div className="hidden sm:block w-px h-5 shrink-0" style={{ background: "#1c2030" }} />
+        <div className="hidden sm:block w-px h-5 shrink-0" style={{ background: "rgba(34,197,94,0.08)" }} />
 
         {/* Action buttons */}
         <div className="flex items-center gap-1 shrink-0">
@@ -856,7 +856,7 @@ export default function TokenTerminalPage() {
       {/* ====== MOBILE PRICE BAR (visible < sm) ====== */}
       <div
         className="flex sm:hidden items-center justify-between px-3 py-2 mb-3 rounded"
-        style={{ background: "#0d1017", border: "1px solid #1c2030" }}
+        style={{ background: "#0d1017", border: "1px solid rgba(34,197,94,0.08)" }}
       >
         <span className="text-sm font-bold font-mono" style={{ color: "#f0f2f7" }}>
           {priceSol != null ? `${formatPriceSol(priceSol)} SOL` : "\u2014"}
@@ -888,7 +888,7 @@ export default function TokenTerminalPage() {
       {(priceChange5m !== null || priceChange1h !== null || priceChange6h !== null || priceChange24h !== null) && (
         <div
           className="flex items-center gap-1.5 px-3 py-2 mb-3 rounded overflow-x-auto"
-          style={{ background: "#0d1017", border: "1px solid #1c2030" }}
+          style={{ background: "#0d1017", border: "1px solid rgba(34,197,94,0.08)" }}
         >
           <span className="text-[9px] uppercase tracking-wider shrink-0" style={{ color: "#5c6380" }}>
             Change
@@ -927,7 +927,7 @@ export default function TokenTerminalPage() {
           {/* ====== TAB BAR ====== */}
           <div
             className="flex gap-0"
-            style={{ borderBottom: "1px solid #1c2030" }}
+            style={{ borderBottom: "1px solid rgba(34,197,94,0.08)" }}
           >
             {(["overview", "trade", "trades", "holders", "info"] as const).map((tab) => (
               <button
@@ -1076,7 +1076,7 @@ export default function TokenTerminalPage() {
               {token.description && (
                 <div
                   className="rounded px-3 py-2.5"
-                  style={{ background: "#0d1017", border: "1px solid #1c2030" }}
+                  style={{ background: "#0d1017", border: "1px solid rgba(34,197,94,0.08)" }}
                 >
                   <p className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color: "#5c6380" }}>
                     Token Description
@@ -1091,7 +1091,7 @@ export default function TokenTerminalPage() {
               {!token.isGraduated && bondingProgress != null && (
                 <div
                   className="rounded px-3 py-2.5"
-                  style={{ background: "#0d1017", border: "1px solid #1c2030" }}
+                  style={{ background: "#0d1017", border: "1px solid rgba(34,197,94,0.08)" }}
                 >
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="text-[10px] uppercase tracking-wider" style={{ color: "#5c6380" }}>
@@ -1130,7 +1130,7 @@ export default function TokenTerminalPage() {
               {totalTrades > 0 && (
                 <div
                   className="rounded px-3 py-2.5"
-                  style={{ background: "#0d1017", border: "1px solid #1c2030" }}
+                  style={{ background: "#0d1017", border: "1px solid rgba(34,197,94,0.08)" }}
                 >
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="text-[10px] uppercase tracking-wider" style={{ color: "#5c6380" }}>
@@ -1161,7 +1161,7 @@ export default function TokenTerminalPage() {
               {/* Security Analysis */}
               <div
                 className="rounded px-3 py-2.5"
-                style={{ background: "#0d1017", border: "1px solid #1c2030" }}
+                style={{ background: "#0d1017", border: "1px solid rgba(34,197,94,0.08)" }}
               >
                 <p className="text-[10px] uppercase tracking-wider mb-2.5" style={{ color: "#5c6380" }}>
                   Security Analysis
@@ -1177,7 +1177,7 @@ export default function TokenTerminalPage() {
                     <div
                       key={social.label}
                       className="flex items-center gap-1.5 px-2 py-1 rounded"
-                      style={{ background: "#141820", border: "1px solid #1c2030" }}
+                      style={{ background: "#141820", border: "1px solid rgba(34,197,94,0.08)" }}
                     >
                       <span
                         className="inline-block w-1.5 h-1.5 rounded-full"
@@ -1253,7 +1253,7 @@ export default function TokenTerminalPage() {
               {signals.length > 0 && (
                 <div
                   className="rounded px-3 py-2.5"
-                  style={{ background: "#0d1017", border: "1px solid #1c2030" }}
+                  style={{ background: "#0d1017", border: "1px solid rgba(34,197,94,0.08)" }}
                 >
                   <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color: "#5c6380" }}>
                     Security Signals
@@ -1263,7 +1263,7 @@ export default function TokenTerminalPage() {
                       <div
                         key={signal.label}
                         className="flex items-center gap-1.5 px-2 py-1 rounded"
-                        style={{ background: "#141820", border: "1px solid #1c2030" }}
+                        style={{ background: "#141820", border: "1px solid rgba(34,197,94,0.08)" }}
                       >
                         <span
                           className="text-[10px]"
@@ -1303,12 +1303,12 @@ export default function TokenTerminalPage() {
           {activeLeftTab === "trades" && (
             <div
               className="rounded overflow-hidden"
-              style={{ background: "#0d1017", border: "1px solid #1c2030" }}
+              style={{ background: "#0d1017", border: "1px solid rgba(34,197,94,0.08)" }}
             >
               {/* Header */}
               <div
                 className="flex items-center justify-between h-8 px-3"
-                style={{ borderBottom: "1px solid #1c2030" }}
+                style={{ borderBottom: "1px solid rgba(34,197,94,0.08)" }}
               >
                 <div className="flex items-center gap-2">
                   <span className="text-[9px] font-mono uppercase tracking-widest" style={{ color: "#5c6380" }}>
@@ -1432,12 +1432,12 @@ export default function TokenTerminalPage() {
 
                 {/* Load More button */}
                 {allTrades.length > 0 && (
-                  <div className="flex justify-center pt-2 pb-1" style={{ borderTop: "1px solid #1c2030" }}>
+                  <div className="flex justify-center pt-2 pb-1" style={{ borderTop: "1px solid rgba(34,197,94,0.08)" }}>
                     <button
                       onClick={handleLoadMoreTrades}
                       disabled={tradesLoading}
                       className="flex items-center gap-1.5 px-4 py-1.5 rounded text-[10px] font-mono transition-colors disabled:opacity-50"
-                      style={{ background: "#141820", border: "1px solid #1c2030", color: "#8890a4" }}
+                      style={{ background: "#141820", border: "1px solid rgba(34,197,94,0.08)", color: "#8890a4" }}
                     >
                       {tradesLoading ? (
                         <>
@@ -1464,7 +1464,7 @@ export default function TokenTerminalPage() {
               {mockHolders.length > 0 && (
                 <div
                   className="rounded px-3 py-2.5"
-                  style={{ background: "#0d1017", border: "1px solid #1c2030" }}
+                  style={{ background: "#0d1017", border: "1px solid rgba(34,197,94,0.08)" }}
                 >
                   <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color: "#5c6380" }}>
                     Top 10 Distribution
@@ -1516,11 +1516,11 @@ export default function TokenTerminalPage() {
               {/* Holders Table */}
               <div
                 className="rounded overflow-hidden"
-                style={{ background: "#0d1017", border: "1px solid #1c2030" }}
+                style={{ background: "#0d1017", border: "1px solid rgba(34,197,94,0.08)" }}
               >
                 <div
                   className="flex items-center justify-between h-8 px-3"
-                  style={{ borderBottom: "1px solid #1c2030" }}
+                  style={{ borderBottom: "1px solid rgba(34,197,94,0.08)" }}
                 >
                   <span className="text-[9px] font-mono uppercase tracking-widest" style={{ color: "#5c6380" }}>
                     Top Holders
@@ -1664,7 +1664,7 @@ export default function TokenTerminalPage() {
               {/* Token Metadata Grid */}
               <div
                 className="rounded px-3 py-2.5"
-                style={{ background: "#0d1017", border: "1px solid #1c2030" }}
+                style={{ background: "#0d1017", border: "1px solid rgba(34,197,94,0.08)" }}
               >
                 <p className="text-[10px] uppercase tracking-wider mb-2.5" style={{ color: "#5c6380" }}>
                   Token Metadata
@@ -1767,7 +1767,7 @@ export default function TokenTerminalPage() {
               {/* Links Section */}
               <div
                 className="rounded px-3 py-2.5"
-                style={{ background: "#0d1017", border: "1px solid #1c2030" }}
+                style={{ background: "#0d1017", border: "1px solid rgba(34,197,94,0.08)" }}
               >
                 <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color: "#5c6380" }}>
                   Links
@@ -1782,7 +1782,7 @@ export default function TokenTerminalPage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-mono transition-colors"
-                        style={{ background: "#141820", border: "1px solid #1c2030", color: "#8890a4" }}
+                        style={{ background: "#141820", border: "1px solid rgba(34,197,94,0.08)", color: "#8890a4" }}
                       >
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
                           <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
@@ -1799,7 +1799,7 @@ export default function TokenTerminalPage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-mono transition-colors"
-                        style={{ background: "#141820", border: "1px solid #1c2030", color: "#8890a4" }}
+                        style={{ background: "#141820", border: "1px solid rgba(34,197,94,0.08)", color: "#8890a4" }}
                       >
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
                           <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
@@ -1816,7 +1816,7 @@ export default function TokenTerminalPage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-mono transition-colors"
-                        style={{ background: "#141820", border: "1px solid #1c2030", color: "#8890a4" }}
+                        style={{ background: "#141820", border: "1px solid rgba(34,197,94,0.08)", color: "#8890a4" }}
                       >
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
@@ -1844,7 +1844,7 @@ export default function TokenTerminalPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex-1 flex items-center justify-center gap-1 h-7 rounded text-[10px] font-mono font-medium tracking-wider transition-colors"
-                      style={{ background: "#141820", border: "1px solid #1c2030", color: "#5c6380" }}
+                      style={{ background: "#141820", border: "1px solid rgba(34,197,94,0.08)", color: "#5c6380" }}
                     >
                       {link.label}
                       <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1863,12 +1863,12 @@ export default function TokenTerminalPage() {
           {/* Token Info Panel */}
           <div
             className="rounded overflow-hidden"
-            style={{ background: "#0d1017", border: "1px solid #1c2030" }}
+            style={{ background: "#0d1017", border: "1px solid rgba(34,197,94,0.08)" }}
           >
             {/* Panel header */}
             <div
               className="flex items-center h-7 px-3"
-              style={{ borderBottom: "1px solid #1c2030" }}
+              style={{ borderBottom: "1px solid rgba(34,197,94,0.08)" }}
             >
               <span className="text-[9px] font-mono uppercase tracking-widest" style={{ color: "#5c6380" }}>
                 Token Info
@@ -1919,14 +1919,14 @@ export default function TokenTerminalPage() {
               </div>
               {/* Description */}
               {token.description && (
-                <div className="hidden lg:block pt-1.5" style={{ borderTop: "1px solid #1c2030" }}>
+                <div className="hidden lg:block pt-1.5" style={{ borderTop: "1px solid rgba(34,197,94,0.08)" }}>
                   <p className="text-[10px] leading-relaxed" style={{ color: "#8890a4" }}>
                     {token.description}
                   </p>
                 </div>
               )}
               {/* Platform links */}
-              <div className="flex items-center gap-1 pt-1.5" style={{ borderTop: "1px solid #1c2030" }}>
+              <div className="flex items-center gap-1 pt-1.5" style={{ borderTop: "1px solid rgba(34,197,94,0.08)" }}>
                 {[
                   { label: "PF", title: "Pump.fun", url: `https://pump.fun/coin/${token.mintAddress}` },
                   { label: "SS", title: "Solscan", url: `https://solscan.io/token/${token.mintAddress}` },
@@ -1940,7 +1940,7 @@ export default function TokenTerminalPage() {
                     rel="noopener noreferrer"
                     title={link.title}
                     className="flex-1 flex items-center justify-center h-7 rounded text-[10px] font-bold tracking-wider transition-colors"
-                    style={{ background: "#141820", border: "1px solid #1c2030", color: "#5c6380" }}
+                    style={{ background: "#141820", border: "1px solid rgba(34,197,94,0.08)", color: "#5c6380" }}
                   >
                     {link.label}
                   </a>
@@ -1966,7 +1966,7 @@ export default function TokenTerminalPage() {
             className="flex items-center gap-2 p-2 rounded card-depth"
             style={{
               background: "rgba(10,13,20,0.95)",
-              border: "1px solid #1c2030",
+              border: "1px solid rgba(34,197,94,0.08)",
               backdropFilter: "blur(12px)",
             }}
           >
@@ -1989,6 +1989,7 @@ export default function TokenTerminalPage() {
                 background: "rgba(239,68,68,0.12)",
                 border: "1px solid rgba(239,68,68,0.3)",
                 color: "#ef4444",
+                boxShadow: "0 0 12px rgba(239,68,68,0.2)",
               }}
             >
               Sell
@@ -2001,6 +2002,7 @@ export default function TokenTerminalPage() {
                 background: "rgba(34,197,94,0.12)",
                 border: "1px solid rgba(34,197,94,0.3)",
                 color: "#22c55e",
+                boxShadow: "0 0 12px rgba(34,197,94,0.2)",
               }}
             >
               Buy

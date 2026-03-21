@@ -62,7 +62,7 @@ function TradeRow({ position }: { position: ClosedPosition }) {
       className="rounded-xl p-3"
       style={{
         background: "#141820",
-        border: "1px solid #1c2030",
+        border: "1px solid rgba(34,197,94,0.08)",
         borderLeft: `2px solid ${borderLeftColor}`,
       }}
     >

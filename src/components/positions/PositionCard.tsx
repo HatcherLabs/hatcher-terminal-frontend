@@ -116,7 +116,7 @@ export function PositionCard({ position, onClose, takeProfitPct, stopLossPct }: 
   return (
     <div
       className="group relative rounded-xl overflow-hidden"
-      style={{ background: "#141820", border: "1px solid #1c2030" }}
+      style={{ background: "#141820", border: "1px solid rgba(34,197,94,0.08)" }}
       onMouseEnter={() => setShowSellButtons(true)}
       onMouseLeave={() => {
         if (sellingPercent === null) setShowSellButtons(false);
@@ -223,7 +223,7 @@ export function PositionCard({ position, onClose, takeProfitPct, stopLossPct }: 
                   onClick={() => handleSell(pct)}
                   className="py-1.5 text-xs font-medium rounded-lg border transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
-                    borderColor: pct === 100 ? "rgba(239,68,68,0.4)" : "#1c2030",
+                    borderColor: pct === 100 ? "rgba(239,68,68,0.4)" : "rgba(34,197,94,0.08)",
                     color: pct === 100 ? "#ef4444" : "#8890a4",
                     background: "transparent",
                   }}

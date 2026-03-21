@@ -81,7 +81,7 @@ function PortfolioSummary({ stats }: { stats: PortfolioStats }) {
   const pnlColorFaded = isPositive ? "rgba(34,197,94,0.7)" : "rgba(239,68,68,0.7)";
 
   return (
-    <div className="rounded-xl p-4 mb-4" style={{ background: "#141820", border: "1px solid #1c2030" }}>
+    <div className="rounded-xl p-4 mb-4" style={{ background: "#141820", border: "1px solid rgba(34,197,94,0.08)" }}>
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#5c6380" }}>
           Portfolio
@@ -302,7 +302,7 @@ export function PositionList() {
       {/* Position count + total unrealized P&L bar */}
       <div
         className="flex items-center justify-between rounded-xl px-4 py-2.5"
-        style={{ background: "#141820", border: "1px solid #1c2030" }}
+        style={{ background: "#141820", border: "1px solid rgba(34,197,94,0.08)" }}
       >
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#5c6380" }}>

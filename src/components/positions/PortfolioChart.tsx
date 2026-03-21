@@ -269,7 +269,7 @@ export function PortfolioChart() {
         className="w-full h-[180px] md:h-[220px] flex flex-col items-center justify-center gap-1.5"
         style={{
           background: "#0d1017",
-          border: "1px solid #1c2030",
+          border: "1px solid rgba(34,197,94,0.08)",
           borderRadius: 8,
         }}
       >
@@ -314,7 +314,7 @@ export function PortfolioChart() {
     <div
       style={{
         background: "#0d1017",
-        border: "1px solid #1c2030",
+        border: "1px solid rgba(34,197,94,0.08)",
         borderRadius: 8,
       }}
       className="p-3"
@@ -358,7 +358,7 @@ export function PortfolioChart() {
               onClick={() => setRange(r)}
               className="px-2 py-1 text-[10px] font-mono font-medium rounded transition-colors"
               style={{
-                background: range === r ? "#1c2030" : "transparent",
+                background: range === r ? "rgba(34,197,94,0.08)" : "transparent",
                 color: range === r ? "#f0f2f7" : "#5c6380",
               }}
             >
