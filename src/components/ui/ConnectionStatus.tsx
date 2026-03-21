@@ -44,7 +44,7 @@ export function ConnectionStatus() {
           className="relative inline-block w-full h-full rounded-full"
           style={{
             background: cfg.color,
-            boxShadow: `0 0 6px ${cfg.color}80`,
+            boxShadow: `0 0 8px ${cfg.color}99, 0 0 16px ${cfg.color}40`,
           }}
         />
       </span>

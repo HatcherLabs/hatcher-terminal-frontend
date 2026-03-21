@@ -116,7 +116,12 @@ export default function SwipePage() {
           {/* Tab bar */}
           <nav
             className="flex items-center gap-1 p-1 mb-3 rounded-full"
-            style={{ background: "#0d1017", border: "1px solid #1c2030" }}
+            style={{
+              background: "rgba(13, 16, 23, 0.8)",
+              border: "1px solid rgba(28, 32, 48, 0.6)",
+              backdropFilter: "blur(12px)",
+              boxShadow: "0 2px 12px rgba(0, 0, 0, 0.3)",
+            }}
             role="tablist"
             aria-label="Token categories"
           >
@@ -136,7 +141,11 @@ export default function SwipePage() {
                   `}
                   style={
                     isActive
-                      ? { background: "#22c55e", color: "#06080e" }
+                      ? {
+                          background: "#22c55e",
+                          color: "#06080e",
+                          boxShadow: "0 0 12px rgba(34, 197, 94, 0.3)",
+                        }
                       : { color: "#5c6380" }
                   }
                 >
@@ -159,11 +168,13 @@ export default function SwipePage() {
           {/* Floating session stats badge */}
           {session.seen > 0 && (
             <div
-              className="fixed bottom-20 left-4 z-40 flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-md text-[10px] font-mono"
+              className="fixed bottom-20 left-4 z-40 flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-mono"
               style={{
-                background: "rgba(13,16,23,0.85)",
-                border: "1px solid #1c2030",
-                boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
+                background: "rgba(13,16,23,0.75)",
+                backdropFilter: "blur(16px) saturate(1.3)",
+                WebkitBackdropFilter: "blur(16px) saturate(1.3)",
+                border: "1px solid rgba(34, 197, 94, 0.08)",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.4), 0 0 20px rgba(34, 197, 94, 0.04)",
               }}
             >
               <span style={{ color: "#8890a4" }}>

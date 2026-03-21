@@ -33,16 +33,28 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
       return (
         <div
-          className="flex flex-col items-center justify-center py-16 px-4 text-center rounded-lg mx-auto max-w-md"
+          className="relative flex flex-col items-center justify-center py-16 px-4 text-center rounded-lg mx-auto max-w-md overflow-hidden"
           style={{
             backgroundColor: "#0d1017",
-            border: "1px solid #ef4444",
+            border: "1px solid rgba(239, 68, 68, 0.3)",
+            boxShadow: "0 0 40px rgba(239, 68, 68, 0.08), 0 0 80px rgba(239, 68, 68, 0.04)",
           }}
         >
+          {/* Scanline texture */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(239,68,68,0.02) 2px, rgba(239,68,68,0.02) 4px)",
+            }}
+          />
+
           {/* Terminal-style error icon */}
           <div
-            className="w-12 h-12 rounded-full flex items-center justify-center mb-4"
-            style={{ backgroundColor: "rgba(239, 68, 68, 0.1)" }}
+            className="relative w-12 h-12 rounded-full flex items-center justify-center mb-4"
+            style={{
+              backgroundColor: "rgba(239, 68, 68, 0.1)",
+              boxShadow: "0 0 20px rgba(239, 68, 68, 0.15)",
+            }}
           >
             <svg
               viewBox="0 0 24 24"
@@ -53,6 +65,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
+              style={{ filter: "drop-shadow(0 0 6px rgba(239, 68, 68, 0.4))" }}
             >
               <circle cx="12" cy="12" r="10" />
               <line x1="15" y1="9" x2="9" y2="15" />
@@ -62,14 +75,14 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
           {/* Terminal prompt style title */}
           <h2
-            className="text-sm font-bold font-mono tracking-wider uppercase mb-1"
-            style={{ color: "#ef4444" }}
+            className="relative text-sm font-bold font-mono tracking-wider uppercase mb-1"
+            style={{ color: "#ef4444", textShadow: "0 0 10px rgba(239, 68, 68, 0.3)" }}
           >
             {this.props.fallbackTitle || "Something went wrong"}
           </h2>
 
           <p
-            className="text-xs font-mono mb-6 max-w-[280px] leading-relaxed"
+            className="relative text-xs font-mono mb-6 max-w-[280px] leading-relaxed"
             style={{ color: "#5c6380" }}
           >
             An unexpected error occurred. Try again or return home.
@@ -78,17 +91,17 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           {/* Dev-only error message */}
           {isDev && this.state.error && (
             <div
-              className="w-full max-w-sm rounded-lg p-3 text-left mb-6"
+              className="relative w-full max-w-sm rounded-lg p-3 text-left mb-6"
               style={{
                 backgroundColor: "#06080e",
-                border: "1px solid #1c2030",
+                border: "1px solid rgba(239, 68, 68, 0.15)",
               }}
             >
               <p
                 className="text-[9px] font-bold uppercase tracking-widest mb-1.5"
                 style={{ color: "#ef4444" }}
               >
-                DEV ERROR
+                &gt; DEV ERROR
               </p>
               <p
                 className="text-[11px] font-mono break-all leading-relaxed"
@@ -100,13 +113,14 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           )}
 
           {/* Action buttons */}
-          <div className="flex items-center gap-3">
+          <div className="relative flex items-center gap-3">
             <button
               onClick={this.handleRetry}
               className="px-5 py-2 rounded-lg text-sm font-bold font-mono uppercase tracking-wider transition-all hover:brightness-110"
               style={{
                 backgroundColor: "#22c55e",
                 color: "#06080e",
+                boxShadow: "0 0 20px rgba(34, 197, 94, 0.2)",
               }}
             >
               Try Again

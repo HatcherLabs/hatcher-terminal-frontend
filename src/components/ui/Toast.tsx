@@ -27,10 +27,43 @@ export const useToast = create<ToastStore>((set) => ({
   remove: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
 }));
 
-const typeStyles = {
-  success: "border-green/30 bg-green-dim text-green",
-  error: "border-red/30 bg-red-dim text-red",
-  info: "border-blue/30 bg-blue/10 text-blue",
+const typeConfig = {
+  success: {
+    border: "rgba(34, 197, 94, 0.25)",
+    bg: "rgba(34, 197, 94, 0.06)",
+    color: "#22c55e",
+    glow: "0 0 20px rgba(34, 197, 94, 0.1)",
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+        <polyline points="20 6 9 17 4 12" />
+      </svg>
+    ),
+  },
+  error: {
+    border: "rgba(239, 68, 68, 0.25)",
+    bg: "rgba(239, 68, 68, 0.06)",
+    color: "#ef4444",
+    glow: "0 0 20px rgba(239, 68, 68, 0.1)",
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+    ),
+  },
+  info: {
+    border: "rgba(59, 130, 246, 0.25)",
+    bg: "rgba(59, 130, 246, 0.06)",
+    color: "#3b82f6",
+    glow: "0 0 20px rgba(59, 130, 246, 0.1)",
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="16" x2="12" y2="12" />
+        <line x1="12" y1="8" x2="12.01" y2="8" />
+      </svg>
+    ),
+  },
 };
 
 export function ToastContainer() {
@@ -48,6 +81,7 @@ export function ToastContainer() {
 function ToastItemComponent({ toast }: { toast: ToastItem }) {
   const [visible, setVisible] = useState(false);
   const remove = useToast((s) => s.remove);
+  const cfg = typeConfig[toast.type];
 
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true));
@@ -56,11 +90,24 @@ function ToastItemComponent({ toast }: { toast: ToastItem }) {
   return (
     <div
       onClick={() => remove(toast.id)}
-      className={`px-4 py-3 rounded-lg border text-sm cursor-pointer transition-all duration-300 ${
-        typeStyles[toast.type]
-      } ${visible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"}`}
+      className="flex items-center gap-2.5 px-4 py-3 rounded-lg cursor-pointer transition-all duration-300 font-mono"
+      style={{
+        background: "rgba(13, 16, 23, 0.85)",
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
+        border: `1px solid ${cfg.border}`,
+        boxShadow: cfg.glow,
+        color: cfg.color,
+        fontSize: 12,
+        fontWeight: 500,
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translateX(0)" : "translateX(16px)",
+      }}
     >
-      {toast.message}
+      <span className="shrink-0" style={{ filter: `drop-shadow(0 0 4px ${cfg.color})` }}>
+        {cfg.icon}
+      </span>
+      <span>{toast.message}</span>
     </div>
   );
 }

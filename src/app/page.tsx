@@ -101,8 +101,15 @@ export default function LandingPage() {
 
   if (checking) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-green/30 border-t-green rounded-full animate-spin" />
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3 relative" style={{ backgroundColor: "#06080e" }}>
+        <div className="animated-grid" />
+        <div
+          className="w-8 h-8 border-2 rounded-full animate-spin"
+          style={{ borderColor: "rgba(34,197,94,0.15)", borderTopColor: "#22c55e" }}
+        />
+        <span className="text-xs font-mono" style={{ color: "#5c6380" }}>
+          Initializing<span className="cursor-blink">_</span>
+        </span>
       </div>
     );
   }
