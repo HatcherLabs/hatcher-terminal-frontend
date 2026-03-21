@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import {
   motion,
   useMotionValue,
@@ -11,7 +10,6 @@ import {
 } from "framer-motion";
 import { SwipeCard } from "./SwipeCard";
 import { SwipeOverlay } from "./SwipeOverlay";
-import { TokenDetailModal } from "@/components/token/TokenDetailModal";
 import { useFeed } from "@/components/providers/FeedProvider";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useToast } from "@/components/ui/Toast";
@@ -57,14 +55,13 @@ function getStoredSwipeCount(): number {
 
 export function SwipeStack({ tokens: tokensProp, onSessionUpdate, onSettingsOpen }: SwipeStackProps) {
   const feed = useFeed();
-  const router = useRouter();
+
   const { connected } = useWallet();
   const { amount: quickBuyAmount } = useQuickBuy();
   const { selectToken } = useQuickTrade();
   const toast = useToast();
   const [swiping, setSwiping] = useState(false);
   const [buyLoading, setBuyLoading] = useState(false);
-  const [detailToken, setDetailToken] = useState<TokenData | null>(null);
 
   // Swipe hint: show for first N swipes across sessions
   const [swipeHintCount, setSwipeHintCount] = useState(getStoredSwipeCount);
@@ -88,10 +85,6 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate, onSettingsOpen
 
   // Undo history (pass swipes only)
   const [undoHistory, setUndoHistory] = useState<TokenData[]>([]);
-
-  const handleInfoTap = useCallback((token: TokenData) => {
-    router.push(`/token/${token.mintAddress}`);
-  }, [router]);
 
   // When tokens prop is provided, manage our own local index.
   const useLocalIndex = tokensProp !== undefined;
@@ -411,7 +404,7 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate, onSettingsOpen
             >
               <div className="relative w-full">
                 <SwipeOverlay direction={currentOverlayDir} opacity={currentOverlayOp} />
-                <SwipeCard token={currentToken} onInfoTap={handleInfoTap} />
+                <SwipeCard token={currentToken} />
 
                 {buyLoading && (
                   <div className="absolute inset-0 z-20 flex flex-col items-center justify-center rounded-card backdrop-blur-sm" style={{ backgroundColor: "rgba(6,8,14,0.8)" }}>
@@ -510,12 +503,6 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate, onSettingsOpen
         </div>
       </div>
 
-      <TokenDetailModal
-        token={detailToken}
-        isOpen={detailToken !== null}
-        onClose={() => setDetailToken(null)}
-        onBuy={(token) => handleSwipe("right", token)}
-      />
     </>
   );
 }

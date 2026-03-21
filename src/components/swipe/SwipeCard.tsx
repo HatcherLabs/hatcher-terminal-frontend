@@ -3,7 +3,6 @@
 import { TokenAvatar } from "@/components/ui/TokenAvatar";
 import { RiskBadge } from "@/components/ui/RiskBadge";
 import { HeatBadge } from "@/components/ui/HeatBadge";
-import { MiniChart } from "@/components/token/MiniChart";
 import { AnimatedPrice } from "@/components/ui/AnimatedPrice";
 import { useLiveTokenPrice } from "@/hooks/useLiveTokenPrice";
 import { useSolPriceContext } from "@/components/providers/SolPriceProvider";
@@ -11,7 +10,6 @@ import type { TokenData } from "@/types/token";
 
 interface SwipeCardProps {
   token: TokenData;
-  onInfoTap?: (token: TokenData) => void;
 }
 
 /* ---- Helpers ---- */
@@ -213,7 +211,7 @@ function WebIcon() {
    SwipeCard — Bloomberg-terminal-style data card
    ================================================================ */
 
-export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
+export function SwipeCard({ token }: SwipeCardProps) {
   const liveData = useLiveTokenPrice({ mintAddress: token.mintAddress });
   const { solPrice } = useSolPriceContext();
   const heat = ((token as unknown as Record<string, unknown>).heatScore as number | undefined) ?? 50;
@@ -383,12 +381,7 @@ export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
         </div>
       </div>
 
-      {/* ---- Row 3: Mini Chart ---- */}
-      <div style={{ padding: "0 8px", height: 48 }}>
-        <MiniChart mintAddress={token.mintAddress} livePrice={liveData?.priceSol} />
-      </div>
-
-      {/* ---- Row 4: 2x3 Metrics Grid ---- */}
+      {/* ---- Row 3: 2x3 Metrics Grid ---- */}
       <div
         style={{
           display: "grid",
@@ -491,41 +484,6 @@ export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
             </span>
           )}
         </div>
-
-        {/* Terminal button */}
-        {onInfoTap && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onInfoTap(token);
-            }}
-            onPointerDown={(e) => e.stopPropagation()}
-            style={{
-              fontSize: 10,
-              fontWeight: 700,
-              padding: "4px 10px",
-              borderRadius: 4,
-              background: "#1c2030",
-              border: "1px solid #1a1f2a",
-              color: "#8890a4",
-              cursor: "pointer",
-              transition: "background 0.15s, color 0.15s",
-              fontFamily: "monospace",
-              letterSpacing: "0.03em",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "#1a1f2a";
-              e.currentTarget.style.color = "#f0f2f7";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "#1c2030";
-              e.currentTarget.style.color = "#8890a4";
-            }}
-            aria-label={`View details for ${token.name}`}
-          >
-            TERMINAL &rarr;
-          </button>
-        )}
       </div>
     </div>
   );
