@@ -108,7 +108,12 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen overflow-x-hidden" style={{ backgroundColor: "#06080e" }}>
+    <div className="min-h-screen overflow-x-hidden relative" style={{ backgroundColor: "#06080e" }}>
+      {/* Animated grid background */}
+      <div className="animated-grid" />
+      {/* Scanline CRT overlay */}
+      <div className="scanlines" />
+
       {/* ========== NAVBAR ========== */}
       <nav
         className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl"
@@ -161,11 +166,12 @@ export default function LandingPage() {
 
         <div className="relative z-10 max-w-2xl">
           <div
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-medium tracking-wider uppercase mb-8"
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-medium tracking-wider uppercase mb-8 fade-in-up"
             style={{
               border: "1px solid rgba(34,197,94,0.2)",
               backgroundColor: "rgba(34,197,94,0.05)",
               color: "#22c55e",
+              animationDelay: "0.1s",
             }}
           >
             <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: "#22c55e" }} />
@@ -173,10 +179,10 @@ export default function LandingPage() {
           </div>
 
           <h1
-            className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-[1.1] mb-6"
-            style={{ color: "#f0f2f7" }}
+            className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-[1.1] mb-6 fade-in-up"
+            style={{ color: "#f0f2f7", animationDelay: "0.25s" }}
           >
-            Swipe. Trade.{" "}
+            <span className="text-glow-green">Swipe. Trade.</span>{" "}
             <span
               style={{
                 background: "linear-gradient(135deg, #22c55e 0%, #00cc6a 40%, #8b5cf6 100%)",
@@ -189,19 +195,21 @@ export default function LandingPage() {
             </span>
           </h1>
 
-          <p className="text-base sm:text-lg font-light leading-relaxed mb-10 max-w-lg mx-auto" style={{ color: "#8890a4" }}>
+          <p
+            className="text-base sm:text-lg font-light leading-relaxed mb-10 max-w-lg mx-auto fade-in-up"
+            style={{ color: "#8890a4", animationDelay: "0.4s" }}
+          >
             The Solana memecoin trading terminal with a swipe-to-trade UX.
             Discover Pump.fun tokens the moment they launch. Swipe right to ape in.
           </p>
 
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center fade-in-up" style={{ animationDelay: "0.55s" }}>
             <Link
               href="/swipe"
-              className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-semibold text-sm transition-all hover:brightness-110 hover:shadow-lg text-center"
+              className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-semibold text-sm transition-all hover:brightness-110 hover:shadow-lg text-center pulse-glow"
               style={{
                 background: "linear-gradient(135deg, #22c55e 0%, #00cc6a 100%)",
                 color: "#06080e",
-                boxShadow: "0 0 30px rgba(34,197,94,0.2), 0 0 60px rgba(34,197,94,0.1)",
               }}
             >
               Launch App
@@ -211,18 +219,20 @@ export default function LandingPage() {
       </section>
 
       {/* ========== STATS BAR ========== */}
-      <section className="px-4 sm:px-6 pb-16 sm:pb-20">
+      <section className="px-4 sm:px-6 pb-16 sm:pb-20 relative z-10">
         <div
-          className="max-w-4xl mx-auto rounded-2xl p-6 grid grid-cols-2 sm:grid-cols-4 gap-6"
+          className="max-w-4xl mx-auto rounded-2xl p-6 grid grid-cols-2 sm:grid-cols-4 gap-6 fade-in-up"
           style={{
             backgroundColor: "rgba(10,13,20,0.6)",
-            border: "1px solid rgba(26,31,46,0.6)",
+            border: "1px solid rgba(34,197,94,0.1)",
             backdropFilter: "blur(12px)",
+            animationDelay: "0.7s",
+            boxShadow: "0 0 40px rgba(34,197,94,0.04)",
           }}
         >
           {STATS.map((stat) => (
             <div key={stat.label} className="text-center">
-              <p className="text-2xl font-bold font-mono" style={{ color: "#22c55e" }}>
+              <p className="text-2xl font-bold font-mono text-glow-green" style={{ color: "#22c55e" }}>
                 {stat.value}
               </p>
               <p className="text-xs mt-1" style={{ color: "#5c6380" }}>
@@ -234,29 +244,30 @@ export default function LandingPage() {
       </section>
 
       {/* ========== FEATURES GRID ========== */}
-      <section className="px-4 sm:px-6 pb-16 sm:pb-24">
+      <section className="px-4 sm:px-6 pb-16 sm:pb-24 relative z-10">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3" style={{ color: "#f0f2f7" }}>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3 fade-in-up" style={{ color: "#f0f2f7" }}>
               Everything You Need to Trade
             </h2>
-            <p className="text-sm max-w-md mx-auto" style={{ color: "#5c6380" }}>
+            <p className="text-sm max-w-md mx-auto fade-in-up" style={{ color: "#5c6380", animationDelay: "0.1s" }}>
               Built from the ground up for speed, security, and the degen lifestyle.
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {FEATURES.map((feature) => (
+            {FEATURES.map((feature, i) => (
               <div
                 key={feature.title}
-                className="rounded-xl p-5 transition-all hover:border-opacity-60 group"
+                className="rounded-xl p-5 transition-all duration-300 group gradient-border-animated fade-in-up"
                 style={{
                   backgroundColor: "rgba(10,13,20,0.5)",
                   border: "1px solid rgba(26,31,46,0.6)",
+                  animationDelay: `${0.1 + i * 0.08}s`,
                 }}
               >
                 <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
+                  className="w-10 h-10 rounded-lg flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110"
                   style={{
                     backgroundColor: "rgba(34,197,94,0.08)",
                     color: "#22c55e",
@@ -277,7 +288,7 @@ export default function LandingPage() {
       </section>
 
       {/* ========== HOW IT WORKS ========== */}
-      <section className="px-4 sm:px-6 pb-16 sm:pb-24">
+      <section className="px-4 sm:px-6 pb-16 sm:pb-24 relative z-10">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3" style={{ color: "#f0f2f7" }}>
@@ -290,7 +301,7 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {STEPS.map((s, i) => (
-              <div key={s.step} className="relative">
+              <div key={s.step} className="relative fade-in-up" style={{ animationDelay: `${0.15 + i * 0.15}s` }}>
                 {/* Connector line (desktop) */}
                 {i < STEPS.length - 1 && (
                   <div
@@ -300,7 +311,7 @@ export default function LandingPage() {
                 )}
                 <div className="text-center">
                   <div
-                    className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center mb-4 text-xl font-bold font-mono"
+                    className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center mb-4 text-xl font-bold font-mono step-pulse"
                     style={{
                       background: "linear-gradient(135deg, rgba(34,197,94,0.1) 0%, rgba(139,92,246,0.1) 100%)",
                       border: "1px solid rgba(34,197,94,0.15)",
@@ -323,7 +334,7 @@ export default function LandingPage() {
       </section>
 
       {/* ========== FINAL CTA ========== */}
-      <section className="px-4 sm:px-6 pb-16 sm:pb-24">
+      <section className="px-4 sm:px-6 pb-16 sm:pb-24 relative z-10">
         <div
           className="max-w-3xl mx-auto rounded-2xl p-6 sm:p-10 text-center relative overflow-hidden"
           style={{
@@ -331,6 +342,15 @@ export default function LandingPage() {
             border: "1px solid rgba(34,197,94,0.12)",
           }}
         >
+          {/* Grid background inside CTA */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              backgroundImage:
+                "linear-gradient(rgba(34,197,94,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(34,197,94,0.02) 1px, transparent 1px)",
+              backgroundSize: "40px 40px",
+            }}
+          />
           <div
             className="absolute top-0 right-0 w-[300px] h-[300px] rounded-full blur-[100px] pointer-events-none"
             style={{ background: "radial-gradient(circle, rgba(34,197,94,0.08), transparent 70%)" }}
@@ -344,11 +364,10 @@ export default function LandingPage() {
             </p>
             <Link
               href="/swipe"
-              className="inline-block px-10 py-3.5 rounded-xl font-semibold text-sm transition-all hover:brightness-110"
+              className="inline-block px-10 py-3.5 rounded-xl font-semibold text-sm transition-all hover:brightness-110 pulse-glow"
               style={{
                 background: "linear-gradient(135deg, #22c55e 0%, #00cc6a 100%)",
                 color: "#06080e",
-                boxShadow: "0 0 30px rgba(34,197,94,0.25)",
               }}
             >
               Launch App — It&apos;s Free
@@ -359,7 +378,7 @@ export default function LandingPage() {
 
       {/* ========== FOOTER ========== */}
       <footer
-        className="px-4 sm:px-6 py-8"
+        className="px-4 sm:px-6 py-8 relative z-10"
         style={{ borderTop: "1px solid rgba(26,31,46,0.6)" }}
       >
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">

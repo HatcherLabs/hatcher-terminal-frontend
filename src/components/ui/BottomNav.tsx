@@ -35,10 +35,8 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 terminal:hidden"
+      className="fixed bottom-0 left-0 right-0 z-50 terminal:hidden glass-nav"
       style={{
-        background: "#0d1017",
-        borderTop: "1px solid #1c2030",
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
       }}
     >
@@ -50,31 +48,31 @@ export function BottomNav() {
             <Link
               key={item.href}
               href={item.href}
-              className="relative flex flex-col items-center gap-0.5 px-3 py-1 rounded-md transition-colors duration-150"
+              className="relative flex flex-col items-center gap-0.5 px-3 py-1 rounded-md transition-all duration-200"
               style={{
                 color: active ? "#22c55e" : "#5c6380",
               }}
             >
               {active && (
                 <span
-                  className="absolute -top-[1px] left-2 right-2 h-[2px] rounded-b"
+                  className="absolute -top-[1px] left-1 right-1 h-[2px] rounded-b"
                   style={{
                     background: "#22c55e",
-                    boxShadow: "0 0 6px rgba(34,197,94,0.4)",
+                    boxShadow: "0 0 8px rgba(34,197,94,0.5), 0 0 20px rgba(34,197,94,0.2)",
                   }}
                 />
               )}
               <span
                 style={
                   active
-                    ? { filter: "drop-shadow(0 0 3px rgba(34,197,94,0.3))" }
+                    ? { filter: "drop-shadow(0 0 4px rgba(34,197,94,0.4))" }
                     : undefined
                 }
               >
                 {item.icon}
               </span>
               <span
-                className="text-[9px] font-medium font-mono tracking-wide"
+                className="text-[9px] font-medium font-mono tracking-wide transition-colors duration-200"
                 style={{ color: active ? "#22c55e" : "#5c6380" }}
               >
                 {item.label}

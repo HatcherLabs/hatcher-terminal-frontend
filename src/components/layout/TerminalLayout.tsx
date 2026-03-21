@@ -55,7 +55,7 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
       <div className="terminal:hidden w-full max-w-[480px] mx-auto min-h-screen pb-16">
         <div className="flex items-center justify-between px-4 py-2">
           <span
-            className="font-bold text-sm tracking-widest font-mono"
+            className="font-bold text-sm tracking-widest font-mono text-glow-accent"
             style={{ color: "#8b5cf6" }}
           >
             HATCHER
@@ -94,7 +94,7 @@ export function TerminalLayout({ children }: TerminalLayoutProps) {
           }}
         >
           <span
-            className="font-bold text-sm tracking-widest font-mono"
+            className="font-bold text-sm tracking-widest font-mono text-glow-accent"
             style={{ color: "#8b5cf6" }}
           >
             HATCHER

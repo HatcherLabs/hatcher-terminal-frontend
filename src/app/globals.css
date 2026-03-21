@@ -568,6 +568,167 @@ form {
   box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25);
 }
 
+/* ===== Animated Grid Background ===== */
+@keyframes gridScroll {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 60px; }
+}
+
+.animated-grid {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(34, 197, 94, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 197, 94, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: gridScroll 8s linear infinite;
+}
+
+/* ===== Scanline CRT Overlay ===== */
+.scanlines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+}
+
+/* ===== Enhanced Glow Utilities ===== */
+.glow-green-lg {
+  box-shadow: 0 0 30px rgba(34, 197, 94, 0.2), 0 0 80px rgba(34, 197, 94, 0.08);
+}
+
+.glow-accent {
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.15), 0 0 60px rgba(139, 92, 246, 0.05);
+}
+
+.text-glow-green {
+  text-shadow: 0 0 20px rgba(34, 197, 94, 0.4), 0 0 40px rgba(34, 197, 94, 0.15);
+}
+
+.text-glow-accent {
+  text-shadow: 0 0 20px rgba(139, 92, 246, 0.5), 0 0 40px rgba(139, 92, 246, 0.2);
+}
+
+/* ===== Animated Gradient Border ===== */
+@property --gradient-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes rotateBorder {
+  to { --gradient-angle: 360deg; }
+}
+
+.gradient-border-animated {
+  position: relative;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+.gradient-border-animated::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: conic-gradient(from var(--gradient-angle), #22c55e, #8b5cf6, #22c55e);
+  z-index: -1;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  padding: 1px;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.gradient-border-animated:hover::before {
+  opacity: 1;
+  animation: rotateBorder 3s linear infinite;
+}
+
+/* ===== Blinking Cursor ===== */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.cursor-blink {
+  animation: blink 1s step-end infinite;
+}
+
+/* ===== Glass Nav ===== */
+.glass-nav {
+  background: rgba(13, 16, 23, 0.7);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border-top: 1px solid rgba(34, 197, 94, 0.08);
+}
+
+/* ===== Boot Sequence Line Reveal ===== */
+@keyframes lineReveal {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.boot-line {
+  animation: lineReveal 0.3s ease-out both;
+}
+
+/* ===== Sweep Animation (Stats bar) ===== */
+@keyframes borderSweep {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.sweep-border {
+  border-image: linear-gradient(
+    90deg,
+    rgba(26, 31, 46, 0.6) 0%,
+    rgba(34, 197, 94, 0.3) 50%,
+    rgba(26, 31, 46, 0.6) 100%
+  ) 1;
+  background-size: 200% 100%;
+  animation: borderSweep 4s linear infinite;
+}
+
+/* ===== Staggered Entrance ===== */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.6s ease-out both;
+}
+
+/* ===== Pulse Glow Ring (CTA) ===== */
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 30px rgba(34,197,94,0.2), 0 0 60px rgba(34,197,94,0.1); }
+  50% { box-shadow: 0 0 40px rgba(34,197,94,0.35), 0 0 80px rgba(34,197,94,0.15); }
+}
+
+.pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* ===== Step Number Pulse ===== */
+@keyframes stepPulse {
+  0%, 100% { border-color: rgba(34, 197, 94, 0.15); }
+  50% { border-color: rgba(34, 197, 94, 0.35); }
+}
+
+.step-pulse {
+  animation: stepPulse 3s ease-in-out infinite;
+}
+
 /* ===== Print Styles ===== */
 @media print {
   body::before {

@@ -381,6 +381,8 @@ export function SwipeStack({ tokens: tokensProp, onSessionUpdate, onSettingsOpen
                 transform: `scale(${1 - (i + 1) * 0.05}) translateY(${(i + 1) * 8}px)`,
                 zIndex: -i - 1,
                 opacity: 1 - (i + 1) * 0.3,
+                border: "1px solid rgba(34,197,94,0.05)",
+                borderRadius: 12,
               }}
             >
               <SwipeCard token={token} />

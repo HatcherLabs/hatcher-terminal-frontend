@@ -232,13 +232,13 @@ export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
 
   return (
     <div
-      className="relative w-full no-select overflow-hidden"
+      className="relative w-full no-select overflow-hidden gradient-border-animated"
       style={{
         background: "#0d1017",
         border: "1px solid #1c2030",
         borderRadius: 12,
         maxWidth: 420,
-        boxShadow: "0 4px 24px rgba(6,8,14,0.8), 0 1px 3px rgba(0,0,0,0.4)",
+        boxShadow: "0 4px 24px rgba(6,8,14,0.8), 0 1px 3px rgba(0,0,0,0.4), 0 0 20px rgba(34,197,94,0.04)",
       }}
     >
       {/* ---- Row 1: Header ---- */}
@@ -248,6 +248,7 @@ export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
           alignItems: "center",
           padding: "10px 12px 8px",
           gap: 8,
+          background: "linear-gradient(180deg, rgba(34,197,94,0.03) 0%, transparent 100%)",
         }}
       >
         {/* Avatar + Colored circle fallback + Name + Ticker */}
@@ -299,6 +300,7 @@ export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
             </span>
             {liveData && (
               <span
+                className="animate-live-pulse"
                 style={{
                   width: 5,
                   height: 5,
@@ -306,7 +308,7 @@ export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
                   background: "#22c55e",
                   display: "inline-block",
                   flexShrink: 0,
-                  boxShadow: "0 0 4px #22c55e",
+                  boxShadow: "0 0 6px #22c55e, 0 0 12px rgba(34,197,94,0.3)",
                 }}
                 title="Live data"
               />
@@ -393,7 +395,7 @@ export function SwipeCard({ token, onInfoTap }: SwipeCardProps) {
           gridTemplateColumns: "repeat(3, 1fr)",
           gap: "1px",
           margin: "6px 12px 0",
-          background: "#1c2030",
+          background: "linear-gradient(135deg, rgba(34,197,94,0.08), #1c2030, rgba(34,197,94,0.08))",
           borderRadius: 6,
           overflow: "hidden",
         }}

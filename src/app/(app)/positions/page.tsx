@@ -68,8 +68,20 @@ function PositionCard({ pos, selling, onSell }: { pos: Position; selling: boolea
 
   return (
     <div
-      className="flex items-center justify-between px-4 py-3 rounded-lg"
-      style={{ background: C.card, border: `1px solid ${C.cardBorder}` }}
+      className="flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200"
+      style={{
+        background: C.card,
+        border: `1px solid ${C.cardBorder}`,
+        borderLeft: `3px solid ${pnlColor(pnlPercent)}`,
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "translateY(-1px)";
+        e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.3)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.boxShadow = "none";
+      }}
     >
       <div className="flex items-center gap-3 min-w-0">
         <TokenAvatar mintAddress={pos.mintAddress} imageUri={pos.token.imageUri} ticker={pos.token.ticker} size={36} />
