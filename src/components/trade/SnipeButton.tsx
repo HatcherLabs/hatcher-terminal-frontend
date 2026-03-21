@@ -22,6 +22,7 @@ export function SnipeButton({ mintAddress, ticker }: SnipeButtonProps) {
   const addToast = useToast((s) => s.add);
 
   const [status, setStatus] = useState<SnipeStatus>("idle");
+  const [hovered, setHovered] = useState(false);
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -121,13 +122,15 @@ export function SnipeButton({ mintAddress, ticker }: SnipeButtonProps) {
   let bg: string;
   let borderColor: string;
   let textColor: string;
+  let boxShadow: string;
 
   switch (status) {
     case "idle":
       content = `Snipe ${amount} SOL`;
       bg = "#22c55e";
-      borderColor = "#22c55e";
+      borderColor = "rgba(34,197,94,0.15)";
       textColor = "#000000";
+      boxShadow = "none";
       break;
     case "building":
     case "signing":
@@ -155,6 +158,7 @@ export function SnipeButton({ mintAddress, ticker }: SnipeButtonProps) {
       bg = "#f59e0b";
       borderColor = "#f59e0b";
       textColor = "#000000";
+      boxShadow = "0 0 12px rgba(34,197,94,0.3)";
       break;
     case "success":
       content = (
@@ -168,6 +172,7 @@ export function SnipeButton({ mintAddress, ticker }: SnipeButtonProps) {
       bg = "#22c55e";
       borderColor = "#22c55e";
       textColor = "#000000";
+      boxShadow = "0 0 16px rgba(34,197,94,0.4)";
       break;
     case "failed":
       content = (
@@ -182,6 +187,7 @@ export function SnipeButton({ mintAddress, ticker }: SnipeButtonProps) {
       bg = "#ef4444";
       borderColor = "#ef4444";
       textColor = "#ffffff";
+      boxShadow = "0 0 12px rgba(239,68,68,0.3)";
       break;
   }
 
@@ -190,6 +196,8 @@ export function SnipeButton({ mintAddress, ticker }: SnipeButtonProps) {
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       <button
         onClick={handleSnipe}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
         disabled={isProcessing}
         style={{
           background: bg,
@@ -204,7 +212,10 @@ export function SnipeButton({ mintAddress, ticker }: SnipeButtonProps) {
           whiteSpace: "nowrap",
           cursor: isProcessing ? "not-allowed" : "pointer",
           opacity: isProcessing ? 0.85 : 1,
-          transition: "background 0.15s, border-color 0.15s, color 0.15s, opacity 0.15s",
+          boxShadow: hovered && !isProcessing
+            ? `0 0 14px ${status === "failed" ? "rgba(239,68,68,0.4)" : "rgba(34,197,94,0.45)"}`
+            : boxShadow,
+          transition: "background 0.15s, border-color 0.15s, color 0.15s, opacity 0.15s, box-shadow 0.2s",
         }}
         className="hover:brightness-110 active:scale-[0.97]"
         aria-label={`Snipe ${ticker} for ${amount} SOL`}

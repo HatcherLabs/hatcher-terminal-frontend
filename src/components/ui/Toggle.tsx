@@ -43,6 +43,10 @@ export function Toggle({
         height: trackH,
         backgroundColor: enabled ? bgColor : "#1c2030",
         border: enabled ? "none" : "1px solid #2a3048",
+        boxShadow: enabled
+          ? `0 0 8px rgba(${activeColor === "red" ? "239,68,68" : activeColor === "accent" ? "139,92,246" : "34,197,94"},0.3)`
+          : "none",
+        transition: "background-color 200ms ease, box-shadow 200ms ease, border 200ms ease",
       }}
     >
       <span
@@ -51,7 +55,8 @@ export function Toggle({
           width: knobSize,
           height: knobSize,
           transform: `translateX(${enabled ? knobOn : "2px"})`,
-          transition: "transform 200ms ease",
+          transition: "transform 200ms ease, box-shadow 200ms ease",
+          boxShadow: enabled ? "0 0 6px rgba(255,255,255,0.25)" : "none",
         }}
       />
     </button>

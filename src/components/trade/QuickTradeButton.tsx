@@ -36,7 +36,11 @@ export function QuickTradeButton({ token, size = 18, className = "" }: QuickTrad
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       className={`flex items-center justify-center transition-colors ${className}`}
-      style={{ color: hovered ? "#8b5cf6" : "#5c6380" }}
+      style={{
+        color: hovered ? "#8b5cf6" : "#5c6380",
+        boxShadow: hovered ? "0 0 8px rgba(139,92,246,0.3)" : "none",
+        transition: "color 0.15s, box-shadow 0.2s",
+      }}
       aria-label={`Quick trade ${token.ticker}`}
       title={`Quick trade ${token.ticker}`}
     >
@@ -45,6 +49,7 @@ export function QuickTradeButton({ token, size = 18, className = "" }: QuickTrad
         height={size}
         viewBox="0 0 24 24"
         fill="currentColor"
+        style={{ filter: "drop-shadow(0 0 4px rgba(139,92,246,0.4))" }}
       >
         <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
       </svg>

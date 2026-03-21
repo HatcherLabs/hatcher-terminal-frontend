@@ -29,6 +29,20 @@ export function CopyButton({ text, label, size = "sm" }: CopyButtonProps) {
   return (
     <button
       onClick={handleCopy}
+      onMouseEnter={(e) => {
+        const el = e.currentTarget;
+        el.style.boxShadow = "0 0 6px rgba(34,197,94,0.2)";
+        el.style.borderColor = "#22c55e55";
+        const icon = el.querySelector("svg") as SVGElement | null;
+        if (icon) icon.style.filter = "drop-shadow(0 0 3px currentColor)";
+      }}
+      onMouseLeave={(e) => {
+        const el = e.currentTarget;
+        el.style.boxShadow = "none";
+        el.style.borderColor = "#2a2d3a";
+        const icon = el.querySelector("svg") as SVGElement | null;
+        if (icon) icon.style.filter = "none";
+      }}
       style={{
         display: "inline-flex",
         alignItems: "center",
@@ -43,6 +57,7 @@ export function CopyButton({ text, label, size = "sm" }: CopyButtonProps) {
         cursor: "pointer",
         transition: "all 150ms ease",
         whiteSpace: "nowrap",
+        textShadow: copied ? "0 0 6px rgba(34,197,94,0.3)" : "none",
       }}
       title={copied ? "Copied!" : `Copy${label ? ` ${label}` : ""}`}
       aria-label={copied ? "Copied!" : `Copy${label ? ` ${label}` : ""}`}
