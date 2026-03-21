@@ -74,7 +74,7 @@ function TokenRow({
         padding: "5px 10px",
         borderBottom: "1px solid rgba(26, 31, 46, 0.3)",
       }}
-      onMouseEnter={(e) => (e.currentTarget.style.background = "#141820")}
+      onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(34,197,94,0.03)")}
       onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
     >
       {/* Avatar */}
@@ -247,7 +247,7 @@ export function LiveFeed({ tokens, graduatingTokens }: LiveFeedProps) {
       className="hidden terminal:flex flex-col overflow-hidden"
       style={{
         width: 320,
-        borderLeft: "1px solid #1c2030",
+        borderLeft: "1px solid rgba(34,197,94,0.08)",
         background: "#0d1017",
       }}
     >
@@ -267,6 +267,7 @@ export function LiveFeed({ tokens, graduatingTokens }: LiveFeedProps) {
             fontFamily: "var(--font-jetbrains-mono), monospace",
             textTransform: "uppercase",
             letterSpacing: "0.06em",
+            textShadow: "0 0 8px rgba(92,99,128,0.3)",
           }}
         >
           Live Feed
@@ -289,6 +290,7 @@ export function LiveFeed({ tokens, graduatingTokens }: LiveFeedProps) {
                   textTransform: "uppercase",
                   letterSpacing: "0.04em",
                   color: isActive ? "#f0f2f7" : "#5c6380",
+                  textShadow: isActive ? "0 0 8px rgba(34,197,94,0.3)" : "none",
                   borderBottom: isActive
                     ? "2px solid #22c55e"
                     : "2px solid transparent",
@@ -389,7 +391,7 @@ export function LiveFeed({ tokens, graduatingTokens }: LiveFeedProps) {
               borderRadius: "50%",
               background: "#22c55e",
               display: "inline-block",
-              boxShadow: "0 0 4px #22c55e",
+              boxShadow: "0 0 6px #22c55e, 0 0 12px rgba(34,197,94,0.3)",
             }}
           />
           LIVE

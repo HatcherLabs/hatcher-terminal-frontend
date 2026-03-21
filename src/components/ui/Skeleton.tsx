@@ -23,7 +23,7 @@ function injectShimmer() {
 /* ─── Shared shimmer style ─── */
 
 const BASE = "#141820";
-const HIGHLIGHT = "#1a1f2a";
+const HIGHLIGHT = "#1a2420";
 
 function shimmerStyle(extra?: CSSProperties): CSSProperties {
   injectShimmer();

@@ -22,6 +22,7 @@ export function HeatBadge({ heat, size = "sm" }: HeatBadgeProps) {
         fontWeight: 700,
         letterSpacing: ".03em",
         whiteSpace: "nowrap",
+        boxShadow: `0 0 8px ${c}25`,
       }}
       className="font-mono"
     >

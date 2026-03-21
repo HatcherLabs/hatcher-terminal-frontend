@@ -76,11 +76,17 @@ export function SettingsSheet({
             <div
               className="w-full max-w-[480px] px-5 pt-5 pb-8 space-y-5"
               style={{
-                background: "#0d1017",
-                borderTop: "1px solid #1c2030",
+                position: "relative",
+                background: "rgba(10,13,20,0.92)",
+                backdropFilter: "blur(20px) saturate(1.3)",
+                WebkitBackdropFilter: "blur(20px) saturate(1.3)",
+                borderTop: "1px solid rgba(34,197,94,0.08)",
                 borderRadius: "16px 16px 0 0",
+                boxShadow: "0 -8px 40px rgba(0,0,0,0.5), 0 0 30px rgba(34,197,94,0.03)",
               }}
             >
+              {/* Grid background overlay */}
+              <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(34,197,94,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(34,197,94,0.02) 1px, transparent 1px)", backgroundSize: "24px 24px", pointerEvents: "none", borderRadius: "16px 16px 0 0" }} />
               {/* Buy Amount */}
               <div>
                 <label

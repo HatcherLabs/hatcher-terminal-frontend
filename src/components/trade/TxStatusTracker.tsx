@@ -144,7 +144,7 @@ function TxRow({ tx }: { tx: TrackedTx }) {
   return (
     <div
       className="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all"
-      style={{ background: config.bgColor, border: `1px solid ${config.color}20` }}
+      style={{ background: config.bgColor, border: `1px solid ${config.color}30` }}
     >
       {/* Status indicator */}
       <div className="flex-shrink-0">
@@ -258,8 +258,9 @@ export function TxStatusTracker() {
       className="fixed bottom-4 right-4 z-[100] w-[320px] max-h-[400px] overflow-y-auto terminal-scrollbar rounded-xl shadow-2xl"
       style={{
         background: "rgba(10,13,20,0.95)",
-        border: "1px solid #1c2030",
+        border: "1px solid rgba(34,197,94,0.08)",
         backdropFilter: "blur(12px)",
+        boxShadow: "0 8px 40px rgba(0,0,0,0.5), 0 0 20px rgba(34,197,94,0.04)",
       }}
     >
       {/* Header */}
@@ -267,13 +268,13 @@ export function TxStatusTracker() {
         className="flex items-center justify-between px-3 py-2 sticky top-0"
         style={{
           background: "rgba(10,13,20,0.95)",
-          borderBottom: "1px solid #1c2030",
+          borderBottom: "1px solid rgba(34,197,94,0.06)",
         }}
       >
         <div className="flex items-center gap-1.5">
           <div
             className="w-2 h-2 rounded-full animate-pulse"
-            style={{ background: "#8b5cf6" }}
+            style={{ background: "#8b5cf6", boxShadow: "0 0 8px rgba(139,92,246,0.4)" }}
           />
           <span className="text-[10px] uppercase tracking-wider font-medium" style={{ color: "#5c6380" }}>
             Transactions ({transactions.length})

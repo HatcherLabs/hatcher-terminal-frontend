@@ -191,10 +191,13 @@ export function TokenDetailModal({
           >
             <div
               style={{
-                background: "#0d1017",
-                border: "1px solid #1c2030",
+                background: "rgba(10,13,20,0.95)",
+                backdropFilter: "blur(16px) saturate(1.2)",
+                WebkitBackdropFilter: "blur(16px) saturate(1.2)",
+                border: "1px solid rgba(34,197,94,0.08)",
                 borderRadius: 12,
                 overflow: "hidden",
+                boxShadow: "0 8px 40px rgba(0,0,0,0.5), 0 0 20px rgba(34,197,94,0.04)",
               }}
             >
               {/* ── Header: Avatar + Name + Ticker + Risk ─── */}
@@ -312,7 +315,7 @@ export function TokenDetailModal({
                   display: "grid",
                   gridTemplateColumns: "1fr 1fr",
                   gap: 1,
-                  background: "#1c2030",
+                  background: "rgba(34,197,94,0.06)",
                   margin: "0 14px",
                   borderRadius: 8,
                   overflow: "hidden",
@@ -563,10 +566,12 @@ export function TokenDetailModal({
                   onMouseEnter={(e) => {
                     e.currentTarget.style.background = "#161b26";
                     e.currentTarget.style.borderColor = "#2a3040";
+                    e.currentTarget.style.boxShadow = "0 0 8px rgba(34,197,94,0.1)";
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.background = "#0f1219";
                     e.currentTarget.style.borderColor = "#1c2030";
+                    e.currentTarget.style.boxShadow = "none";
                   }}
                 >
                   View Detail
@@ -587,6 +592,7 @@ export function TokenDetailModal({
                     fontWeight: 700,
                     cursor: "pointer",
                     transition: "background 0.15s",
+                    boxShadow: "0 0 12px rgba(34,197,94,0.2)",
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.background = "rgba(34,197,94,0.2)";
